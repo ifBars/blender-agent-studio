@@ -5,7 +5,7 @@
 # Blender Agent Studio
 
 [![Validate](https://github.com/ifBars/blender-agent-studio/actions/workflows/validate.yml/badge.svg)](https://github.com/ifBars/blender-agent-studio/actions/workflows/validate.yml)
-[![skills.sh](https://skills.sh/b/ifBars/blender-agent-studio)](https://skills.sh/ifBars/blender-agent-studio/blender-modeling-workflow)
+[![skills.sh](https://img.shields.io/badge/skills.sh-6%20skills-000000?logo=vercel&logoColor=white)](https://skills.sh/ifBars/blender-agent-studio/blender-agent-studio)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 Build, inspect, animate, and benchmark Blender assets with reproducible Python,
