@@ -11,11 +11,12 @@
 Build, inspect, animate, and benchmark Blender assets with reproducible Python,
 fixed visual evidence, deterministic quality gates, and a bounded local MCP.
 
-Blender Agent Studio packages five complementary agent skills plus evaluation
-tools for turning a user request into inspectable `.blend` and GLB deliverables.
-It is designed to answer a harder question than “did Blender produce a file?”:
-does the result satisfy the request, survive export, read correctly from every
-side, and improve when the agent workflow changes?
+Blender Agent Studio packages one umbrella routing skill, five specialist
+skills, and evaluation tools for turning a user request into inspectable
+`.blend` and GLB deliverables. It is designed to answer a harder question than
+“did Blender produce a file?”: does the result satisfy the request, survive
+export, read correctly from every side, and improve when the agent workflow
+changes?
 
 ## Quick start
 
@@ -57,13 +58,13 @@ codex plugin add blender-agent-studio@blender-agent-studio
 
 ### Skills-only install
 
-Install one skill through the Vercel Agent Skills CLI:
+Install the umbrella routing skill through the Vercel Agent Skills CLI:
 
 ```bash
-bunx skills add -g ifBars/blender-agent-studio --skill blender-modeling-workflow --agent codex --full-depth -y
+bunx skills add -g ifBars/blender-agent-studio --skill blender-agent-studio --agent codex -y
 ```
 
-Install all five skills:
+Install the umbrella and all five specialist skills:
 
 ```bash
 bunx skills add -g ifBars/blender-agent-studio --skill "*" --agent codex --full-depth -y
@@ -175,6 +176,8 @@ or prompt improvements.
 <summary><strong>Plugin layout</strong></summary>
 
 ```text
+SKILL.md
+agents/openai.yaml
 .agents/plugins/marketplace.json
 plugins/blender-agent-studio/
   .codex-plugin/plugin.json

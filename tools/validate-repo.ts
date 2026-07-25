@@ -4,6 +4,15 @@ import { join, resolve } from "node:path";
 const root = resolve(import.meta.dir, "..");
 const marketplacePath = join(root, ".agents", "plugins", "marketplace.json");
 const marketplace = JSON.parse(readFileSync(marketplacePath, "utf8"));
+const rootSkill = readFileSync(join(root, "SKILL.md"), "utf8");
+const rootSkillName = rootSkill.match(/^name:\s*(.+)$/m)?.[1]?.trim();
+
+if (rootSkillName !== "blender-agent-studio") {
+  throw new Error(`Root skill name mismatch: ${rootSkillName}`);
+}
+if (!existsSync(join(root, "agents", "openai.yaml"))) {
+  throw new Error("Root skill agents/openai.yaml is missing");
+}
 
 if (marketplace.name !== "blender-agent-studio") {
   throw new Error("Marketplace name must be blender-agent-studio");
