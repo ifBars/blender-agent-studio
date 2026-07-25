@@ -1,0 +1,4 @@
+interface:
+  display_name: "Blender Modeling Workflow"
+  short_description: "Build reproducible Blender models via code"
+  default_prompt: "Use $blender-agent-studio:blender-modeling-workflow to create or refine a reproducible Blender model from this request."

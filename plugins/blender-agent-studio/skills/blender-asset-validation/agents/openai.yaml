@@ -1,0 +1,4 @@
+interface:
+  display_name: "Blender Asset Validation"
+  short_description: "Validate mesh quality and visual evidence"
+  default_prompt: "Use $blender-agent-studio:blender-asset-validation to inspect this Blender asset and produce technical and visual evidence."

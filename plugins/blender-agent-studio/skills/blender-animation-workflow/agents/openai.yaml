@@ -1,0 +1,4 @@
+interface:
+  display_name: "Blender Animation Workflow"
+  short_description: "Author and review believable Blender motion"
+  default_prompt: "Use $blender-agent-studio:blender-animation-workflow to build or refine this mechanical Blender animation."

@@ -1,0 +1,41 @@
+{
+  "name": "blender-agent-studio",
+  "version": "0.1.0",
+  "description": "Evidence-driven Blender 5.2 modeling, validation, animation, and agent benchmarking workflows.",
+  "author": {
+    "name": "Bars",
+    "url": "https://github.com/ifBars"
+  },
+  "homepage": "https://github.com/ifBars/blender-agent-studio#readme",
+  "repository": "https://github.com/ifBars/blender-agent-studio.git",
+  "license": "MIT",
+  "keywords": [
+    "blender",
+    "codex",
+    "agent-skills",
+    "mcp",
+    "benchmarking"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Blender Agent Studio",
+    "shortDescription": "Build and benchmark better Blender assets",
+    "longDescription": "Procedural Blender 5.2 workflows for creating reproducible models, validating technical and visual quality, refining mechanical animation, and measuring agent improvements with paired benchmarks.",
+    "developerName": "Bars",
+    "category": "Developer Tools",
+    "websiteURL": "https://github.com/ifBars/blender-agent-studio",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Build a Blender model from this request.",
+      "Validate this Blender asset and render evidence.",
+      "Benchmark this Blender agent workflow."
+    ],
+    "brandColor": "#E87D0D",
+    "composerIcon": "./assets/blender-icon.png",
+    "logo": "./assets/blender-icon.png"
+  },
+  "mcpServers": "./.mcp.json"
+}

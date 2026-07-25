@@ -1,0 +1,11 @@
+{
+  "name": "blender-agent-studio-repository",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "bun@1.3.5",
+  "description": "Codex plugin marketplace for reproducible Blender modeling, validation, animation, and agent benchmarking.",
+  "scripts": {
+    "check": "bun tools/validate-repo.ts",
+    "test": "bun --cwd plugins/blender-agent-studio test"
+  }
+}

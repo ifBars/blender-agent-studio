@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "blender-agent-studio": {
+      "command": "bun",
+      "args": [
+        "./mcp/server.ts"
+      ],
+      "cwd": ".",
+      "note": "Bounded Blender 5.2 execution, asset inspection, and evidence rendering tools."
+    }
+  }
+}

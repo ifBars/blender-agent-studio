@@ -1,0 +1,4 @@
+interface:
+  display_name: "Blender Agent Benchmark"
+  short_description: "Compare Blender agent workflows fairly"
+  default_prompt: "Use $blender-agent-studio:blender-agent-benchmark to run a paired baseline and plugin-enabled Blender evaluation."

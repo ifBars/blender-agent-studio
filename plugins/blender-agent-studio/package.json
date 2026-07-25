@@ -1,0 +1,15 @@
+{
+  "name": "blender-agent-studio",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "mcp": "bun mcp/server.ts",
+    "test": "bun test",
+    "benchmark": "bun skills/blender-agent-benchmark/scripts/run_benchmark.ts",
+    "benchmark:mcp": "bun skills/blender-agent-benchmark/scripts/benchmark_mcp.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.29.0",
+    "zod": "3.25.76"
+  }
+}

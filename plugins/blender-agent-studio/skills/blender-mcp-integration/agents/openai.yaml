@@ -1,0 +1,4 @@
+interface:
+  display_name: "Blender MCP Integration"
+  short_description: "Choose and use Blender MCP layers safely"
+  default_prompt: "Use $blender-agent-studio:blender-mcp-integration to connect this workflow to the appropriate Blender MCP."

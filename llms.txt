@@ -1,0 +1,23 @@
+# Blender Agent Studio
+
+This repository is a Codex plugin marketplace containing the
+`blender-agent-studio` plugin.
+
+Install:
+
+```bash
+codex plugin marketplace add ifBars/blender-agent-studio
+codex plugin add blender-agent-studio@blender-agent-studio
+```
+
+Core capabilities:
+
+- reproducible procedural Blender modeling;
+- authored-scene and fresh-export validation;
+- standardized multiview and animation evidence;
+- mechanical animation guidance;
+- isolated baseline/plugin/MCP agent benchmarks;
+- a bounded local evaluation MCP.
+
+The plugin source is under `plugins/blender-agent-studio/`. Generated models,
+renders, exports, and benchmark runs are intentionally excluded from git.
