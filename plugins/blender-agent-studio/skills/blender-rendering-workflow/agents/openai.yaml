@@ -1,0 +1,4 @@
+interface:
+  display_name: "Blender Rendering Workflow"
+  short_description: "Create reproducible Blender stills and animation renders"
+  default_prompt: "Use $blender-agent-studio:blender-rendering-workflow to light, render, and validate this Blender deliverable."

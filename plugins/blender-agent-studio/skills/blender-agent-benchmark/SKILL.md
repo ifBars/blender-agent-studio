@@ -18,6 +18,9 @@ Measure changes with the same tasks, model, effort, limits, Blender build, and e
 7. Evaluate outputs after generation. Do not leak hidden rubric details to the agent.
 
 Read [references/methodology.md](references/methodology.md) before changing fixtures, scoring, or comparison claims.
+Read [references/open-source-benchmark-landscape.md](references/open-source-benchmark-landscape.md)
+when designing new suites or borrowing evaluation ideas from other Blender
+benchmarks.
 Read [references/validated-results.md](references/validated-results.md) only
 when reviewing the plugin's recorded validation result, not while generating a
 benchmark submission.
@@ -61,6 +64,9 @@ Keep these dimensions separate:
 - execution/export validity;
 - prompt and structural compliance;
 - geometry/game-readiness;
+- finish-profile compliance, including polished-smooth versus explicitly
+  low-poly intent;
+- UV, shading, refinement, material, texture, and presentation signals;
 - multiview visual quality;
 - physical plausibility;
 - animation quality when applicable;
@@ -68,6 +74,8 @@ Keep these dimensions separate:
 - time, turns, tool failures, and cost.
 
 Use hard gates before the weighted score. Prefer blinded pairwise visual review over uncalibrated absolute aesthetic scores.
+Counterbalance A/B image order across judges and preserve per-judge mappings.
+Do not let a low triangle count compensate for a blockout-looking final asset.
 
 ## Iterate
 

@@ -22,10 +22,30 @@ Write a compact JSON or Markdown contract before substantial modeling:
     "tablet exits into tray"
   ],
   "style": ["stylized", "worn painted metal"],
+  "finish": {
+    "profile": "polished_smooth",
+    "low_poly_explicitly_requested": false,
+    "surface_targets": [
+      "smooth outer silhouette",
+      "beveled manufactured edges",
+      "readable secondary and tertiary detail",
+      "no visible blockout residue"
+    ]
+  },
   "limits": {
-    "triangle_max": 5000,
+    "triangle_range": [4000, 24000],
     "maximum_extent_m": 1.5
   },
+  "stages": [
+    "contract_and_references",
+    "graybox",
+    "primary_secondary_forms",
+    "structural_refinement",
+    "materials_textures",
+    "surface_polish",
+    "export_validation"
+  ],
+  "approval_gates": [],
   "animation": {
     "required": true,
     "critical_frames": [1, 18, 36, 60, 84, 96]
@@ -44,3 +64,8 @@ Separate:
 - hard gates: execution, export, required parts, numeric limits;
 - measurable quality: topology, dimensions, material coverage, motion continuity;
 - perceptual review: style, visual coherence, physical plausibility, polish.
+
+Record whether the user actually requested low-poly. If not, use
+`polished_smooth` as the normal finish profile. A triangle maximum is a ceiling,
+not evidence that the model is finished; prefer a range or platform-specific
+performance target when one is known.

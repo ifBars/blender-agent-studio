@@ -34,13 +34,27 @@ Multi-part machines, foliage cards, open cloth, hair, effects meshes, and articu
 - pivots unrelated to the visible joint;
 - hidden internal detail dominating the triangle budget;
 - authored and re-imported dimensions or action counts disagree.
+- a polished or game-ready request with almost entirely flat-shaded curved
+  surfaces, no UV-bearing visible meshes, and no visible refinement evidence;
+- a result dramatically below its permitted geometry budget while still
+  reading as a graybox or generic primitive assembly;
+- missing-magenta, crushed-black, or default-gray visible surfaces;
+- coplanar or nearly coplanar surfaces likely to z-fight in a game engine;
+- final decoration that floats, penetrates walls, or has no structural or
+  compositional role.
 
 ## Visual review questions
 
 - Can the object be identified from silhouette alone?
 - Are primary, secondary, and tertiary forms proportionate?
+- Does the result read as the requested final stage, or is blockout geometry
+  still being presented as complete?
+- Are broad curves smooth enough for the intended view distance unless
+  faceting was explicitly requested?
 - Do functional parts visibly connect?
 - Are support and contact relationships believable?
 - Does the material palette describe different substances?
+- Are UVs, textures, procedural coordinates, shading, and exposure working in
+  the render engine used for evidence?
 - Does the asset remain readable in front, side, top, and perspective views?
 - Does it look correct at the intended in-game or icon scale?

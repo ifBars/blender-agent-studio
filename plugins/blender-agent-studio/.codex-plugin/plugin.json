@@ -1,7 +1,7 @@
 {
   "name": "blender-agent-studio",
-  "version": "0.1.0",
-  "description": "Evidence-driven Blender 5.2 modeling, validation, animation, and agent benchmarking workflows.",
+  "version": "0.2.0+codex.20260731082550",
+  "description": "Evidence-driven Blender 5.2 modeling, procedural, rendering, simulation, character, validation, animation, and benchmark workflows.",
   "author": {
     "name": "Bars",
     "url": "https://github.com/ifBars"
@@ -19,8 +19,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Blender Agent Studio",
-    "shortDescription": "Build and benchmark better Blender assets",
-    "longDescription": "Procedural Blender 5.2 workflows for creating reproducible models, validating technical and visual quality, refining mechanical animation, and measuring agent improvements with paired benchmarks.",
+    "shortDescription": "Build, simulate, render, and benchmark Blender work",
+    "longDescription": "Evidence-driven Blender 5.2 workflows for reproducible models, Geometry Nodes, rendering, physics simulations, character rigs, validation, animation, and paired agent benchmarks.",
     "developerName": "Bars",
     "category": "Developer Tools",
     "websiteURL": "https://github.com/ifBars/blender-agent-studio",
@@ -30,7 +30,9 @@
     ],
     "defaultPrompt": [
       "Build a Blender model from this request.",
+      "Clarify this Blender brief and create an optional concept mockup.",
       "Validate this Blender asset and render evidence.",
+      "Create and validate a Blender fluid or physics simulation.",
       "Benchmark this Blender agent workflow."
     ],
     "brandColor": "#E87D0D",

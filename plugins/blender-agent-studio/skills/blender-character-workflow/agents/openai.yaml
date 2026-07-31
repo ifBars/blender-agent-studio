@@ -1,0 +1,4 @@
+interface:
+  display_name: "Blender Character Workflow"
+  short_description: "Rig, animate, and validate Blender characters and avatars"
+  default_prompt: "Use $blender-agent-studio:blender-character-workflow to create or repair and validate this Blender character."

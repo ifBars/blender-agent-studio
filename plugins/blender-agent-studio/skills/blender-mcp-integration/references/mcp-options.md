@@ -57,3 +57,24 @@ Use only for high-level, deterministic evaluation:
 - benchmark result preparation.
 
 It intentionally does not replace general live scene control or duplicate arbitrary-code execution.
+
+## Broader agent capability comparison
+
+The relevant ecosystem splits into complementary layers rather than a single
+server to install everywhere:
+
+| Layer | Representative implementation | Useful coverage | Studio decision |
+| --- | --- | --- | --- |
+| Official live control | Blender Lab MCP | scene/file inspection, docs, screenshots, navigation, rendering, Python | Prefer for an open Blender session on supported Blender versions. |
+| Community live/external bridge | ahujasid/blender-mcp | object/material control, screenshots, arbitrary Python, remote hosts, Poly Haven, Sketchfab, external mesh generation | Opt in only for its unique external capability and explicitly accept its credentials, downloads, telemetry, and socket surface. |
+| Broad headless automation | sandraschi/blender-mcp | mesh/sculpt, Geometry Nodes, compositor, VSE, Grease Pencil, physics, export, optional live bridge | Treat as a workflow reference or task-specific integration; do not duplicate its broad mutable tool catalog in this plugin. |
+| Deterministic evaluator | Blender Agent Studio MCP | build fingerprint, clean-process metrics, fixed evidence renders, benchmark preparation | Keep bundled and narrow; use it to verify work made through any authoring layer. |
+
+Skills should cover the durable workflow gaps across modeling, procedural
+systems, rendering, simulation, characters, animation, and validation. MCP
+tools should provide transport or local observation, not replace contracts,
+cache provenance, fresh-import checks, and visual review.
+
+Sources: https://www.blender.org/lab/mcp-server/ ;
+https://github.com/ahujasid/blender-mcp ;
+https://github.com/sandraschi/blender-mcp
