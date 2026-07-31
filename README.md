@@ -5,13 +5,15 @@
 # Blender Agent Studio
 
 [![Validate](https://github.com/ifBars/blender-agent-studio/actions/workflows/validate.yml/badge.svg)](https://github.com/ifBars/blender-agent-studio/actions/workflows/validate.yml)
-[![skills.sh](https://img.shields.io/badge/skills.sh-6%20skills-000000?logo=vercel&logoColor=white)](https://skills.sh/ifBars/blender-agent-studio/blender-agent-studio)
+[![skills.sh](https://img.shields.io/badge/skills.sh-11%20skills-000000?logo=vercel&logoColor=white)](https://skills.sh/ifBars/blender-agent-studio/blender-agent-studio)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-Build, inspect, animate, and benchmark Blender assets with reproducible Python,
-fixed visual evidence, deterministic quality gates, and a bounded local MCP.
+Build, inspect, rig, animate, simulate, render, and benchmark Blender work with reproducible Python,
+explicit graybox-to-polish stages, fixed visual evidence, deterministic quality
+gates, and a bounded local MCP. Finished assets default to a polished smooth
+quality target unless low-poly is explicitly requested.
 
-Blender Agent Studio packages one umbrella routing skill, five specialist
+Blender Agent Studio packages one umbrella routing skill, ten specialist
 skills, and evaluation tools for turning a user request into inspectable
 `.blend` and GLB deliverables. It is designed to answer a harder question than
 “did Blender produce a file?”: does the result satisfy the request, survive
@@ -41,7 +43,7 @@ articulated or animated parts.
 
 ### Full Codex plugin
 
-The marketplace install includes all five skills, the Blender icon and plugin
+The marketplace install includes all ten skills, the Blender icon and plugin
 metadata, and the bounded local MCP:
 
 ```bash
@@ -64,7 +66,7 @@ Install the umbrella routing skill through the Vercel Agent Skills CLI:
 bunx skills add -g ifBars/blender-agent-studio --skill blender-agent-studio --agent codex -y
 ```
 
-Install the umbrella and all five specialist skills:
+Install the umbrella and all ten specialist skills:
 
 ```bash
 bunx skills add -g ifBars/blender-agent-studio --skill "*" --agent codex --full-depth -y
@@ -103,8 +105,13 @@ package contains no machine-specific installation path.
 | Goal | Skill |
 | --- | --- |
 | Build or substantially refine a model | [`blender-modeling-workflow`](https://skills.sh/ifBars/blender-agent-studio/blender-modeling-workflow) |
+| Clarify a brief or create an optional concept reference | `blender-art-direction-intake` |
 | Audit topology, hierarchy, export, or visual quality | [`blender-asset-validation`](https://skills.sh/ifBars/blender-agent-studio/blender-asset-validation) |
 | Create or diagnose articulated mechanical motion | [`blender-animation-workflow`](https://skills.sh/ifBars/blender-agent-studio/blender-animation-workflow) |
+| Create Geometry Nodes, scattering, terrain, or generators | `blender-procedural-workflow` |
+| Light, compose, or deliver still/video renders | `blender-rendering-workflow` |
+| Bake or diagnose fluid and physics simulations | `blender-simulation-workflow` |
+| Rig, skin, animate, or export characters and avatars | `blender-character-workflow` |
 | Measure baseline versus workflow quality | [`blender-agent-benchmark`](https://skills.sh/ifBars/blender-agent-studio/blender-agent-benchmark) |
 | Choose or evaluate a Blender MCP | [`blender-mcp-integration`](https://skills.sh/ifBars/blender-agent-studio/blender-mcp-integration) |
 
@@ -187,10 +194,15 @@ plugins/blender-agent-studio/
   scripts/
   skills/
     blender-agent-benchmark/
+    blender-art-direction-intake/
     blender-animation-workflow/
     blender-asset-validation/
+    blender-character-workflow/
     blender-mcp-integration/
     blender-modeling-workflow/
+    blender-procedural-workflow/
+    blender-rendering-workflow/
+    blender-simulation-workflow/
 ```
 
 The repository root is a Codex marketplace. The installable plugin lives under

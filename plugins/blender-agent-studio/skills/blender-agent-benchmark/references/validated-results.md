@@ -2,6 +2,11 @@
 
 Date: 2026-07-24 Pacific / 2026-07-25 UTC.
 
+Historical note: this result predates inspector schema 2 and scorer version 3,
+which add UV, shading, refinement, finish-profile, and counterbalanced judge
+dimensions. Preserve it as evidence for the earlier methodology; do not compare
+its 100-point automated scores directly with newly generated runs.
+
 Environment:
 
 - Blender 5.2.0 LTS, build `fbe6228777e7`;

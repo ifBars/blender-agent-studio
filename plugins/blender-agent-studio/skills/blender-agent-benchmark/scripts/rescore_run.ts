@@ -67,7 +67,7 @@ async function main(): Promise<void> {
   const rescored = {
     ...summary,
     rescoredAt: new Date().toISOString(),
-    scorerVersion: 2,
+    scorerVersion: 3,
     hardGatePasses: results.filter((item) => item.score.hardGatePass).length,
     meanAutomatedScore: Number(
       (

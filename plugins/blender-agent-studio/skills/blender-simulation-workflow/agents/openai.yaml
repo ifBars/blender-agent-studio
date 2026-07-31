@@ -1,0 +1,4 @@
+interface:
+  display_name: "Blender Simulation Workflow"
+  short_description: "Build and validate fluid, physics, cloth, and particle bakes"
+  default_prompt: "Use $blender-agent-studio:blender-simulation-workflow to create and validate this Blender simulation."

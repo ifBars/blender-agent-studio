@@ -3,7 +3,13 @@ import type { BenchmarkTask } from "./tasks.ts";
 type AssetMetrics = {
   hard_gate_pass?: boolean;
   materials?: string[];
-  meshes?: Array<{ name?: string }>;
+  meshes?: Array<{
+    name?: string;
+    uv_layers?: number;
+    smooth_polygons?: number;
+    flat_polygons?: number;
+    refinement_modifiers?: Array<{ type?: string }>;
+  }>;
   objects?: Array<{ name?: string; parent?: string | null; action?: string | null }>;
   actions?: Array<{ frame_start?: number; frame_end?: number; name?: string }>;
   scene?: { bounds?: { dimensions?: number[] }; frame_start?: number; frame_end?: number };
@@ -14,6 +20,10 @@ type AssetMetrics = {
     invalid_vertices?: number;
     degenerate_faces?: number;
     zero_length_edges?: number;
+    smooth_polygons?: number;
+    flat_polygons?: number;
+    uv_mapped_meshes?: number;
+    refinement_modifiers?: number;
   };
 };
 
@@ -25,6 +35,7 @@ export type AutomatedScore = {
     specificationCoverage: number;
     geometryReadiness: number;
     materialsAndPresentation: number;
+    finishQuality: number;
     animationOrAssembly: number;
     reproducibility: number;
   };
@@ -108,9 +119,9 @@ export function scoreSubmission(options: {
   add(
     "semantic_part_coverage",
     coverage === 1,
-    30,
+    25,
     `${matchedGroups.length}/${task.rubric.requiredNameGroups.length} required semantic part groups found`,
-    coverage * 30,
+    coverage * 25,
   );
 
   const triangles = blendMetrics?.totals?.triangles ?? 0;
@@ -118,7 +129,7 @@ export function scoreSubmission(options: {
   add(
     "triangle_range",
     triangles >= minimumTriangles && triangles <= maximumTriangles,
-    6,
+    5,
     `${triangles} triangles; expected ${minimumTriangles}-${maximumTriangles}`,
   );
   const meshObjects = blendMetrics?.totals?.mesh_objects ?? 0;
@@ -126,9 +137,9 @@ export function scoreSubmission(options: {
   add(
     "mesh_object_count",
     objectRatio === 1,
-    5,
+    4,
     `${meshObjects} mesh objects; minimum ${task.rubric.minimumMeshObjects}`,
-    objectRatio * 5,
+    objectRatio * 4,
   );
   const invalidCount =
     (blendMetrics?.totals?.invalid_vertices ?? 0) +
@@ -137,14 +148,14 @@ export function scoreSubmission(options: {
   add(
     "invalid_geometry",
     invalidCount === 0,
-    5,
+    4,
     `${invalidCount} invalid vertices, degenerate faces, or zero-length edges`,
   );
   const extent = Math.max(...(blendMetrics?.scene?.bounds?.dimensions ?? [Infinity]));
   add(
     "maximum_extent",
     extent <= task.rubric.maximumExtent,
-    4,
+    2,
     `${Number.isFinite(extent) ? extent.toFixed(3) : "missing"}m maximum extent; limit ${task.rubric.maximumExtent}m`,
   );
 
@@ -153,9 +164,9 @@ export function scoreSubmission(options: {
   add(
     "material_count",
     materialRatio === 1,
-    7,
+    5,
     `${materials} materials; minimum ${task.rubric.minimumMaterials}`,
-    materialRatio * 7,
+    materialRatio * 5,
   );
   const glbMaterials = glbMetrics?.totals?.materials ?? 0;
   add(
@@ -163,6 +174,65 @@ export function scoreSubmission(options: {
     glbMaterials >= Math.min(materials, task.rubric.minimumMaterials),
     3,
     `${glbMaterials} materials survived GLB import`,
+  );
+
+  const uvMappedMeshes = blendMetrics?.totals?.uv_mapped_meshes ?? 0;
+  const uvRatio = meshObjects ? uvMappedMeshes / meshObjects : 0;
+  const minimumUvRatio = task.rubric.minimumUvMeshRatio;
+  add(
+    "uv_coverage",
+    uvRatio >= minimumUvRatio,
+    4,
+    `${uvMappedMeshes}/${meshObjects} meshes have UV layers; minimum ratio ${minimumUvRatio.toFixed(2)}`,
+    minimumUvRatio > 0 ? Math.min(4, (uvRatio / minimumUvRatio) * 4) : 4,
+  );
+
+  const smoothPolygons = blendMetrics?.totals?.smooth_polygons ?? 0;
+  const flatPolygons = blendMetrics?.totals?.flat_polygons ?? 0;
+  const shadedPolygons = smoothPolygons + flatPolygons;
+  const smoothRatio = shadedPolygons ? smoothPolygons / shadedPolygons : 0;
+  const minimumSmoothRatio = task.rubric.minimumSmoothFaceRatio;
+  const maximumSmoothRatio = task.rubric.maximumSmoothFaceRatio;
+  const smoothPass =
+    smoothRatio >= minimumSmoothRatio &&
+    (maximumSmoothRatio === undefined || smoothRatio <= maximumSmoothRatio);
+  let smoothPartial = 4;
+  if (smoothRatio < minimumSmoothRatio) {
+    smoothPartial =
+      minimumSmoothRatio > 0
+        ? Math.min(4, (smoothRatio / minimumSmoothRatio) * 4)
+        : 4;
+  } else if (
+    maximumSmoothRatio !== undefined &&
+    smoothRatio > maximumSmoothRatio
+  ) {
+    smoothPartial =
+      smoothRatio > 0
+        ? Math.min(4, (maximumSmoothRatio / smoothRatio) * 4)
+        : 0;
+  }
+  add(
+    "finish_shading_profile",
+    smoothPass,
+    4,
+    `${(smoothRatio * 100).toFixed(1)}% smooth polygons for ${task.rubric.finishProfile}`,
+    smoothPartial,
+  );
+
+  const refinementModifiers =
+    blendMetrics?.totals?.refinement_modifiers ?? 0;
+  const densityEvidence = triangles >= minimumTriangles * 2;
+  const refinementPass =
+    !task.rubric.requireRefinementEvidence ||
+    refinementModifiers > 0 ||
+    densityEvidence;
+  add(
+    "refinement_evidence",
+    refinementPass,
+    3,
+    task.rubric.requireRefinementEvidence
+      ? `${refinementModifiers} refinement modifiers; density evidence ${densityEvidence ? "present" : "absent"}`
+      : "Refinement modifier evidence is not required for this finish profile",
   );
 
   if (task.rubric.requireAnimation) {
@@ -215,7 +285,7 @@ export function scoreSubmission(options: {
   add(
     "deterministic_source",
     options.reproductionPass,
-    10,
+    11,
     options.reproductionPass
       ? "Source reproduced inspectable .blend and .glb outputs in a clean directory"
       : "Clean-directory source reproduction did not produce both inspectable outputs",
@@ -247,6 +317,15 @@ export function scoreSubmission(options: {
     .reduce((sum, check) => sum + check.earned, 0);
   const materialsAndPresentation = checks
     .filter((check) => ["material_count", "glb_materials"].includes(check.id))
+    .reduce((sum, check) => sum + check.earned, 0);
+  const finishQuality = checks
+    .filter((check) =>
+      [
+        "uv_coverage",
+        "finish_shading_profile",
+        "refinement_evidence",
+      ].includes(check.id),
+    )
     .reduce((sum, check) => sum + check.earned, 0);
   const animationOrAssembly = checks
     .filter((check) =>
@@ -290,6 +369,7 @@ export function scoreSubmission(options: {
         specificationCoverage +
         geometryReadiness +
         materialsAndPresentation +
+        finishQuality +
         animationOrAssembly +
         reproducibility
       ).toFixed(2),
@@ -299,6 +379,7 @@ export function scoreSubmission(options: {
       specificationCoverage,
       geometryReadiness,
       materialsAndPresentation,
+      finishQuality,
       animationOrAssembly,
       reproducibility,
     },

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Blender Procedural Workflow"
+  short_description: "Create editable Geometry Nodes and procedural scene systems"
+  default_prompt: "Use $blender-agent-studio:blender-procedural-workflow to build and validate this Blender generator."

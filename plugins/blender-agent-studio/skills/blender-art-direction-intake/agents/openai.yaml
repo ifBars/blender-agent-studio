@@ -1,0 +1,4 @@
+interface:
+  display_name: "Blender Art Direction Intake"
+  short_description: "Clarify a Blender brief and optionally create a concept"
+  default_prompt: "Use $blender-agent-studio:blender-art-direction-intake to clarify this Blender brief and offer a concept mockup."

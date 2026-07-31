@@ -22,6 +22,9 @@ $env:BLENDER_EXECUTABLE = "C:\path\to\Blender\blender.exe"
 Inspect:
 
 - evaluated vertices, edges, polygons, and triangles;
+- authored versus evaluated geometry density and refinement modifiers;
+- smooth versus flat-shaded polygon ratios;
+- UV-bearing meshes, node-based materials, image textures, and authored lights;
 - mesh objects, materials, actions, frame ranges, and hierarchy;
 - dimensions and world bounds;
 - invalid coordinates, degenerate faces, loose elements, boundary and non-manifold edges;
@@ -47,6 +50,8 @@ Open the hero and contact sheet with an image-viewing tool. Review:
 - floating or unsupported elements;
 - intersections and accidental gaps;
 - material readability;
+- visible faceting, razor edges, blockout residue, and missing or broken
+  textures;
 - whether details remain legible at intended scale.
 
 ## Verify the exported artifact

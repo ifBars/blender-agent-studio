@@ -9,6 +9,7 @@ import {
 } from "../../../scripts/blender-process.ts";
 import { scoreSubmission } from "./score.ts";
 import { BENCHMARK_TASKS } from "./tasks.ts";
+import { summarizeAgentEvents } from "./trace.ts";
 
 type Mode = "baseline" | "skills" | "skills_mcp";
 type Suite = "smoke" | "quick" | "full";
@@ -308,7 +309,7 @@ async function main(): Promise<void> {
     versionProc.exited,
   ]);
   const runManifest = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     startedAt: new Date().toISOString(),
     mode: options.mode,
     suite: options.suite,
@@ -319,6 +320,13 @@ async function main(): Promise<void> {
     codexVersion: codexVersion.trim(),
     codexVersionError: codexVersionError.trim(),
     taskIds: selected.map((task) => task.id),
+    taskCategories: [...new Set(selected.map((task) => task.category))].sort(),
+    capabilityCoverage: [
+      ...new Set(selected.flatMap((task) => task.capabilities)),
+    ].sort(),
+    finishProfiles: [
+      ...new Set(selected.map((task) => task.rubric.finishProfile)),
+    ].sort(),
     bypassApprovals: options.bypassApprovals,
   };
   await writeFile(
@@ -370,6 +378,7 @@ async function main(): Promise<void> {
         "utf8",
       );
       await writeFile(join(workdir, "agent-events.jsonl"), agent.stdout, "utf8");
+      const agentTrace = summarizeAgentEvents(agent.stdout);
 
       const sourcePath = join(workdir, "create_asset.py");
       const blendPath = join(workdir, "asset.blend");
@@ -418,6 +427,7 @@ async function main(): Promise<void> {
           exitCode: agent.exitCode,
           timedOut: agent.timedOut,
           durationMs: agent.durationMs,
+          trace: agentTrace,
         },
         score,
         evidenceContactSheet: existsSync(
@@ -445,6 +455,10 @@ async function main(): Promise<void> {
 
   const numericResults = results as Array<{
     score: { score: number; hardGatePass: boolean };
+    agent: {
+      durationMs: number;
+      trace: ReturnType<typeof summarizeAgentEvents>;
+    };
   }>;
   const summary = {
     ...runManifest,
@@ -458,8 +472,40 @@ async function main(): Promise<void> {
         numericResults.length
       ).toFixed(2),
     ),
+    execution: {
+      totalDurationMs: numericResults.reduce(
+        (sum, item) => sum + item.agent.durationMs,
+        0,
+      ),
+      totalToolCalls: numericResults.reduce(
+        (sum, item) => sum + item.agent.trace.toolCalls,
+        0,
+      ),
+      totalToolFailures: numericResults.reduce(
+        (sum, item) => sum + item.agent.trace.toolFailures,
+        0,
+      ),
+      totalErrors: numericResults.reduce(
+        (sum, item) => sum + item.agent.trace.errors,
+        0,
+      ),
+      totalInputTokens: numericResults.reduce(
+        (sum, item) => sum + item.agent.trace.usage.inputTokens,
+        0,
+      ),
+      totalOutputTokens: numericResults.reduce(
+        (sum, item) => sum + item.agent.trace.usage.outputTokens,
+        0,
+      ),
+      totalTokens: numericResults.reduce(
+        (sum, item) => sum + item.agent.trace.usage.totalTokens,
+        0,
+      ),
+      tokenCaveat:
+        "Total tokens are a usage proxy, not a dollar-cost measurement. Cached and cache-write input tokens are reported per result.",
+    },
     warning:
-      "This is a deterministic structural score, not a complete quality score. Use blinded multiview review before making a quality claim.",
+      "The automated score includes structural and finish-signal proxies, not a complete aesthetic judgment. Use counterbalanced blinded multiview review before making a quality claim.",
     results,
   };
   await writeFile(

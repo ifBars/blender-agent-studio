@@ -108,6 +108,7 @@ def inspect_mesh(
     obj: bpy.types.Object,
     depsgraph: bpy.types.Depsgraph,
 ) -> dict[str, Any]:
+    source_mesh = obj.data
     evaluated = obj.evaluated_get(depsgraph)
     mesh = evaluated.to_mesh(preserve_all_data_layers=True, depsgraph=depsgraph)
     try:
@@ -144,10 +145,28 @@ def inspect_mesh(
             if polygon.material_index >= len(material_slots)
             or material_slots[polygon.material_index] is None
         )
+        smooth_polygons = sum(1 for polygon in mesh.polygons if polygon.use_smooth)
+        refinement_modifiers = [
+            modifier
+            for modifier in obj.modifiers
+            if modifier.type
+            in {
+                "BEVEL",
+                "NODES",
+                "REMESH",
+                "SCREW",
+                "SKIN",
+                "SOLIDIFY",
+                "SUBSURF",
+                "WEIGHTED_NORMAL",
+            }
+        ]
 
         return {
             "name": obj.name,
             "data_name": obj.data.name if obj.data else None,
+            "source_vertices": len(source_mesh.vertices) if source_mesh else 0,
+            "source_polygons": len(source_mesh.polygons) if source_mesh else 0,
             "vertices": len(mesh.vertices),
             "edges": len(mesh.edges),
             "polygons": len(mesh.polygons),
@@ -161,11 +180,22 @@ def inspect_mesh(
             "wire_edges": wire_edges,
             "isolated_vertices": isolated_vertices,
             "uv_layers": len(mesh.uv_layers),
+            "smooth_polygons": smooth_polygons,
+            "flat_polygons": len(mesh.polygons) - smooth_polygons,
+            "smooth_polygon_ratio": (
+                round(smooth_polygons / len(mesh.polygons), 6)
+                if mesh.polygons
+                else 0.0
+            ),
             "material_slots": material_slots,
             "missing_material_faces": missing_material_faces,
             "modifiers": [
                 {"name": modifier.name, "type": modifier.type}
                 for modifier in obj.modifiers
+            ],
+            "refinement_modifiers": [
+                {"name": modifier.name, "type": modifier.type}
+                for modifier in refinement_modifiers
             ],
             "shape_keys": (
                 len(obj.data.shape_keys.key_blocks)
@@ -187,6 +217,30 @@ def inspect_action(action: bpy.types.Action) -> dict[str, Any]:
         "frame_start": round(float(start), 4),
         "frame_end": round(float(end), 4),
         "users": int(action.users),
+    }
+
+
+def inspect_material(material: bpy.types.Material) -> dict[str, Any]:
+    node_tree = material.node_tree
+    nodes = list(node_tree.nodes) if node_tree else []
+    image_texture_nodes = [
+        node
+        for node in nodes
+        if node.type == "TEX_IMAGE"
+    ]
+    images = sorted(
+        {
+            node.image.name
+            for node in image_texture_nodes
+            if getattr(node, "image", None)
+        }
+    )
+    return {
+        "name": material.name,
+        "use_nodes": bool(node_tree),
+        "node_count": len(nodes),
+        "image_texture_nodes": len(image_texture_nodes),
+        "images": images,
     }
 
 
@@ -261,7 +315,24 @@ def main() -> None:
         "polygons": sum(mesh["polygons"] for mesh in meshes),
         "triangles": sum(mesh["triangles"] for mesh in meshes),
         "materials": len(bpy.data.materials),
+        "node_materials": sum(
+            1 for material in bpy.data.materials if material.node_tree
+        ),
+        "textured_materials": sum(
+            1
+            for material in bpy.data.materials
+            if material.node_tree
+            and any(node.type == "TEX_IMAGE" for node in material.node_tree.nodes)
+        ),
+        "images": len(bpy.data.images),
+        "lights": sum(1 for obj in objects if obj["type"] == "LIGHT"),
         "actions": len(bpy.data.actions),
+        "smooth_polygons": sum(mesh["smooth_polygons"] for mesh in meshes),
+        "flat_polygons": sum(mesh["flat_polygons"] for mesh in meshes),
+        "uv_mapped_meshes": sum(1 for mesh in meshes if mesh["uv_layers"] > 0),
+        "refinement_modifiers": sum(
+            len(mesh["refinement_modifiers"]) for mesh in meshes
+        ),
         "invalid_vertices": sum(mesh["invalid_vertices"] for mesh in meshes),
         "degenerate_faces": sum(mesh["degenerate_faces"] for mesh in meshes),
         "zero_length_edges": sum(mesh["zero_length_edges"] for mesh in meshes),
@@ -297,7 +368,7 @@ def main() -> None:
         issues.append({"severity": "gate", "code": "invalid_object_transform"})
 
     output = {
-        "schema_version": 1,
+        "schema_version": 2,
         "input": str(input_path),
         "blender": {
             "version": bpy.app.version_string,
@@ -317,6 +388,10 @@ def main() -> None:
         "objects": objects,
         "meshes": meshes,
         "materials": sorted(material.name for material in bpy.data.materials),
+        "material_details": [
+            inspect_material(material)
+            for material in sorted(bpy.data.materials, key=lambda item: item.name)
+        ],
         "actions": [
             inspect_action(action)
             for action in sorted(bpy.data.actions, key=lambda item: item.name)
