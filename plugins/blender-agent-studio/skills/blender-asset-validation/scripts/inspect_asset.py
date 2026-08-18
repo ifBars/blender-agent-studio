@@ -204,6 +204,8 @@ def inspect_mesh(
                 and obj.data.shape_keys
                 else 0
             ),
+            "vertex_groups": len(obj.vertex_groups),
+            "weighted_vertices": sum(1 for vertex in source_mesh.vertices if vertex.groups),
             "world_bounds": object_world_bounds(obj),
         }
     finally:
@@ -257,6 +259,11 @@ def main() -> None:
     meshes: list[dict[str, Any]] = []
 
     for obj in sorted(bpy.context.scene.objects, key=lambda item: item.name):
+        # Blender's glTF importer may reconstruct armature custom-shape helpers
+        # in this reserved collection. They are editor gizmos, not delivered
+        # asset geometry, and must not pollute bounds or material gates.
+        if any(collection.name == "glTF_not_exported" for collection in obj.users_collection):
+            continue
         transform_is_finite = (
             finite_vector(obj.location)
             and finite_vector(obj.rotation_euler)
@@ -326,6 +333,39 @@ def main() -> None:
         ),
         "images": len(bpy.data.images),
         "lights": sum(1 for obj in objects if obj["type"] == "LIGHT"),
+        "cameras": sum(1 for obj in objects if obj["type"] == "CAMERA"),
+        "armatures": sum(1 for obj in objects if obj["type"] == "ARMATURE"),
+        "bones": sum(
+            len(obj.data.bones)
+            for obj in bpy.context.scene.objects
+            if obj.type == "ARMATURE" and obj.data
+        ),
+        "weighted_meshes": sum(1 for mesh in meshes if mesh["weighted_vertices"] > 0),
+        "shape_keys": sum(mesh["shape_keys"] for mesh in meshes),
+        "geometry_nodes_modifiers": sum(
+            1
+            for mesh in meshes
+            for modifier in mesh["modifiers"]
+            if modifier["type"] == "NODES"
+        ),
+        "simulation_modifiers": sum(
+            1
+            for mesh in meshes
+            for modifier in mesh["modifiers"]
+            if modifier["type"] in {"CLOTH", "FLUID", "PARTICLE_SYSTEM", "SOFT_BODY"}
+        ),
+        "rigid_body_objects": sum(
+            1 for obj in bpy.context.scene.objects if obj.rigid_body is not None
+        ),
+        "constraints": sum(
+            len(obj.constraints)
+            + (
+                sum(len(pose_bone.constraints) for pose_bone in obj.pose.bones)
+                if obj.type == "ARMATURE" and obj.pose
+                else 0
+            )
+            for obj in bpy.context.scene.objects
+        ),
         "actions": len(bpy.data.actions),
         "smooth_polygons": sum(mesh["smooth_polygons"] for mesh in meshes),
         "flat_polygons": sum(mesh["flat_polygons"] for mesh in meshes),
@@ -368,7 +408,7 @@ def main() -> None:
         issues.append({"severity": "gate", "code": "invalid_object_transform"})
 
     output = {
-        "schema_version": 2,
+        "schema_version": 3,
         "input": str(input_path),
         "blender": {
             "version": bpy.app.version_string,

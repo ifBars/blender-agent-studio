@@ -24,6 +24,17 @@ type AssetMetrics = {
     flat_polygons?: number;
     uv_mapped_meshes?: number;
     refinement_modifiers?: number;
+    lights?: number;
+    cameras?: number;
+    node_materials?: number;
+    geometry_nodes_modifiers?: number;
+    simulation_modifiers?: number;
+    rigid_body_objects?: number;
+    armatures?: number;
+    bones?: number;
+    weighted_meshes?: number;
+    shape_keys?: number;
+    constraints?: number;
   };
 };
 
@@ -48,6 +59,14 @@ export type AutomatedScore = {
   }>;
 };
 
+export type VideoEvidence = {
+  exists: boolean;
+  durationSeconds: number | null;
+  frameRate: number | null;
+  frameCount: number | null;
+  probeError: string | null;
+};
+
 function containsAnyName(names: string[], alternatives: string[]): boolean {
   return names.some((name) =>
     alternatives.some((alternative) =>
@@ -63,6 +82,8 @@ export function scoreSubmission(options: {
   reproductionPass: boolean;
   blendExists: boolean;
   glbExists: boolean;
+  iterationReviewExists?: boolean;
+  videoEvidence?: VideoEvidence | null;
   blendMetrics: AssetMetrics | null;
   glbMetrics: AssetMetrics | null;
 }): AutomatedScore {
@@ -116,13 +137,41 @@ export function scoreSubmission(options: {
     task.rubric.requiredNameGroups.length === 0
       ? 1
       : matchedGroups.length / task.rubric.requiredNameGroups.length;
+  const categorySignals = task.rubric.categorySignals ?? [];
+  const semanticCoveragePoints = categorySignals.length ? 20 : 25;
   add(
     "semantic_part_coverage",
     coverage === 1,
-    25,
+    semanticCoveragePoints,
     `${matchedGroups.length}/${task.rubric.requiredNameGroups.length} required semantic part groups found`,
-    coverage * 25,
+    coverage * semanticCoveragePoints,
   );
+
+  if (categorySignals.length) {
+    const signalRatios = categorySignals.map((signal) => {
+      const actual = blendMetrics?.totals?.[signal.metric] ?? 0;
+      return {
+        ...signal,
+        actual,
+        ratio: signal.minimum > 0 ? Math.min(1, actual / signal.minimum) : 1,
+      };
+    });
+    const categoryCoverage =
+      signalRatios.reduce((sum, signal) => sum + signal.ratio, 0) /
+      signalRatios.length;
+    add(
+      "category_signals",
+      signalRatios.every((signal) => signal.actual >= signal.minimum),
+      5,
+      signalRatios
+        .map(
+          (signal) =>
+            `${signal.actual}/${signal.minimum} ${signal.label}`,
+        )
+        .join("; "),
+      categoryCoverage * 5,
+    );
+  }
 
   const triangles = blendMetrics?.totals?.triangles ?? 0;
   const [minimumTriangles, maximumTriangles] = task.rubric.triangleRange;
@@ -244,19 +293,49 @@ export function scoreSubmission(options: {
         (action) => (action.frame_end ?? 0) - (action.frame_start ?? 0),
       ),
     );
+    const blendAnimationPoints = task.requiredVideo ? 4 : 6;
+    const glbAnimationPoints = task.requiredVideo ? 3 : 4;
     add(
       "blend_animation",
       blendActions.length > 0 &&
         longestSpan >= (task.rubric.minimumActionSpan ?? 1),
-      6,
+      blendAnimationPoints,
       `${blendActions.length} actions; longest span ${longestSpan} frames`,
     );
     add(
       "glb_animation",
       glbActions.length > 0,
-      4,
+      glbAnimationPoints,
       `${glbActions.length} actions survived GLB import`,
     );
+    if (task.requiredVideo) {
+      const video = options.videoEvidence;
+      const expected = task.requiredVideo;
+      const durationPass =
+        video?.durationSeconds !== null &&
+        video?.durationSeconds !== undefined &&
+        Math.abs(video.durationSeconds - expected.durationSeconds) <=
+          expected.toleranceSeconds;
+      const frameRatePass =
+        video?.frameRate !== null &&
+        video?.frameRate !== undefined &&
+        Math.abs(video.frameRate - expected.fps) <= 0.05;
+      const minimumFrames = Math.floor(
+        expected.durationSeconds * expected.fps - 1,
+      );
+      const frameCountPass =
+        video?.frameCount !== null &&
+        video?.frameCount !== undefined &&
+        video.frameCount >= minimumFrames;
+      add(
+        "rendered_video",
+        Boolean(video?.exists) && durationPass && frameRatePass && frameCountPass,
+        3,
+        video?.exists
+          ? `${expected.filename}: ${video.durationSeconds?.toFixed(3) ?? "unknown"}s, ${video.frameRate?.toFixed(3) ?? "unknown"} fps, ${video.frameCount ?? "unknown"} frames${video.probeError ? `; ${video.probeError}` : ""}`
+          : `${expected.filename} missing`,
+      );
+    }
   } else {
     const namedObjects = (blendMetrics?.objects ?? []).filter(
       (object) => (object.name ?? "").trim().length > 0,
@@ -282,10 +361,20 @@ export function scoreSubmission(options: {
     );
   }
 
+  if (task.requireIterationReview) {
+    add(
+      "iteration_review",
+      Boolean(options.iterationReviewExists),
+      2,
+      options.iterationReviewExists
+        ? "iteration_review.json retained"
+        : "iteration_review.json missing",
+    );
+  }
   add(
     "deterministic_source",
     options.reproductionPass,
-    11,
+    task.requireIterationReview ? 9 : 11,
     options.reproductionPass
       ? "Source reproduced inspectable .blend and .glb outputs in a clean directory"
       : "Clean-directory source reproduction did not produce both inspectable outputs",
@@ -303,8 +392,11 @@ export function scoreSubmission(options: {
       ].includes(check.id),
     )
     .reduce((sum, check) => sum + check.earned, 0);
-  const specificationCoverage =
-    checks.find((check) => check.id === "semantic_part_coverage")?.earned ?? 0;
+  const specificationCoverage = checks
+    .filter((check) =>
+      ["semantic_part_coverage", "category_signals"].includes(check.id),
+    )
+    .reduce((sum, check) => sum + check.earned, 0);
   const geometryReadiness = checks
     .filter((check) =>
       [
@@ -332,13 +424,17 @@ export function scoreSubmission(options: {
       [
         "blend_animation",
         "glb_animation",
+        "rendered_video",
         "semantic_object_names",
         "assembly_structure",
       ].includes(check.id),
     )
     .reduce((sum, check) => sum + check.earned, 0);
-  const reproducibility =
-    checks.find((check) => check.id === "deterministic_source")?.earned ?? 0;
+  const reproducibility = checks
+    .filter((check) =>
+      ["deterministic_source", "iteration_review"].includes(check.id),
+    )
+    .reduce((sum, check) => sum + check.earned, 0);
 
   const hardGatePass =
     options.agentExitCode === 0 &&
@@ -351,11 +447,14 @@ export function scoreSubmission(options: {
       .filter((check) =>
         [
           "semantic_part_coverage",
+          "category_signals",
           "triangle_range",
           "invalid_geometry",
           "maximum_extent",
           "blend_animation",
           "glb_animation",
+          "rendered_video",
+          "iteration_review",
           "deterministic_source",
         ].includes(check.id),
       )

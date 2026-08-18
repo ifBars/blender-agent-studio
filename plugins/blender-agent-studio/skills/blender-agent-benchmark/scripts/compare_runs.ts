@@ -1,7 +1,11 @@
 import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { BENCHMARK_TASKS } from "./tasks.ts";
+import {
+  BENCHMARK_TASKS,
+  type VisualCriterion,
+} from "./tasks.ts";
+import { computeVerifiedCompositeScore } from "./verified_score.ts";
 
 type RunResult = {
   taskId: string;
@@ -15,6 +19,9 @@ type RunResult = {
 };
 
 type RunSummary = {
+  schemaVersion?: number;
+  scorerVersion?: number;
+  inspectorSchemaVersion?: number;
   mode: string;
   model: string;
   reasoning: string;
@@ -35,9 +42,122 @@ type JudgeResult = {
     A: Record<string, number>;
     B: Record<string, number>;
   };
+  criterionResults: Array<{
+    criterionId: string;
+    A: "pass" | "fail" | "unclear";
+    B: "pass" | "fail" | "unclear";
+    evidenceA: string;
+    evidenceB: string;
+  }>;
   majorDefects: { A: string[]; B: string[] };
   rationale: string;
 };
+
+type RegressionComparison = {
+  taskId: string;
+  repetition: number;
+  baselineAutomatedScore: number;
+  candidateAutomatedScore: number;
+  hardGates: { baseline: boolean; candidate: boolean };
+  visualWinnerVotes: string[];
+  criticalCriterionMajorities: Array<{
+    criterionId: string;
+    baselinePasses: number;
+    candidatePasses: number;
+    judgeCount: number;
+  }>;
+};
+
+export function assessNonRegression(options: {
+  comparisons: RegressionComparison[];
+  missingComparisons: Array<{ taskId: string; repetition: number; reason: string }>;
+  configurationMismatches?: string[];
+  baselineMode: string;
+  candidateMode: string;
+}) {
+  const automatedRegressions = options.comparisons.filter(
+    (item) => item.candidateAutomatedScore < item.baselineAutomatedScore,
+  );
+  const hardGateRegressions = options.comparisons.filter(
+    (item) => item.hardGates.baseline && !item.hardGates.candidate,
+  );
+  const visualMajorityRegressions = options.comparisons.filter((item) => {
+    const baselineVotes = item.visualWinnerVotes.filter(
+      (vote) => vote === options.baselineMode,
+    ).length;
+    const candidateVotes = item.visualWinnerVotes.filter(
+      (vote) => vote === options.candidateMode,
+    ).length;
+    return baselineVotes > candidateVotes;
+  });
+  const criticalCriterionRegressions = options.comparisons.flatMap((item) =>
+    item.criticalCriterionMajorities
+      .filter(
+        (criterion) =>
+          criterion.baselinePasses > criterion.judgeCount / 2 &&
+          criterion.candidatePasses <= criterion.judgeCount / 2,
+      )
+      .map((criterion) => ({
+        taskId: item.taskId,
+        repetition: item.repetition,
+        criterionId: criterion.criterionId,
+        baselinePasses: criterion.baselinePasses,
+        candidatePasses: criterion.candidatePasses,
+        judgeCount: criterion.judgeCount,
+      })),
+  );
+  const reasons = [
+    ...(options.configurationMismatches?.length
+      ? [`${options.configurationMismatches.length} comparison configuration mismatch(es)`]
+      : []),
+    ...(options.missingComparisons.length
+      ? [`${options.missingComparisons.length} baseline result(s) were not compared`]
+      : []),
+    ...(hardGateRegressions.length
+      ? [`${hardGateRegressions.length} hard-gate regression(s)`]
+      : []),
+    ...(automatedRegressions.length
+      ? [`${automatedRegressions.length} automated-score regression(s)`]
+      : []),
+    ...(visualMajorityRegressions.length
+      ? [`${visualMajorityRegressions.length} blinded visual majority regression(s)`]
+      : []),
+    ...(criticalCriterionRegressions.length
+      ? [`${criticalCriterionRegressions.length} critical visual-criterion regression(s)`]
+      : []),
+  ];
+  return {
+    pass: reasons.length === 0,
+    reasons,
+    configurationMismatches: options.configurationMismatches ?? [],
+    missingComparisons: options.missingComparisons,
+    hardGateRegressions: hardGateRegressions.map((item) => ({ taskId: item.taskId, repetition: item.repetition })),
+    automatedScoreRegressions: automatedRegressions.map((item) => ({
+      taskId: item.taskId,
+      repetition: item.repetition,
+      baseline: item.baselineAutomatedScore,
+      candidate: item.candidateAutomatedScore,
+    })),
+    visualMajorityRegressions: visualMajorityRegressions.map((item) => ({ taskId: item.taskId, repetition: item.repetition })),
+    criticalCriterionRegressions,
+  };
+}
+
+function validateCriterionResults(
+  criteria: VisualCriterion[],
+  results: JudgeResult["criterionResults"],
+): void {
+  const expected = new Set(criteria.map((criterion) => criterion.id));
+  const actual = results.map((result) => result.criterionId);
+  const missing = [...expected].filter((id) => !actual.includes(id));
+  const unexpected = actual.filter((id) => !expected.has(id));
+  const duplicates = actual.filter((id, index) => actual.indexOf(id) !== index);
+  if (missing.length || unexpected.length || duplicates.length) {
+    throw new Error(
+      `Invalid criterion results; missing=${missing.join(",") || "none"}; unexpected=${unexpected.join(",") || "none"}; duplicates=${[...new Set(duplicates)].join(",") || "none"}`,
+    );
+  }
+}
 
 function argument(name: string): string | undefined {
   const index = process.argv.indexOf(name);
@@ -108,7 +228,14 @@ async function judgePair(options: {
 const schema = {
   type: "object",
   additionalProperties: false,
-  required: ["winner", "confidence", "scores", "majorDefects", "rationale"],
+  required: [
+    "winner",
+    "confidence",
+    "scores",
+    "criterionResults",
+    "majorDefects",
+    "rationale",
+  ],
   properties: {
     winner: { type: "string", enum: ["A", "B", "tie"] },
     confidence: { type: "number", minimum: 0, maximum: 1 },
@@ -119,6 +246,21 @@ const schema = {
       properties: {
         A: { $ref: "#/$defs/dimensions" },
         B: { $ref: "#/$defs/dimensions" },
+      },
+    },
+    criterionResults: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["criterionId", "A", "B", "evidenceA", "evidenceB"],
+        properties: {
+          criterionId: { type: "string" },
+          A: { type: "string", enum: ["pass", "fail", "unclear"] },
+          B: { type: "string", enum: ["pass", "fail", "unclear"] },
+          evidenceA: { type: "string" },
+          evidenceB: { type: "string" },
+        },
       },
     },
     majorDefects: {
@@ -194,22 +336,81 @@ async function main(): Promise<void> {
 
   const baseline = await readJson<RunSummary>(resolve(baselinePath));
   const candidate = await readJson<RunSummary>(resolve(candidatePath));
+  if (baseline.mode === candidate.mode) {
+    throw new Error(
+      "Baseline and candidate condition labels must differ; rerun or relabel with --condition-label",
+    );
+  }
+  const configurationMismatches = [
+    ...(baseline.model !== candidate.model
+      ? [`generation model differs: ${baseline.model} vs ${candidate.model}`]
+      : []),
+    ...(baseline.reasoning !== candidate.reasoning
+      ? [`generation reasoning differs: ${baseline.reasoning} vs ${candidate.reasoning}`]
+      : []),
+    ...(baseline.scorerVersion !== candidate.scorerVersion
+      ? [`scorer version differs: ${baseline.scorerVersion ?? "missing"} vs ${candidate.scorerVersion ?? "missing"}`]
+      : []),
+    ...(baseline.inspectorSchemaVersion !== candidate.inspectorSchemaVersion
+      ? [`inspector schema differs: ${baseline.inspectorSchemaVersion ?? "missing"} vs ${candidate.inspectorSchemaVersion ?? "missing"}`]
+      : []),
+    ...(process.argv.includes("--require-non-regression") &&
+    (baseline.scorerVersion === undefined || candidate.scorerVersion === undefined)
+      ? ["strict comparison requires scorerVersion in both summaries"]
+      : []),
+    ...(process.argv.includes("--require-non-regression") &&
+    (baseline.inspectorSchemaVersion === undefined ||
+      candidate.inspectorSchemaVersion === undefined)
+      ? ["strict comparison requires inspectorSchemaVersion in both summaries"]
+      : []),
+  ];
   const model = argument("--judge-model") ?? "gpt-5.6-terra";
   const reasoning = argument("--judge-reasoning") ?? "medium";
   const judges = Math.max(1, Number(argument("--judges") ?? 3));
+  const taskFilter = new Set(
+    (argument("--tasks") ?? "")
+      .split(",")
+      .map((value) => value.trim())
+      .filter(Boolean),
+  );
+  const baselineResults = taskFilter.size
+    ? baseline.results.filter((result) => taskFilter.has(result.taskId))
+    : baseline.results;
+  const unknownTaskIds = [...taskFilter].filter(
+    (taskId) => !baseline.results.some((result) => result.taskId === taskId),
+  );
+  if (unknownTaskIds.length) {
+    throw new Error(
+      `Requested task(s) absent from baseline: ${unknownTaskIds.join(", ")}`,
+    );
+  }
   const comparisons: unknown[] = [];
+  const missingComparisons: Array<{
+    taskId: string;
+    repetition: number;
+    reason: string;
+  }> = [];
 
-  for (const baselineResult of baseline.results) {
+  for (const baselineResult of baselineResults) {
     const candidateResult = candidate.results.find(
       (item) =>
         item.taskId === baselineResult.taskId &&
         item.repetition === baselineResult.repetition,
     );
-    if (
-      !candidateResult ||
-      !baselineResult.evidenceContactSheet ||
-      !candidateResult.evidenceContactSheet
-    ) {
+    if (!candidateResult) {
+      missingComparisons.push({
+        taskId: baselineResult.taskId,
+        repetition: baselineResult.repetition,
+        reason: "candidate result missing",
+      });
+      continue;
+    }
+    if (!baselineResult.evidenceContactSheet || !candidateResult.evidenceContactSheet) {
+      missingComparisons.push({
+        taskId: baselineResult.taskId,
+        repetition: baselineResult.repetition,
+        reason: "contact-sheet evidence missing",
+      });
       continue;
     }
     const pairDir = join(
@@ -284,6 +485,12 @@ async function main(): Promise<void> {
         JSON.stringify(mapping, null, 2),
         "utf8",
       );
+      const criterionPrompt = task.visualCriteria
+        .map(
+          (criterion) =>
+            `- ${criterion.id} [${criterion.category}${criterion.critical ? ", critical" : ""}]: ${criterion.question}`,
+        )
+        .join("\n");
       const prompt = `You are a strict blinded 3D asset art director. The first attached contact sheet is candidate A and the second is candidate B. Both show fixed perspective, front, back, left, right, and top views of assets made from the same request.${animationPrompt}
 
 Compare only visible evidence. Do not infer quality from filenames or likely generation method. Penalize floating or mechanically unexplained parts, accidental intersections, weak silhouettes, incoherent proportions, missing requested relationships, generic primitive assembly, visible faceting when smooth finish was requested, unwanted smoothing when low-poly was requested, blockout residue, razor edges, poor texture or material separation, inconsistent detail, broken lighting, broken views, and presentation tricks that hide defects. Reward clear task fidelity, plausible construction, readable primary through tertiary forms, intentional surface refinement, coherent materials and textures, balanced presentation, and consistency across every view. A technically valid model that still looks like a graybox should score poorly on finalStageCompleteness. A tie is valid.
@@ -291,6 +498,9 @@ Compare only visible evidence. Do not infer quality from filenames or likely gen
 Task: ${baselineResult.taskTitle}
 Finish profile: ${task.rubric.finishProfile}
 Visible requirements: ${task.visualBrief}
+
+Answer every criterion below for both candidates as pass, fail, or unclear. Use the exact criterion IDs once each. Treat unclear as missing evidence, not a pass.
+${criterionPrompt}
 
 Return the required JSON only. Keep rationale concise and specific.`;
       const judged = await judgePair({
@@ -301,6 +511,7 @@ Return the required JSON only. Keep rationale concise and specific.`;
         model,
         reasoning,
       });
+      validateCriterionResults(task.visualCriteria, judged.result.criterionResults);
       await writeFile(
         join(judgeDir, "judge-process.json"),
         JSON.stringify(
@@ -328,6 +539,74 @@ Return the required JSON only. Keep rationale concise and specific.`;
       });
     }
     const decodedWinners = judgeResults.map((item) => item.decodedWinner);
+    const criterionMajorities = task.visualCriteria.map((criterion) => {
+        let baselinePasses = 0;
+        let candidatePasses = 0;
+        for (const judged of judgeResults) {
+          const result = judged.result.criterionResults.find(
+            (item) => item.criterionId === criterion.id,
+          )!;
+          const baselineSide = judged.mapping.A === baseline.mode ? "A" : "B";
+          const candidateSide = baselineSide === "A" ? "B" : "A";
+          if (result[baselineSide] === "pass") baselinePasses += 1;
+          if (result[candidateSide] === "pass") candidatePasses += 1;
+        }
+        return {
+          criterionId: criterion.id,
+          baselinePasses,
+          candidatePasses,
+          judgeCount: judgeResults.length,
+        };
+      });
+    const criticalCriterionMajorities = criterionMajorities.filter((item) =>
+      task.visualCriteria.find((criterion) => criterion.id === item.criterionId)!
+        .critical,
+    );
+    const pairDimensionMeans = (mode: string) =>
+      Object.fromEntries(
+        VISUAL_DIMENSIONS.map((dimension) => {
+          const values = judgeResults.map(
+            (item) => item.scoresByMode[mode][dimension],
+          );
+          return [
+            dimension,
+            values.length
+              ? values.reduce((sum, value) => sum + value, 0) / values.length
+              : null,
+          ];
+        }),
+      );
+    const verifiedScores =
+      task.difficultyProfile === "gauntlet"
+        ? {
+            baseline: computeVerifiedCompositeScore({
+              automatedScore: baselineResult.score.score,
+              hardGatePass: baselineResult.score.hardGatePass,
+              criteria: criterionMajorities.map((item) => ({
+                id: item.criterionId,
+                critical: task.visualCriteria.find(
+                  (criterion) => criterion.id === item.criterionId,
+                )!.critical,
+                passCount: item.baselinePasses,
+                judgeCount: item.judgeCount,
+              })),
+              visualDimensions: pairDimensionMeans(baseline.mode),
+            }),
+            candidate: computeVerifiedCompositeScore({
+              automatedScore: candidateResult.score.score,
+              hardGatePass: candidateResult.score.hardGatePass,
+              criteria: criterionMajorities.map((item) => ({
+                id: item.criterionId,
+                critical: task.visualCriteria.find(
+                  (criterion) => criterion.id === item.criterionId,
+                )!.critical,
+                passCount: item.candidatePasses,
+                judgeCount: item.judgeCount,
+              })),
+              visualDimensions: pairDimensionMeans(candidate.mode),
+            }),
+          }
+        : null;
     comparisons.push({
       taskId: baselineResult.taskId,
       repetition: baselineResult.repetition,
@@ -338,6 +617,9 @@ Return the required JSON only. Keep rationale concise and specific.`;
         candidate: candidateResult.score.hardGatePass,
       },
       visualWinnerVotes: decodedWinners,
+      criterionMajorities,
+      criticalCriterionMajorities,
+      verifiedScores,
       judgeResults,
     });
   }
@@ -347,8 +629,13 @@ Return the required JSON only. Keep rationale concise and specific.`;
     hardGates: { baseline: boolean; candidate: boolean };
     baselineAutomatedScore: number;
     candidateAutomatedScore: number;
+    taskId: string;
+    repetition: number;
+    criticalCriterionMajorities: RegressionComparison["criticalCriterionMajorities"];
     judgeResults: Array<{
+      mapping: { A: string; B: string };
       scoresByMode: Record<string, Record<string, number>>;
+      result: JudgeResult;
     }>;
   }>;
   const allVotes = typed.flatMap((item) => item.visualWinnerVotes);
@@ -372,8 +659,47 @@ Return the required JSON only. Keep rationale concise and specific.`;
         ];
       }),
     );
+  const criterionCategoryPassRates = (mode: string) => {
+    const buckets = new Map<string, { passes: number; total: number }>();
+    for (const comparison of typed) {
+      const task = BENCHMARK_TASKS.find((item) => item.id === comparison.taskId)!;
+      for (const judged of comparison.judgeResults) {
+        const side = judged.mapping.A === mode ? "A" : "B";
+        for (const criterion of task.visualCriteria) {
+          const result = judged.result.criterionResults.find(
+            (item) => item.criterionId === criterion.id,
+          )!;
+          const bucket = buckets.get(criterion.category) ?? { passes: 0, total: 0 };
+          bucket.total += 1;
+          if (result[side] === "pass") bucket.passes += 1;
+          buckets.set(criterion.category, bucket);
+        }
+      }
+    }
+    return Object.fromEntries(
+      [...buckets.entries()].sort(([left], [right]) => left.localeCompare(right)).map(
+        ([category, bucket]) => [
+          category,
+          {
+            passes: bucket.passes,
+            total: bucket.total,
+            rate: bucket.total
+              ? Number((bucket.passes / bucket.total).toFixed(3))
+              : null,
+          },
+        ],
+      ),
+    );
+  };
+  const regressionGate = assessNonRegression({
+    comparisons: typed,
+    missingComparisons,
+    configurationMismatches,
+    baselineMode: baseline.mode,
+    candidateMode: candidate.mode,
+  });
   const summary = {
-    schemaVersion: 2,
+    schemaVersion: 3,
     createdAt: new Date().toISOString(),
     baselineMode: baseline.mode,
     candidateMode: candidate.mode,
@@ -433,6 +759,11 @@ Return the required JSON only. Keep rationale concise and specific.`;
       baseline: meanDimensions(baseline.mode),
       candidate: meanDimensions(candidate.mode),
     },
+    visualCriterionCategoryPassRates: {
+      baseline: criterionCategoryPassRates(baseline.mode),
+      candidate: criterionCategoryPassRates(candidate.mode),
+    },
+    regressionGate,
     comparisons,
     caveat:
       "Model-based visual judging is blinded and A/B-counterbalanced but is still a proxy. Preserve contact sheets and per-judge records for human review.",
@@ -445,6 +776,14 @@ Return the required JSON only. Keep rationale concise and specific.`;
   process.stdout.write(
     `${baseline.mode} vs ${candidate.mode}: ${JSON.stringify(summary.visualVotes)}\n`,
   );
+  process.stdout.write(
+    `Non-regression gate: ${regressionGate.pass ? "pass" : `fail (${regressionGate.reasons.join("; ")})`}\n`,
+  );
+  if (process.argv.includes("--require-non-regression") && !regressionGate.pass) {
+    process.exitCode = 2;
+  }
 }
 
-await main();
+if (import.meta.main) {
+  await main();
+}

@@ -16,6 +16,9 @@ follow each selected `SKILL.md` completely.
   read `plugins/blender-agent-studio/skills/blender-art-direction-intake/SKILL.md`.
 - Inspect an authored scene or exported asset: read
   `plugins/blender-agent-studio/skills/blender-asset-validation/SKILL.md`.
+- Run an explicit evidence-backed second pass without changing the default
+  modeling path: read
+  `plugins/blender-agent-studio/skills/blender-iterative-refinement/SKILL.md`.
 - Create or diagnose articulated motion: also read
   `plugins/blender-agent-studio/skills/blender-animation-workflow/SKILL.md`.
 - Create Geometry Nodes, scattering, terrain, or parametric systems: read

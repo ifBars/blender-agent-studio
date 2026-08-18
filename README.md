@@ -166,6 +166,22 @@ bun run benchmark --suite quick --mode skills `
 Run `skills_mcp` separately so MCP transport does not receive credit for skill
 or prompt improvements.
 
+Keep `full` as the historical regression anchor. Run the opt-in harder
+environment, procedural, character-rig, and simulation coverage separately:
+
+```powershell
+bun run benchmark --suite challenge --mode skills `
+  --condition-label revised-plugin `
+  --output C:\bench\revised-challenge --blender $env:BLENDER_EXECUTABLE
+```
+
+When comparing the current plugin with a revision, label both runs distinctly
+and pin each to its exact plugin directory with `--skill-root`, then pass
+`--require-non-regression` to `compare_runs.ts`. The strict gate does
+not allow a gain on one task to average away a missing pair, hard-gate loss,
+per-task automated-score decrease, blinded visual majority loss, or critical
+visual-criterion regression.
+
 </details>
 
 ## What you get
@@ -176,6 +192,12 @@ or prompt improvements.
 - Mechanical animation checks for pivots, supports, and connector endpoints
 - Immutable benchmark runs with clean-source reproduction
 - Hard-gate scoring plus blinded pairwise visual judging
+- Structured presence, count, relation, material, lighting, style, motion, and
+  deformation checks against multiview evidence
+- A realistic fire-lantern challenge with six-view review and a validated
+  15-second moving-flame MP4
+- A first-candidate, critic, targeted-repair, same-evidence recheck loop
+- Historical regression plus opt-in challenge and integrated gauntlet suites
 - Separate baseline, skills, and skills-plus-MCP conditions
 - A bounded MCP that cannot execute arbitrary Blender Python
 
@@ -198,6 +220,7 @@ plugins/blender-agent-studio/
     blender-animation-workflow/
     blender-asset-validation/
     blender-character-workflow/
+    blender-iterative-refinement/
     blender-mcp-integration/
     blender-modeling-workflow/
     blender-procedural-workflow/
@@ -229,7 +252,8 @@ bun run test
 ```
 
 The checks validate marketplace and plugin metadata, interface assets, skill
-frontmatter, bounded MCP discovery, and benchmark scoring.
+frontmatter, bounded MCP discovery, benchmark scoring, challenge coverage, and
+the non-regression gate.
 
 Generated models, exports, renders, benchmark runs, and agent traces are
 excluded from source control.

@@ -7,12 +7,12 @@ import {
   resolveBlenderExecutable,
   runBlender,
 } from "../../../scripts/blender-process.ts";
-import { scoreSubmission } from "./score.ts";
-import { BENCHMARK_TASKS } from "./tasks.ts";
+import { scoreSubmission, type VideoEvidence } from "./score.ts";
+import { BENCHMARK_TASKS, type BenchmarkTask } from "./tasks.ts";
 import { summarizeAgentEvents } from "./trace.ts";
 
 type Mode = "baseline" | "skills" | "skills_mcp";
-type Suite = "smoke" | "quick" | "full";
+type Suite = "smoke" | "quick" | "full" | "challenge" | "gauntlet";
 
 type Options = {
   suite: Suite;
@@ -25,6 +25,8 @@ type Options = {
   blenderPath: string;
   taskIds: string[];
   bypassApprovals: boolean;
+  conditionLabel: string;
+  skillRoot?: string;
 };
 
 function argument(name: string): string | undefined {
@@ -37,7 +39,7 @@ function parseOptions(): Options {
   const modeInput = argument("--mode") ?? "baseline";
   const mode = (modeInput === "plugin" ? "skills" : modeInput) as Mode;
   const output = argument("--output");
-  if (!["smoke", "quick", "full"].includes(suite)) {
+  if (!["smoke", "quick", "full", "challenge", "gauntlet"].includes(suite)) {
     throw new Error(`Unsupported suite: ${suite}`);
   }
   if (!["baseline", "skills", "skills_mcp"].includes(mode)) {
@@ -45,6 +47,11 @@ function parseOptions(): Options {
   }
   if (!output) {
     throw new Error("--output is required");
+  }
+  const skillRootArg = argument("--skill-root");
+  const skillRoot = skillRootArg ? resolve(skillRootArg) : undefined;
+  if (skillRoot && !existsSync(join(skillRoot, "skills"))) {
+    throw new Error(`Skill root has no skills directory: ${skillRoot}`);
   }
   return {
     suite,
@@ -60,24 +67,63 @@ function parseOptions(): Options {
       .map((value) => value.trim())
       .filter(Boolean),
     bypassApprovals: process.argv.includes("--bypass-approvals"),
+    conditionLabel: argument("--condition-label") ?? mode,
+    skillRoot,
   };
 }
 
-function pluginPrefix(mode: Mode, animated: boolean): string {
+export function pluginPrefix(
+  mode: Mode,
+  task: BenchmarkTask,
+  skillRoot?: string,
+): string {
   if (mode === "baseline") {
     return "";
   }
-  const skills = [
-    "$blender-agent-studio:blender-modeling-workflow",
-    "$blender-agent-studio:blender-asset-validation",
-  ];
-  if (animated) {
-    skills.push("$blender-agent-studio:blender-animation-workflow");
+  const skillNames = ["blender-modeling-workflow", "blender-asset-validation"];
+  if (task.rubric.requireAnimation) {
+    skillNames.push("blender-animation-workflow");
+  }
+  if (task.requiredVideo) {
+    skillNames.push("blender-rendering-workflow");
+  }
+  if (task.requireIterationReview) {
+    skillNames.push("blender-iterative-refinement");
+  }
+  if (task.category === "environment_creation") {
+    skillNames.push("blender-rendering-workflow");
+  }
+  if (task.category === "procedural_creation") {
+    skillNames.push("blender-procedural-workflow");
+  }
+  if (task.category === "character_creation") {
+    skillNames.push("blender-character-workflow");
+  }
+  if (task.category === "simulation_creation") {
+    skillNames.push("blender-simulation-workflow");
+  }
+  if (task.category === "integrated_gauntlet") {
+    skillNames.push(
+      "blender-procedural-workflow",
+      "blender-character-workflow",
+      "blender-simulation-workflow",
+      "blender-rendering-workflow",
+      "blender-iterative-refinement",
+    );
   }
   if (mode === "skills_mcp") {
-    skills.push("$blender-agent-studio:blender-mcp-integration");
+    skillNames.push("blender-mcp-integration");
   }
-  return `Use ${skills.join(", ")} for this task. Follow their complete workflows and completion gates.\n\n`;
+  if (skillRoot) {
+    const paths = skillNames.map((name) =>
+      join(skillRoot, "skills", name, "SKILL.md"),
+    );
+    return `Read and follow the complete workflows and completion gates in these exact skill files:\n${paths.map((path) => `- ${path}`).join("\n")}\n\n`;
+  }
+  const invocations = skillNames.map(
+    (name) => `$blender-agent-studio:${name}`,
+  );
+  return `Use ${invocations.join(", ")} for this task. Follow their complete workflows and completion gates.\n\n`;
 }
 
 async function runCodex(options: {
@@ -88,6 +134,7 @@ async function runCodex(options: {
   reasoning: string;
   timeoutMs: number;
   bypassApprovals: boolean;
+  skillRootPinned: boolean;
 }): Promise<{
   command: string[];
   exitCode: number;
@@ -113,7 +160,7 @@ async function runCodex(options: {
   } else {
     args.push("--sandbox", "danger-full-access");
   }
-  if (options.mode === "baseline") {
+  if (options.mode === "baseline" || options.skillRootPinned) {
     args.push("--ignore-user-config", "--ignore-rules");
   }
   if (options.model) {
@@ -224,6 +271,92 @@ async function renderEvidence(options: {
   );
 }
 
+function parseRate(value: unknown): number | null {
+  if (typeof value !== "string") return null;
+  const [numeratorText, denominatorText = "1"] = value.split("/");
+  const numerator = Number(numeratorText);
+  const denominator = Number(denominatorText);
+  if (
+    !Number.isFinite(numerator) ||
+    !Number.isFinite(denominator) ||
+    denominator === 0
+  ) {
+    return null;
+  }
+  return numerator / denominator;
+}
+
+async function probeVideo(videoPath: string): Promise<VideoEvidence> {
+  if (!existsSync(videoPath)) {
+    return {
+      exists: false,
+      durationSeconds: null,
+      frameRate: null,
+      frameCount: null,
+      probeError: null,
+    };
+  }
+  const executable = process.env.FFPROBE_EXECUTABLE ?? "ffprobe";
+  try {
+    const proc = Bun.spawn(
+      [
+        executable,
+        "-v",
+        "error",
+        "-select_streams",
+        "v:0",
+        "-count_frames",
+        "-show_entries",
+        "format=duration:stream=avg_frame_rate,nb_frames,nb_read_frames",
+        "-of",
+        "json",
+        videoPath,
+      ],
+      { stdout: "pipe", stderr: "pipe", windowsHide: true },
+    );
+    const [stdout, stderr, exitCode] = await Promise.all([
+      new Response(proc.stdout).text(),
+      new Response(proc.stderr).text(),
+      proc.exited,
+    ]);
+    if (exitCode !== 0) {
+      return {
+        exists: true,
+        durationSeconds: null,
+        frameRate: null,
+        frameCount: null,
+        probeError: `ffprobe exit ${exitCode}: ${stderr.trim()}`,
+      };
+    }
+    const payload = JSON.parse(stdout) as {
+      format?: { duration?: string };
+      streams?: Array<{
+        avg_frame_rate?: string;
+        nb_frames?: string;
+        nb_read_frames?: string;
+      }>;
+    };
+    const stream = payload.streams?.[0];
+    const durationSeconds = Number(payload.format?.duration);
+    const frameCount = Number(stream?.nb_frames ?? stream?.nb_read_frames);
+    return {
+      exists: true,
+      durationSeconds: Number.isFinite(durationSeconds) ? durationSeconds : null,
+      frameRate: parseRate(stream?.avg_frame_rate),
+      frameCount: Number.isFinite(frameCount) ? frameCount : null,
+      probeError: null,
+    };
+  } catch (error) {
+    return {
+      exists: true,
+      durationSeconds: null,
+      frameRate: null,
+      frameCount: null,
+      probeError: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
 async function verifyReproduction(options: {
   sourcePath: string;
   workdir: string;
@@ -309,9 +442,12 @@ async function main(): Promise<void> {
     versionProc.exited,
   ]);
   const runManifest = {
-    schemaVersion: 2,
+    schemaVersion: 3,
+    scorerVersion: 4,
+    inspectorSchemaVersion: 3,
     startedAt: new Date().toISOString(),
-    mode: options.mode,
+    mode: options.conditionLabel,
+    executionMode: options.mode,
     suite: options.suite,
     repetitions: options.repetitions,
     model: options.model ?? "configured default",
@@ -328,6 +464,7 @@ async function main(): Promise<void> {
       ...new Set(selected.map((task) => task.rubric.finishProfile)),
     ].sort(),
     bypassApprovals: options.bypassApprovals,
+    skillRoot: options.skillRoot ?? null,
   };
   await writeFile(
     join(options.output, "run-manifest.json"),
@@ -349,18 +486,19 @@ async function main(): Promise<void> {
       );
       await writeFile(join(workdir, "TASK.md"), taskPrompt, "utf8");
       const prompt =
-        pluginPrefix(options.mode, task.rubric.requireAnimation) +
+        pluginPrefix(options.mode, task, options.skillRoot) +
         "Open TASK.md in the current directory and complete the Blender asset request it contains.";
       await writeFile(join(workdir, "agent-prompt.txt"), prompt, "utf8");
 
       const agent = await runCodex({
         cwd: workdir,
         prompt,
-        mode: options.mode,
+        mode: options.conditionLabel,
         model: options.model,
         reasoning: options.reasoning,
         timeoutMs: options.timeoutMinutes * 60_000,
         bypassApprovals: options.bypassApprovals,
+        skillRootPinned: Boolean(options.skillRoot),
       });
       await writeFile(
         join(workdir, "agent-process.json"),
@@ -383,6 +521,17 @@ async function main(): Promise<void> {
       const sourcePath = join(workdir, "create_asset.py");
       const blendPath = join(workdir, "asset.blend");
       const glbPath = join(workdir, "asset.glb");
+      const videoPath = task.requiredVideo
+        ? join(workdir, task.requiredVideo.filename)
+        : null;
+      const videoEvidence = videoPath ? await probeVideo(videoPath) : null;
+      if (task.requiredVideo) {
+        await writeFile(
+          join(workdir, "video-probe.json"),
+          JSON.stringify(videoEvidence, null, 2),
+          "utf8",
+        );
+      }
       const blendMetricsPath = join(workdir, "metrics-blend.json");
       const glbMetricsPath = join(workdir, "metrics-glb.json");
       const blendMetrics = await inspectAsset(
@@ -414,6 +563,8 @@ async function main(): Promise<void> {
         reproductionPass: reproduction.passed,
         blendExists: existsSync(blendPath),
         glbExists: existsSync(glbPath),
+        iterationReviewExists: existsSync(join(workdir, "iteration_review.json")),
+        videoEvidence,
         blendMetrics: blendMetrics as never,
         glbMetrics: glbMetrics as never,
       });
@@ -440,6 +591,8 @@ async function main(): Promise<void> {
         )
           ? join(workdir, "evidence", "animation_contact_sheet.png")
           : null,
+        renderedVideo: videoPath && existsSync(videoPath) ? videoPath : null,
+        videoEvidence,
       };
       await writeFile(
         join(workdir, "result.json"),
@@ -448,7 +601,7 @@ async function main(): Promise<void> {
       );
       results.push(result);
       process.stdout.write(
-        `${options.mode} ${task.id} r${repetition}: ${score.score}/100 (hard gate ${score.hardGatePass ? "pass" : "fail"})\n`,
+        `${options.conditionLabel} ${task.id} r${repetition}: ${score.score}/100 (hard gate ${score.hardGatePass ? "pass" : "fail"})\n`,
       );
     }
   }
@@ -505,7 +658,7 @@ async function main(): Promise<void> {
         "Total tokens are a usage proxy, not a dollar-cost measurement. Cached and cache-write input tokens are reported per result.",
     },
     warning:
-      "The automated score includes structural and finish-signal proxies, not a complete aesthetic judgment. Use counterbalanced blinded multiview review before making a quality claim.",
+      "The automated score includes structural, finish, and task-category signal proxies, not a complete aesthetic judgment. Use structured, counterbalanced blinded multiview review before making a quality claim.",
     results,
   };
   await writeFile(
@@ -516,4 +669,6 @@ async function main(): Promise<void> {
   process.stdout.write(`Summary: ${join(options.output, "summary.json")}\n`);
 }
 
-await main();
+if (import.meta.main) {
+  await main();
+}

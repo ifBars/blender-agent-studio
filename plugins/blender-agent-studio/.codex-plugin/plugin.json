@@ -1,7 +1,7 @@
 {
   "name": "blender-agent-studio",
-  "version": "0.2.0+codex.20260731082550",
-  "description": "Evidence-driven Blender 5.2 modeling, procedural, rendering, simulation, character, validation, animation, and benchmark workflows.",
+  "version": "0.4.0+codex.20260817205149",
+  "description": "Iterative, evidence-driven Blender 5.2 creation, validation, repair, animation, and regression-safe benchmark workflows.",
   "author": {
     "name": "Bars",
     "url": "https://github.com/ifBars"
@@ -20,7 +20,7 @@
   "interface": {
     "displayName": "Blender Agent Studio",
     "shortDescription": "Build, simulate, render, and benchmark Blender work",
-    "longDescription": "Evidence-driven Blender 5.2 workflows for reproducible models, Geometry Nodes, rendering, physics simulations, character rigs, validation, animation, and paired agent benchmarks.",
+    "longDescription": "Evidence-driven Blender 5.2 workflows for reproducible models, Geometry Nodes, rendering, physics simulations, character rigs, critique-and-repair iteration, and regression-safe paired benchmarks.",
     "developerName": "Bars",
     "category": "Developer Tools",
     "websiteURL": "https://github.com/ifBars/blender-agent-studio",
@@ -30,6 +30,7 @@
     ],
     "defaultPrompt": [
       "Build a Blender model from this request.",
+      "Critique the first complete Blender result, repair its highest-impact defect, and verify no regression.",
       "Clarify this Blender brief and create an optional concept mockup.",
       "Validate this Blender asset and render evidence.",
       "Create and validate a Blender fluid or physics simulation.",

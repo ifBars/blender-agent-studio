@@ -66,3 +66,8 @@ color management, passes, render duration, and any machine-specific limits.
 Use `$blender-agent-studio:blender-asset-validation` for fixed multiview
 geometry evidence; that evidence supplements rather than replaces the art
 directed final render.
+For glass around an emissive subject, validate the final engine rather than the
+node graph alone. Keep transmission, alpha/blend behavior, refraction, exposure,
+and bloom controlled so the enclosure reads as glass and the emissive subject
+retains a distinct colored silhouette. An opaque or blown-white enclosure is a
+render failure even when its material is technically transmissive.

@@ -26,6 +26,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--resolution", type=int, default=384)
     parser.add_argument("--frames", default="")
+    parser.add_argument("--material-mode", choices=("source", "vrchat-fit"), default="source")
+    parser.add_argument("--hide-objects", default="")
+    parser.add_argument("--head-texture", default="")
     return parser.parse_args(script_args())
 
 
@@ -94,7 +97,45 @@ def add_area_light(
     return obj
 
 
-def configure_scene(center: Vector, extent: float, minimum_z: float) -> None:
+def diagnostic_material(name: str, color: tuple[float, float, float, float]) -> bpy.types.Material:
+    material = bpy.data.materials.new(name)
+    material.diffuse_color = color
+    material.use_nodes = True
+    shader = material.node_tree.nodes.get("Principled BSDF")
+    shader.inputs["Base Color"].default_value = color
+    shader.inputs["Roughness"].default_value = 0.68
+    shader.inputs["Metallic"].default_value = 0.0
+    return material
+
+
+def diagnostic_head_material(texture_path: Path | None) -> bpy.types.Material:
+    skin = diagnostic_material("BAS_DiagnosticSkin", (0.42, 0.18, 0.14, 1.0))
+    if texture_path is None:
+        return skin
+    if not texture_path.is_file():
+        raise FileNotFoundError(texture_path)
+    image = bpy.data.images.load(str(texture_path), check_existing=True)
+    texture = skin.node_tree.nodes.new("ShaderNodeTexImage")
+    texture.image = image
+    shader = skin.node_tree.nodes.get("Principled BSDF")
+    skin.node_tree.links.new(texture.outputs["Color"], shader.inputs["Base Color"])
+    return skin
+
+
+def apply_vrchat_fit_materials(head_texture: Path | None = None) -> None:
+    skin = diagnostic_head_material(head_texture)
+    hair = diagnostic_material("BAS_DiagnosticHair", (0.045, 0.075, 0.14, 1.0))
+    accent = diagnostic_material("BAS_DiagnosticAccessory", (0.32, 0.12, 0.42, 1.0))
+    for obj in bpy.context.scene.objects:
+        if obj.type != "MESH":
+            continue
+        lowered = obj.name.lower()
+        material = skin if lowered.startswith("head_") else accent if "horn" in lowered or "bow" in lowered else hair
+        obj.data.materials.clear()
+        obj.data.materials.append(material)
+
+
+def configure_scene(center: Vector, extent: float, minimum_z: float, diagnostic: bool) -> None:
     scene = bpy.context.scene
     engine_items = scene.render.bl_rna.properties["engine"].enum_items
     engine_ids = {item.identifier for item in engine_items}
@@ -114,6 +155,9 @@ def configure_scene(center: Vector, extent: float, minimum_z: float) -> None:
         scene.view_settings.look = "AgX - Medium High Contrast"
     except TypeError:
         pass
+    if diagnostic:
+        scene.view_settings.look = "AgX - Medium High Contrast"
+        scene.view_settings.exposure = -1.0
 
     world = bpy.data.worlds.new("BAS_EvidenceWorld") if not scene.world else scene.world
     scene.world = world
@@ -140,21 +184,21 @@ def configure_scene(center: Vector, extent: float, minimum_z: float) -> None:
         "BAS_Key",
         center + Vector((extent * 2.2, -extent * 2.4, extent * 2.8)),
         center,
-        1200.0,
+        140.0 if diagnostic else 1200.0,
         extent * 2.0,
     )
     add_area_light(
         "BAS_Fill",
         center + Vector((-extent * 2.5, -extent * 0.6, extent * 1.4)),
         center,
-        700.0,
+        65.0 if diagnostic else 700.0,
         extent * 2.4,
     )
     add_area_light(
         "BAS_Rim",
         center + Vector((extent * 0.4, extent * 2.5, extent * 2.0)),
         center,
-        950.0,
+        110.0 if diagnostic else 950.0,
         extent * 1.7,
     )
 
@@ -230,13 +274,21 @@ def main() -> None:
     if not input_path.is_file():
         raise FileNotFoundError(input_path)
     load_asset(input_path)
+    hidden_names = {name.strip().casefold() for name in args.hide_objects.split(",") if name.strip()}
+    for obj in bpy.context.scene.objects:
+        if obj.name.casefold() in hidden_names:
+            obj.hide_render = True
+            obj.hide_viewport = True
+    diagnostic = args.material_mode == "vrchat-fit"
+    if diagnostic:
+        apply_vrchat_fit_materials(Path(args.head_texture).resolve() if args.head_texture else None)
 
     mins, maxs = scene_bounds()
     center = (mins + maxs) * 0.5
     size = maxs - mins
     extent = max(float(size.x), float(size.y), float(size.z), 0.1)
     target = center + Vector((0.0, 0.0, float(size.z) * 0.04))
-    configure_scene(center, extent, float(mins.z))
+    configure_scene(center, extent, float(mins.z), diagnostic)
     camera = create_camera()
 
     views = [
@@ -289,6 +341,9 @@ def main() -> None:
         "input": str(input_path),
         "blender_version": bpy.app.version_string,
         "resolution": resolution,
+        "material_mode": args.material_mode,
+        "hidden_objects": sorted(hidden_names),
+        "head_texture": str(Path(args.head_texture).resolve()) if args.head_texture else None,
         "bounds": {
             "min": [round(float(value), 6) for value in mins],
             "max": [round(float(value), 6) for value in maxs],

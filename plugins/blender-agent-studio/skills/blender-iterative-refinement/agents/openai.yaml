@@ -1,0 +1,4 @@
+interface:
+  display_name: "Blender Iterative Refinement"
+  short_description: "Critique, repair, and rollback Blender iterations"
+  default_prompt: "Use $blender-agent-studio:blender-iterative-refinement to critique this complete Blender candidate, make one evidence-backed source repair, and retain it only if identical validation shows no regression."

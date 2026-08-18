@@ -149,4 +149,118 @@ describe("scoreSubmission", () => {
     expect(score.dimensions.finishQuality).toBe(11);
     expect(score.score).toBe(100);
   });
+
+  test("scores challenge-only category signals inside specification coverage", () => {
+    const task = BENCHMARK_TASKS.find(
+      (item) => item.id === "procedural_bridge_challenge",
+    )!;
+    const metrics = completeMetrics();
+    metrics.objects = task.rubric.requiredNameGroups.map((group, index) => ({
+      name: `${group[0]}_${index}`,
+      parent: index ? task.rubric.requiredNameGroups[0][0] : null,
+    }));
+    metrics.totals.mesh_objects = task.rubric.minimumMeshObjects;
+    metrics.totals.materials = task.rubric.minimumMaterials;
+    metrics.totals.triangles = 20_000;
+    metrics.totals.uv_mapped_meshes = task.rubric.minimumMeshObjects;
+    Object.assign(metrics.totals, {
+      geometry_nodes_modifiers: 1,
+      node_materials: 3,
+    });
+
+    const pass = scoreSubmission({
+      task,
+      agentExitCode: 0,
+      sourceExists: true,
+      reproductionPass: true,
+      blendExists: true,
+      glbExists: true,
+      blendMetrics: metrics,
+      glbMetrics: metrics,
+    });
+    expect(pass.hardGatePass).toBe(true);
+    expect(pass.dimensions.specificationCoverage).toBe(25);
+
+    Object.assign(metrics.totals, { geometry_nodes_modifiers: 0 });
+    const fail = scoreSubmission({
+      task,
+      agentExitCode: 0,
+      sourceExists: true,
+      reproductionPass: true,
+      blendExists: true,
+      glbExists: true,
+      blendMetrics: metrics,
+      glbMetrics: metrics,
+    });
+    expect(fail.hardGatePass).toBe(false);
+    expect(fail.dimensions.specificationCoverage).toBeLessThan(25);
+  });
+
+  test("requires a valid 15-second rendered fire-lantern video", () => {
+    const task = BENCHMARK_TASKS.find(
+      (item) => item.id === "realistic_fire_lantern_showcase",
+    )!;
+    const metrics = completeMetrics();
+    metrics.objects = task.rubric.requiredNameGroups.map((group, index) => ({
+      name: `${group[0]}_${index}`,
+      parent: index ? task.rubric.requiredNameGroups[0][0] : null,
+      action: index === 9 ? "Flame_Flicker_15s" : null,
+    }));
+    metrics.actions = [
+      { name: "Flame_Flicker_15s", frame_start: 1, frame_end: 360 },
+    ];
+    Object.assign(metrics.totals, {
+      triangles: 20_000,
+      mesh_objects: 24,
+      materials: 6,
+      smooth_polygons: 8_000,
+      flat_polygons: 2_000,
+      uv_mapped_meshes: 24,
+      refinement_modifiers: 4,
+      lights: 2,
+      cameras: 1,
+      node_materials: 6,
+      shape_keys: 3,
+    });
+    metrics.scene.bounds.dimensions = [0.7, 0.7, 1.0];
+
+    const validVideo = {
+      exists: true,
+      durationSeconds: 15,
+      frameRate: 24,
+      frameCount: 360,
+      probeError: null,
+    };
+    const pass = scoreSubmission({
+      task,
+      agentExitCode: 0,
+      sourceExists: true,
+      reproductionPass: true,
+      blendExists: true,
+      glbExists: true,
+      iterationReviewExists: true,
+      videoEvidence: validVideo,
+      blendMetrics: metrics,
+      glbMetrics: metrics,
+    });
+    expect(pass.hardGatePass).toBe(true);
+    expect(pass.score).toBe(100);
+
+    const fail = scoreSubmission({
+      task,
+      agentExitCode: 0,
+      sourceExists: true,
+      reproductionPass: true,
+      blendExists: true,
+      glbExists: true,
+      iterationReviewExists: true,
+      videoEvidence: { ...validVideo, durationSeconds: 5 },
+      blendMetrics: metrics,
+      glbMetrics: metrics,
+    });
+    expect(fail.hardGatePass).toBe(false);
+    expect(fail.checks.find((check) => check.id === "rendered_video")?.passed).toBe(
+      false,
+    );
+  });
 });

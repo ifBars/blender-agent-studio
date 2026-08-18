@@ -1,4 +1,4 @@
 interface:
   display_name: "Blender Agent Studio"
   short_description: "Route Blender creation and evaluation workflows"
-  default_prompt: "Use $blender-agent-studio to choose and apply the right workflow for this Blender request."
+  default_prompt: "Use $blender-agent-studio to choose the right Blender workflow, including opt-in iterative refinement when requested."

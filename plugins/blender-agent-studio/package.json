@@ -6,7 +6,8 @@
     "mcp": "bun mcp/server.ts",
     "test": "bun test",
     "benchmark": "bun skills/blender-agent-benchmark/scripts/run_benchmark.ts",
-    "benchmark:mcp": "bun skills/blender-agent-benchmark/scripts/benchmark_mcp.ts"
+    "benchmark:mcp": "bun skills/blender-agent-benchmark/scripts/benchmark_mcp.ts",
+    "benchmark:vrchat-hair": "bun skills/blender-agent-benchmark/scripts/run_vrchat_hair_benchmark.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.29.0",

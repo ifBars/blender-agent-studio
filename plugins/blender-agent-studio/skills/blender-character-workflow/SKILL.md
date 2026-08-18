@@ -46,6 +46,22 @@ expression.
    `$blender-agent-studio:blender-asset-validation` for authored/exported
    geometry and hierarchy evidence.
 
+## Fit modular VRChat hair
+
+For arbitrary head and hair assets, use `scripts/fit_vrchat_hair.py`. It fits
+the largest semantic hair mesh against the upper cranial region in evaluated
+world space while applying one uniform transform to the complete hair rig.
+Do not align the full hairstyle minimum Z to the head top; hanging strands and
+ponytails make that measurement invalid.
+
+Require a 1-8 mm median fitted clearance, no more than 15 mm p95 clearance,
+fewer than 2% large gaps over 20 mm, and a 1.02-1.10 hair-to-cranium width
+ratio. Preserve hair armatures, bones, weights, materials, UVs, and separately
+named style meshes. Treat nearest-normal sign as a warning on multi-component
+or open head meshes, not proof of penetration; confirm intersections in fixed
+front, back, side, top, and perspective evidence. A Blender style visibility
+setup is not proof that Unity/VRChat expression-menu toggles were authored.
+
 ## Completion gate
 
 Deliver the editable source, export, bone/control map, tested pose/action list,
