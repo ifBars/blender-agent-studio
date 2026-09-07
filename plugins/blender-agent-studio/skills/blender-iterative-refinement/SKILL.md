@@ -5,6 +5,9 @@ description: Run an opt-in evidence-backed second pass on a complete Blender del
 
 # Blender Iterative Refinement
 
+Read [the shared execution guidance](references/astra-workflow.md) once per task
+for autonomous decisions, evidence cadence, and long-task continuity.
+
 Start from a complete candidate produced by the relevant creation workflows.
 Do not replace their normal construction stages. This skill adds a bounded
 critic, source repair, identical recheck, and rollback decision.
@@ -21,6 +24,10 @@ critic, source repair, identical recheck, and rollback decision.
    deformation frames. Never overwrite the only copy of the candidate.
 
 ## Run a separate critic pass
+
+Separate critique from editing: freeze the candidate and judge its evidence
+before choosing a repair. This can be a distinct self-review pass; it does not
+require a second agent unless the user or benchmark protocol asks for one.
 
 Open the preserved images with an image-viewing tool. Before editing, write a
 `pass`, `fail`, or `unclear` ledger for every critical requirement and cite the

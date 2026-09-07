@@ -5,6 +5,9 @@ description: Create, diagnose, bake, and validate deterministic Blender physics 
 
 # Blender Simulation Workflow
 
+Read [the shared execution guidance](references/astra-workflow.md) once per task
+for autonomous decisions, evidence cadence, and long-task continuity.
+
 Simulation is a cache-producing build step. Preserve the setup and cache
 provenance; a visually plausible single frame is not proof that it is stable.
 

@@ -13,6 +13,10 @@ import bpy
 import numpy as np
 from mathutils import Vector
 
+# Blender --python does not consistently put the script directory on sys.path.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from evidence_settings import EVIDENCE_SETTINGS_VERSION, resolve_presentation, studio_settings
+
 
 def script_args() -> list[str]:
     if "--" not in sys.argv:
@@ -29,6 +33,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--material-mode", choices=("source", "vrchat-fit"), default="source")
     parser.add_argument("--hide-objects", default="")
     parser.add_argument("--head-texture", default="")
+    parser.add_argument("--presentation", choices=("auto", "neutral", "dark", "light"), default="auto")
     return parser.parse_args(script_args())
 
 
@@ -135,8 +140,50 @@ def apply_vrchat_fit_materials(head_texture: Path | None = None) -> None:
         obj.data.materials.append(material)
 
 
-def configure_scene(center: Vector, extent: float, minimum_z: float, diagnostic: bool) -> None:
+def subject_luminance() -> float | None:
+    """Area-weighted constant base-color hint; final images still need review.
+
+    Texture-driven colors cannot be inferred reliably from shader defaults.
+    Skip them so auto does not pretend to evaluate an arbitrary shader graph.
+    """
+    total = weight = 0.0
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    for obj in bpy.context.scene.objects:
+        if obj.type != "MESH" or obj.hide_render:
+            continue
+        evaluated = obj.evaluated_get(depsgraph)
+        mesh = evaluated.to_mesh()
+        try:
+            transform = evaluated.matrix_world.to_3x3()
+            determinant = abs(transform.determinant())
+            normal_transform = transform.inverted_safe().transposed()
+            for polygon in mesh.polygons:
+                index = polygon.material_index
+                mat = evaluated.material_slots[index].material if index < len(evaluated.material_slots) else None
+                if mat is None:
+                    continue
+                color = mat.diffuse_color
+                if mat.use_nodes:
+                    shader = next((node for node in mat.node_tree.nodes if node.type == 'BSDF_PRINCIPLED'), None)
+                    if shader is None or shader.inputs['Base Color'].is_linked:
+                        continue
+                    color = shader.inputs['Base Color'].default_value
+                # Transform the polygon area vector, including nonuniform scale.
+                area = polygon.area * determinant * (normal_transform @ polygon.normal).length
+                total += area * (0.2126 * color[0] + 0.7152 * color[1] + 0.0722 * color[2])
+                weight += area
+        finally:
+            evaluated.to_mesh_clear()
+    return total / weight if weight else None
+
+
+def configure_scene(center: Vector, extent: float, minimum_z: float, diagnostic: bool, presentation: str = "neutral") -> None:
     scene = bpy.context.scene
+    settings = studio_settings(extent, diagnostic, presentation)
+    # An evidence render must not inherit the authored beauty lighting or grade.
+    for obj in list(scene.objects):
+        if obj.type == "LIGHT":
+            bpy.data.objects.remove(obj, do_unlink=True)
     engine_items = scene.render.bl_rna.properties["engine"].enum_items
     engine_ids = {item.identifier for item in engine_items}
     if "BLENDER_EEVEE" in engine_ids:
@@ -151,6 +198,14 @@ def configure_scene(center: Vector, extent: float, minimum_z: float, diagnostic:
     scene.render.resolution_percentage = 100
     scene.render.use_file_extension = True
     scene.render.image_settings.color_depth = "8"
+    scene.render.use_compositing = False
+    scene.render.use_sequencer = False
+    scene.render.use_border = False
+    scene.render.pixel_aspect_x = scene.render.pixel_aspect_y = 1.0
+    scene.view_settings.view_transform = "AgX"
+    scene.view_settings.exposure = -1.0 if diagnostic else 0.0
+    scene.view_settings.gamma = 1.0
+    scene.view_settings.use_curve_mapping = False
     try:
         scene.view_settings.look = "AgX - Medium High Contrast"
     except TypeError:
@@ -159,7 +214,7 @@ def configure_scene(center: Vector, extent: float, minimum_z: float, diagnostic:
         scene.view_settings.look = "AgX - Medium High Contrast"
         scene.view_settings.exposure = -1.0
 
-    world = bpy.data.worlds.new("BAS_EvidenceWorld") if not scene.world else scene.world
+    world = bpy.data.worlds.new("BAS_EvidenceWorld")
     scene.world = world
     world.use_nodes = True
     background = world.node_tree.nodes.get("Background")
@@ -167,16 +222,16 @@ def configure_scene(center: Vector, extent: float, minimum_z: float, diagnostic:
     background.inputs["Strength"].default_value = 0.35
 
     bpy.ops.mesh.primitive_plane_add(
-        size=max(extent * 8.0, 4.0),
-        location=(center.x, center.y, minimum_z - max(extent * 0.006, 0.002)),
+        size=settings["floor_size"],
+        location=(center.x, center.y, minimum_z - settings["floor_offset"]),
     )
     floor = bpy.context.object
     floor.name = "BAS_EvidenceFloor"
     material = bpy.data.materials.new("BAS_EvidenceFloorMaterial")
-    material.diffuse_color = (0.075, 0.085, 0.11, 1.0)
+    material.diffuse_color = settings["floor_color"]
     material.use_nodes = True
     shader = material.node_tree.nodes.get("Principled BSDF")
-    shader.inputs["Base Color"].default_value = (0.075, 0.085, 0.11, 1.0)
+    shader.inputs["Base Color"].default_value = settings["floor_color"]
     shader.inputs["Roughness"].default_value = 0.82
     floor.data.materials.append(material)
 
@@ -184,21 +239,21 @@ def configure_scene(center: Vector, extent: float, minimum_z: float, diagnostic:
         "BAS_Key",
         center + Vector((extent * 2.2, -extent * 2.4, extent * 2.8)),
         center,
-        140.0 if diagnostic else 1200.0,
+        settings["light_powers"][0],
         extent * 2.0,
     )
     add_area_light(
         "BAS_Fill",
         center + Vector((-extent * 2.5, -extent * 0.6, extent * 1.4)),
         center,
-        65.0 if diagnostic else 700.0,
+        settings["light_powers"][1],
         extent * 2.4,
     )
     add_area_light(
         "BAS_Rim",
         center + Vector((extent * 0.4, extent * 2.5, extent * 2.0)),
         center,
-        110.0 if diagnostic else 950.0,
+        settings["light_powers"][2],
         extent * 1.7,
     )
 
@@ -213,12 +268,15 @@ def render_view(
     resolution: int,
     orthographic: bool,
 ) -> Path:
-    distance = max(extent * 2.8, 1.0)
+    settings = studio_settings(extent)
+    distance = settings["camera_distance"]
     camera.location = target + direction.normalized() * distance
     look_at(camera, target)
     camera.data.type = "ORTHO" if orthographic else "PERSP"
+    camera.data.clip_start = settings["clip_start"]
+    camera.data.clip_end = settings["clip_end"]
     if orthographic:
-        camera.data.ortho_scale = max(extent * 1.45, 0.5)
+        camera.data.ortho_scale = settings["ortho_scale"]
     else:
         camera.data.lens = 55
 
@@ -283,12 +341,14 @@ def main() -> None:
     if diagnostic:
         apply_vrchat_fit_materials(Path(args.head_texture).resolve() if args.head_texture else None)
 
+    luminance = subject_luminance()
+    presentation = resolve_presentation(args.presentation, luminance)
     mins, maxs = scene_bounds()
     center = (mins + maxs) * 0.5
     size = maxs - mins
-    extent = max(float(size.x), float(size.y), float(size.z), 0.1)
+    extent = max(float(size.x), float(size.y), float(size.z), 1e-4)
     target = center + Vector((0.0, 0.0, float(size.z) * 0.04))
-    configure_scene(center, extent, float(mins.z), diagnostic)
+    configure_scene(center, extent, float(mins.z), diagnostic, presentation)
     camera = create_camera()
 
     views = [
@@ -337,7 +397,14 @@ def main() -> None:
         create_contact_sheet(animation_paths, animation_contact_sheet, resolution)
 
     manifest: dict[str, Any] = {
-        "schema_version": 1,
+        "schema_version": 2,
+        "evidence_settings_version": EVIDENCE_SETTINGS_VERSION,
+        "studio": studio_settings(extent, diagnostic, presentation),
+        "requested_presentation": args.presentation,
+        "subject_luminance_hint": luminance,
+        "render_engine": bpy.context.scene.render.engine,
+        "view_transform": bpy.context.scene.view_settings.view_transform,
+        "exposure": bpy.context.scene.view_settings.exposure,
         "input": str(input_path),
         "blender_version": bpy.app.version_string,
         "resolution": resolution,

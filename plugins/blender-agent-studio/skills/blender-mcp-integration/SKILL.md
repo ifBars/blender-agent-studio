@@ -5,6 +5,9 @@ description: Choose, configure, and use Blender MCP integrations for live scene 
 
 # Blender MCP Integration
 
+Read [the shared execution guidance](references/astra-workflow.md) once per task
+for autonomous decisions, evidence cadence, and long-task continuity.
+
 Use the narrowest MCP layer that improves the task.
 
 ## Choose the layer

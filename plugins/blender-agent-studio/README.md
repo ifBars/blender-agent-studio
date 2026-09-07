@@ -4,6 +4,42 @@ Blender Agent Studio is a global Codex plugin for reproducible Blender 5.2
 modeling, procedural systems, rendering, simulation, character work, technical
 and visual validation, animation, MCP selection, and paired agent benchmarking.
 
+## Astra adaptation
+
+Version 0.5.0 also makes presentation adaptive by default. Evidence renders use
+scale-correct soft lighting, close framing, and a contrasting studio floor.
+The MCP accepts `presentation` and the renderer accepts `--presentation`, with
+`auto`, `neutral`, `dark`, or `light`. Open the hero image and adapt the preset
+when necessary. Provide two looks when they serve distinct needs. Benchmark
+evidence pins `neutral`; settings version 2 must not be mixed with older renders
+in a controlled comparison.
+
+The workflows now support GPT-6 Astra's longer-task execution: routine brief
+decisions use stated defaults, related modeling stages can share a build/review
+pass, and long work keeps a compact checkpoint with source and evidence state.
+Construction uses focused checks; completion still requires clean-source
+reproduction, applicable fresh-import checks, and opened visual evidence.
+The shared [execution guidance](references/astra-workflow.md) explains the
+behavior and its source in OpenAI's Astra migration guide.
+
+Select Astra in Codex to use it interactively; the plugin does not change your
+model setting. Sol, Terra, and Luna remain supported. Model-specific Blender
+quality or speed improvements have not yet been measured for this revision.
+
+For explicit, reproducible model selection in the benchmark:
+
+```powershell
+bun run benchmark --profile astra --reasoning medium --suite smoke `
+  --mode skills --condition-label astra-revised --output C:\bench\astra-revised
+```
+
+Profiles `astra`, `sol`, `terra`, and `luna` pin the corresponding model with
+equal `medium` effort by default. Use `--reasoning` to preserve an existing
+comparison's effort. Conflicting model/profile options and known unsupported
+effort levels fail before launching work. Without a profile or explicit model,
+the runner keeps the configured default. There is no automatic model fallback.
+Measure skill changes on one fixed model before comparing different models.
+
 ## What it provides
 
 - `blender-modeling-workflow`: contract-first procedural modeling and

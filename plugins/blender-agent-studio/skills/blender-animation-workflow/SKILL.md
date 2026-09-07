@@ -5,6 +5,9 @@ description: Author, diagnose, and refine Blender animation for articulated prop
 
 # Blender Animation Workflow
 
+Read [the shared execution guidance](references/astra-workflow.md) once per task
+for autonomous decisions, evidence cadence, and long-task continuity.
+
 Make the mechanism understandable in still critical frames before polishing curves.
 
 ## Define semantic phases

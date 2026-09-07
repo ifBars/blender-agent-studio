@@ -22,6 +22,8 @@ type RunSummary = {
   schemaVersion?: number;
   scorerVersion?: number;
   inspectorSchemaVersion?: number;
+  evidenceSettingsVersion?: number;
+  evidencePresentation?: string;
   mode: string;
   model: string;
   reasoning: string;
@@ -319,6 +321,18 @@ const VISUAL_DIMENSIONS = [
   "multiviewConsistency",
 ] as const;
 
+export function evidenceConfigurationMismatches(
+  baseline: Pick<RunSummary, "evidenceSettingsVersion" | "evidencePresentation">,
+  candidate: Pick<RunSummary, "evidenceSettingsVersion" | "evidencePresentation">,
+): string[] {
+  return [
+    ...((baseline.evidenceSettingsVersion ?? 1) !== (candidate.evidenceSettingsVersion ?? 1)
+      ? ["evidence renderer differs; rerender both conditions with the same settings"] : []),
+    ...((baseline.evidencePresentation ?? "legacy") !== (candidate.evidencePresentation ?? "legacy")
+      ? ["evidence presentation differs; pin the same preset for both conditions"] : []),
+  ];
+}
+
 async function main(): Promise<void> {
   const baselinePath = argument("--baseline");
   const candidatePath = argument("--candidate");
@@ -342,6 +356,7 @@ async function main(): Promise<void> {
     );
   }
   const configurationMismatches = [
+    ...evidenceConfigurationMismatches(baseline, candidate),
     ...(baseline.model !== candidate.model
       ? [`generation model differs: ${baseline.model} vs ${candidate.model}`]
       : []),

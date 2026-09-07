@@ -5,6 +5,9 @@ description: Build, diagnose, and deliver Blender still, turntable, sequence, an
 
 # Blender Rendering Workflow
 
+Read [the shared execution guidance](references/astra-workflow.md) once per task
+for autonomous decisions, evidence cadence, and long-task continuity.
+
 Treat a render as a reproducible deliverable, not a screenshot that happened to
 look acceptable once.
 
@@ -46,6 +49,21 @@ rendered deliverable.
    paths, frame range, and output settings.
 
 ## Iterate with evidence
+
+For a normal asset handoff, include a polished hero presentation by default.
+Use a backdrop that separates the asset silhouette, softer key/fill lighting,
+controlled highlights, visible contact shadows, and framing that makes details
+readable. Match the material colors and avoid white-on-white or blown-out studio
+setups. Scale light power with squared scene dimensions when scaling distances
+and emitter sizes together.
+
+Use the validation renderer's `auto`, `neutral`, `dark`, or `light` presentation
+as a starting point. Inspect the first image and adapt the preset or authored
+studio when contrast, translucency, emission, or textures require it. When two
+presentations fit distinct needs, deliver both with clear labels; do not make
+the user choose a preset before producing an initial useful result. Keep the
+fixed diagnostic views alongside the hero, and preserve explicitly requested
+art direction. A studio render does not replace required in-context shots.
 
 1. Render a low-sample diagnostic frame for every required camera.
 2. Open the rendered images, not merely file-existence logs.

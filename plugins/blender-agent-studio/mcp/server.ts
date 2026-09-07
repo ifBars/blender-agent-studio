@@ -118,6 +118,8 @@ server.registerTool(
       assetPath: z.string(),
       outputDir: z.string(),
       resolution: z.number().int().min(128).max(1024).default(384),
+      presentation: z.enum(["auto", "neutral", "dark", "light"]).default("auto")
+        .describe("Adaptive contrast by default; pin a studio preset for repeatable comparisons."),
       animationFrames: z.array(z.number().int().min(0)).max(12).default([]),
       blenderPath: z.string().optional(),
       timeoutMs: z.number().int().min(1_000).max(1_800_000).default(600_000),
@@ -127,6 +129,7 @@ server.registerTool(
     assetPath,
     outputDir,
     resolution,
+    presentation,
     animationFrames,
     blenderPath,
     timeoutMs,
@@ -141,6 +144,8 @@ server.registerTool(
         resolvedOutput,
         "--resolution",
         String(resolution),
+        "--presentation",
+        presentation,
       ];
       if (animationFrames.length) {
         args.push("--frames", animationFrames.join(","));

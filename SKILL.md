@@ -8,6 +8,11 @@ description: Route Blender asset creation, refinement, procedural systems, rende
 Select the smallest set of specialist workflows that covers the request, then
 follow each selected `SKILL.md` completely.
 
+Use routine defaults and continue authorized work; do not turn internal stage
+reviews into approval gates. The specialists bundle Astra execution guidance
+for continuity and focused verification. Start with a polished hero presentation,
+adapt lighting/background after visual inspection, and preserve diagnostic views.
+
 ## Route the request
 
 - Build or substantially refine geometry: read
@@ -48,7 +53,8 @@ their respective capability is required.
    constrained style, target a polished smooth asset with intentional
    secondary and tertiary detail rather than a primitive-looking low-density
    result.
-4. Work through named stages: contract and references, graybox, primary and
+4. Satisfy named stage criteria, combining related build/review passes when useful:
+   contract and references, graybox, primary and
    secondary forms, structural refinement, materials and textures, final
    surface polish, and export validation.
 5. Keep deterministic Python as the durable source for generated assets.

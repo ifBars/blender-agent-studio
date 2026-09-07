@@ -5,6 +5,9 @@ description: Benchmark Blender modeling agents, skills, prompts, scripts, or MCP
 
 # Blender Agent Benchmark
 
+Read [the shared execution guidance](references/astra-workflow.md) once per task
+for autonomous decisions, evidence cadence, and long-task continuity.
+
 Measure changes with the same tasks, model, effort, limits, Blender build, and evaluator. Preserve natural agent behavior.
 
 ## Protect benchmark integrity
@@ -26,6 +29,19 @@ when reviewing the plugin's recorded validation result, not while generating a
 benchmark submission.
 
 ## Run the suites
+
+For Astra, pass `--profile astra` (model `gpt-6-astra`, effort `medium`). The
+`sol`, `terra`, and `luna` profiles select their corresponding GPT-5.6 models
+at the same effort. Explicit `--reasoning` overrides effort, not the model.
+Use an explicit profile or `--model` for reproducible comparisons; runs using
+`configured default` are exploratory because model identity is not pinned.
+
+Separate two experiments: old/revised skills on Astra, then fixed revised
+skills on Astra/Sol/Terra/Luna. Keep fixture, effective effort, Blender build,
+limits, permissions, and evaluator fixed. The existing non-regression gate
+requires matching models; cross-model results are descriptive model comparisons,
+not proof that a skill revision improved. Never replace historical result labels
+with Astra or attribute a simultaneous model-and-skill change to either alone.
 
 Use `scripts/run_benchmark.ts`:
 

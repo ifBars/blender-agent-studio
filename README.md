@@ -5,7 +5,7 @@
 # Blender Agent Studio
 
 [![Validate](https://github.com/ifBars/blender-agent-studio/actions/workflows/validate.yml/badge.svg)](https://github.com/ifBars/blender-agent-studio/actions/workflows/validate.yml)
-[![skills.sh](https://img.shields.io/badge/skills.sh-11%20skills-000000?logo=vercel&logoColor=white)](https://skills.sh/ifBars/blender-agent-studio/blender-agent-studio)
+[![skills.sh](https://img.shields.io/badge/skills.sh-12%20skills-000000?logo=vercel&logoColor=white)](https://skills.sh/ifBars/blender-agent-studio/blender-agent-studio)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 Build, inspect, rig, animate, simulate, render, and benchmark Blender work with reproducible Python,
@@ -13,12 +13,34 @@ explicit graybox-to-polish stages, fixed visual evidence, deterministic quality
 gates, and a bounded local MCP. Finished assets default to a polished smooth
 quality target unless low-poly is explicitly requested.
 
-Blender Agent Studio packages one umbrella routing skill, ten specialist
+Blender Agent Studio packages one umbrella routing skill, eleven specialist
 skills, and evaluation tools for turning a user request into inspectable
 `.blend` and GLB deliverables. It is designed to answer a harder question than
 “did Blender produce a file?”: does the result satisfy the request, survive
 export, read correctly from every side, and improve when the agent workflow
 changes?
+
+## Astra and adaptive presentation
+
+Version 0.5.0 adds Astra-aware execution guidance, explicit model profiles,
+and an adaptive studio presentation. Routine choices use stated defaults;
+related build stages share review passes while final quality gates remain.
+
+Evidence renders now scale light power with asset dimensions, reset inherited
+lighting/exposure, and frame small props more closely. The default `auto`
+presentation uses a material-color hint to select neutral, dark, or light studio
+contrast. Review the hero image and override when the asset needs a different
+look. Two presentation options are useful when they serve distinct needs.
+
+The MCP accepts `presentation: "auto" | "neutral" | "dark" | "light"`;
+the rendering script accepts `--presentation` with the same options.
+The benchmark pins `neutral` and records renderer version 2. Rerender old and
+new candidates under matching settings before making visual comparison claims.
+
+Use `--profile astra`, `sol`, `terra`, or `luna` to pin a benchmark model.
+All profiles default to medium effort; `--reasoning` can explicitly override it.
+Interactive model selection remains yours. This update has a real Blender
+smoke test, but no paired Astra-versus-GPT-5.6 quality or speed claim.
 
 ## Quick start
 
@@ -43,7 +65,7 @@ articulated or animated parts.
 
 ### Full Codex plugin
 
-The marketplace install includes all ten skills, the Blender icon and plugin
+The marketplace install includes all eleven specialist skills, the Blender icon and plugin
 metadata, and the bounded local MCP:
 
 ```bash
@@ -66,7 +88,7 @@ Install the umbrella routing skill through the Vercel Agent Skills CLI:
 bunx skills add -g ifBars/blender-agent-studio --skill blender-agent-studio --agent codex -y
 ```
 
-Install the umbrella and all ten specialist skills:
+Install the umbrella and all eleven specialist skills:
 
 ```bash
 bunx skills add -g ifBars/blender-agent-studio --skill "*" --agent codex --full-depth -y
@@ -112,6 +134,7 @@ package contains no machine-specific installation path.
 | Light, compose, or deliver still/video renders | `blender-rendering-workflow` |
 | Bake or diagnose fluid and physics simulations | `blender-simulation-workflow` |
 | Rig, skin, animate, or export characters and avatars | `blender-character-workflow` |
+| Critique and repair a completed candidate | `blender-iterative-refinement` |
 | Measure baseline versus workflow quality | [`blender-agent-benchmark`](https://skills.sh/ifBars/blender-agent-studio/blender-agent-benchmark) |
 | Choose or evaluate a Blender MCP | [`blender-mcp-integration`](https://skills.sh/ifBars/blender-agent-studio/blender-mcp-integration) |
 
@@ -249,11 +272,21 @@ Install dependencies and run the same checks used by GitHub Actions:
 bun install --cwd plugins/blender-agent-studio
 bun run check
 bun run test
+bun run test:python
 ```
 
 The checks validate marketplace and plugin metadata, interface assets, skill
 frontmatter, bounded MCP discovery, benchmark scoring, challenge coverage, and
 the non-regression gate.
+
+The Python suite includes an optional live Blender renderer test when Blender
+is on PATH or `BLENDER_EXECUTABLE` is set. CI without Blender runs the pure
+settings tests and reports the runtime test as skipped.
+
+When editing `plugins/blender-agent-studio/references/astra-workflow.md`, run
+`bun tools/sync-guidance.ts` to bundle the same guidance inside every specialist
+skill. `bun run check` rejects stale copies, so individual skill installs do
+not depend on a shared file outside their package.
 
 Generated models, exports, renders, benchmark runs, and agent traces are
 excluded from source control.

@@ -5,6 +5,7 @@
   "scripts": {
     "mcp": "bun mcp/server.ts",
     "test": "bun test",
+    "test:python": "python -m unittest discover -s skills/blender-asset-validation/scripts -p \"test_*.py\"",
     "benchmark": "bun skills/blender-agent-benchmark/scripts/run_benchmark.ts",
     "benchmark:mcp": "bun skills/blender-agent-benchmark/scripts/benchmark_mcp.ts",
     "benchmark:vrchat-hair": "bun skills/blender-agent-benchmark/scripts/run_vrchat_hair_benchmark.ts"

@@ -5,15 +5,18 @@ description: Build or substantially refine reproducible Blender models through P
 
 # Blender Modeling Workflow
 
+Read [the shared execution guidance](references/astra-workflow.md) once per task
+for autonomous decisions, evidence cadence, and long-task continuity.
+
 Create the asset as source-controlled Python plus generated `.blend` and `.glb` outputs. Treat the script as the durable source and Blender as the execution runtime.
 
 ## Establish the contract
 
 1. Resolve the exact Blender executable and record `blender --version`.
-2. Use `$blender-agent-studio:blender-art-direction-intake` before editing
-   whenever the subject, art style, visual references, materials, scale,
-   platform, or camera direction remains unclear. Offer its optional concept
-   image only after the brief is clarified.
+2. Resolve routine visual and technical choices from context and state useful
+   defaults. Use `$blender-agent-studio:blender-art-direction-intake` when an
+   unresolved decision would cause substantial rework and context provides no
+   reasonable default, or when the user explicitly requests a brief/concept.
 3. Convert the request into a short modeling contract before editing:
    - required parts and visible relationships;
    - intended style and materials;
@@ -46,7 +49,8 @@ synonyms for visibly low-poly.
 
 Read [references/staged-quality-workflow.md](references/staged-quality-workflow.md)
 and make the current stage explicit in progress updates and `final_report.md`.
-For a normal finished asset, use all stages:
+For a normal finished asset, satisfy all stages' exit criteria. Adjacent stages
+may share a build and review pass; a repair revisits only affected stages:
 
 1. contract and references;
 2. graybox and proportion;
@@ -59,8 +63,8 @@ For a normal finished asset, use all stages:
 Do not add final materials to disguise unresolved proportions or unsupported
 parts. Do not call a graybox or refined blockout “finished.” If the user asks
 for approval-gated iteration, stop after the requested stage, show multiple
-angles, and wait for approval. In noninteractive or benchmark work, perform a
-self-review at each stage and continue without asking.
+angles, and wait for approval. Otherwise, including interactive work, perform
+self-review at each relevant milestone and continue without asking.
 
 ## Author for iteration
 
@@ -88,13 +92,17 @@ $env:BLENDER_EXECUTABLE = "C:\path\to\Blender\blender.exe"
 If `blender` is already on `PATH`, use it directly. The bundled MCP and
 benchmark runner also accept an explicit `blenderPath` or `--blender` value.
 
-After every material geometry change:
+After each coherent geometry change, regenerate the authored asset and inspect
+the affected numerical invariants and low-cost views. At a quality milestone,
+open multiview evidence and assess silhouette, proportion, supports,
+intersections, readability, orientation, and requested details. Open individual
+views at original detail when the contact sheet cannot resolve a defect.
 
-1. Generate the `.blend` and `.glb`.
-2. Use `$blender-agent-studio:blender-asset-validation` to inspect evaluated geometry and render standardized evidence.
-3. Open the hero render and contact sheet with an image-viewing tool.
-4. Inspect silhouette, proportion, supports, intersections, readability, orientation, materials, and requested details.
-5. Refine the source script and regenerate. Do not patch generated outputs manually.
+Use `$blender-agent-studio:blender-asset-validation` for early fresh-import
+checks when a change risks export behavior and for full final inspection and
+standardized evidence. A cosmetic iteration does not require the entire export
+pipeline unless it changes the exported appearance. Refine durable source and
+regenerate; do not patch generated outputs manually.
 
 For animated or articulated assets, also use `$blender-agent-studio:blender-animation-workflow`.
 

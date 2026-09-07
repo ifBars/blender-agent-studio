@@ -17,3 +17,4 @@ jobs:
       - run: bun install --cwd plugins/blender-agent-studio --frozen-lockfile
       - run: bun run check
       - run: bun run test
+      - run: bun run test:python

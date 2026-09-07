@@ -5,12 +5,17 @@ description: Clarify a Blender creation request and optionally generate a concep
 
 # Blender Art Direction Intake
 
-Resolve the visual contract before generating geometry. Do not ask questions
-whose answers are already explicit in the request or supplied references.
+Read [the shared execution guidance](references/astra-workflow.md) once per task
+for autonomous decisions, evidence cadence, and long-task continuity.
+
+Resolve the visual contract from the request, supplied references, and existing
+scene. Record routine assumptions and start authorized work; a missing field
+does not by itself require a question or a user-approved contract.
 
 ## Clarify the brief
 
-Ask the smallest useful set of concise questions for unresolved decisions:
+Consider these decisions, asking only about consequential unresolved choices
+for which context provides no reasonable default:
 
 - subject, purpose, platform, scale, and export target;
 - art style, reference period/genre, level of realism, and visual priorities;
@@ -19,14 +24,17 @@ Ask the smallest useful set of concise questions for unresolved decisions:
   single shot, turntable, animation, or runtime asset;
 - performance, topology, rigging, simulation, and delivery constraints.
 
-If a choice is still open, offer a concrete default and label it as an
-assumption. Stop for user input when a missing choice would materially change
-the asset's visual or technical direction.
+If a choice is still open, use a concrete default and label it as an assumption.
+Wait on the dependent work only when a missing answer would cause substantial
+rework and no reasonable default is available. Continue independent work.
+Respect explicit requests for consultation or approval at stage boundaries.
 
 ## Offer optional concept generation
 
-After clarification, offer an optional image-generation pass when a visual
-reference would reduce ambiguity. Phrase it as a choice, not a requirement:
+When requested, or when a concept would resolve a consequential visual
+ambiguity, offer an optional image-generation pass. Do not routinely interrupt
+an actionable modeling brief with a concept offer. A concept is not a
+prerequisite for geometry:
 
 > I can generate a concept/mockup reference before modeling; it will guide
 > silhouette, materials, palette, and camera—not become the final 3D asset.
@@ -39,7 +47,7 @@ geometry, clean topology, rigging, or a usable texture set.
 
 ## Hand off
 
-Write a short approved contract with the resolved decisions, assumptions,
+Write a short working contract with the resolved decisions, assumptions,
 reference-image path if any, and review questions. Then invoke the smallest
 appropriate workflow: modeling, procedural, rendering, simulation, character,
 or animation.

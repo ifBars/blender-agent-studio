@@ -10,6 +10,7 @@ import {
 import { scoreSubmission, type VideoEvidence } from "./score.ts";
 import { BENCHMARK_TASKS, type BenchmarkTask } from "./tasks.ts";
 import { summarizeAgentEvents } from "./trace.ts";
+import { resolveModelOptions } from "./model-options.ts";
 
 type Mode = "baseline" | "skills" | "skills_mcp";
 type Suite = "smoke" | "quick" | "full" | "challenge" | "gauntlet";
@@ -19,6 +20,7 @@ type Options = {
   mode: Mode;
   output: string;
   model?: string;
+  modelProfile: string | null;
   reasoning: string;
   repetitions: number;
   timeoutMinutes: number;
@@ -48,6 +50,11 @@ function parseOptions(): Options {
   if (!output) {
     throw new Error("--output is required");
   }
+  const modelOptions = resolveModelOptions({
+    profile: argument("--profile"),
+    model: argument("--model"),
+    reasoning: argument("--reasoning"),
+  });
   const skillRootArg = argument("--skill-root");
   const skillRoot = skillRootArg ? resolve(skillRootArg) : undefined;
   if (skillRoot && !existsSync(join(skillRoot, "skills"))) {
@@ -57,8 +64,7 @@ function parseOptions(): Options {
     suite,
     mode,
     output: resolve(output),
-    model: argument("--model"),
-    reasoning: argument("--reasoning") ?? "medium",
+    ...modelOptions,
     repetitions: Math.max(1, Number(argument("--repetitions") ?? 1)),
     timeoutMinutes: Math.max(1, Number(argument("--timeout-minutes") ?? 45)),
     blenderPath: resolveBlenderExecutable(argument("--blender")),
@@ -126,7 +132,7 @@ export function pluginPrefix(
   return `Use ${invocations.join(", ")} for this task. Follow their complete workflows and completion gates.\n\n`;
 }
 
-async function runCodex(options: {
+type CodexRunOptions = {
   cwd: string;
   prompt: string;
   mode: Mode;
@@ -135,14 +141,9 @@ async function runCodex(options: {
   timeoutMs: number;
   bypassApprovals: boolean;
   skillRootPinned: boolean;
-}): Promise<{
-  command: string[];
-  exitCode: number;
-  timedOut: boolean;
-  durationMs: number;
-  stdout: string;
-  stderr: string;
-}> {
+};
+
+export function buildCodexArgs(options: CodexRunOptions): string[] {
   const args = [
     "exec",
     "--ephemeral",
@@ -167,7 +168,18 @@ async function runCodex(options: {
     args.push("--model", options.model);
   }
   args.push("-");
+  return args;
+}
 
+async function runCodex(options: CodexRunOptions): Promise<{
+  command: string[];
+  exitCode: number;
+  timedOut: boolean;
+  durationMs: number;
+  stdout: string;
+  stderr: string;
+}> {
+  const args = buildCodexArgs(options);
   const started = performance.now();
   const proc = Bun.spawn(["codex", ...args], {
     cwd: options.cwd,
@@ -248,6 +260,8 @@ async function renderEvidence(options: {
     options.outputDir,
     "--resolution",
     "384",
+    "--presentation",
+    "neutral",
   ];
   if (options.frames.length) {
     scriptArgs.push("--frames", options.frames.join(","));
@@ -445,12 +459,15 @@ async function main(): Promise<void> {
     schemaVersion: 3,
     scorerVersion: 4,
     inspectorSchemaVersion: 3,
+    evidenceSettingsVersion: 2,
+    evidencePresentation: "neutral",
     startedAt: new Date().toISOString(),
     mode: options.conditionLabel,
     executionMode: options.mode,
     suite: options.suite,
     repetitions: options.repetitions,
     model: options.model ?? "configured default",
+    modelProfile: options.modelProfile,
     reasoning: options.reasoning,
     blenderPath: options.blenderPath,
     codexVersion: codexVersion.trim(),
@@ -493,7 +510,7 @@ async function main(): Promise<void> {
       const agent = await runCodex({
         cwd: workdir,
         prompt,
-        mode: options.conditionLabel,
+        mode: options.mode,
         model: options.model,
         reasoning: options.reasoning,
         timeoutMs: options.timeoutMinutes * 60_000,

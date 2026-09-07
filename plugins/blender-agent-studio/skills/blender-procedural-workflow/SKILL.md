@@ -5,6 +5,9 @@ description: Create reproducible Blender Geometry Nodes, modifiers, instancing s
 
 # Blender Procedural Workflow
 
+Read [the shared execution guidance](references/astra-workflow.md) once per task
+for autonomous decisions, evidence cadence, and long-task continuity.
+
 Build an editable generator with an explicit parameter contract, not a one-off
 node graph that only works for its current input.
 

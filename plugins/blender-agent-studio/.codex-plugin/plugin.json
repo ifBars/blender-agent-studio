@@ -1,6 +1,6 @@
 {
   "name": "blender-agent-studio",
-  "version": "0.4.0+codex.20260817205149",
+  "version": "0.5.0",
   "description": "Iterative, evidence-driven Blender 5.2 creation, validation, repair, animation, and regression-safe benchmark workflows.",
   "author": {
     "name": "Bars",

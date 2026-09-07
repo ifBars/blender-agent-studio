@@ -31,6 +31,10 @@ describe("Blender Agent Studio MCP", () => {
         "blender_render_evidence",
         "blender_version",
       ]);
+      const renderSchema = listed.tools.find((tool) => tool.name === "blender_render_evidence")!.inputSchema;
+      expect(renderSchema.properties?.presentation).toMatchObject({
+        enum: ["auto", "neutral", "dark", "light"], default: "auto",
+      });
 
       const blenderPath =
         process.env.BLENDER_EXECUTABLE ?? Bun.which("blender");

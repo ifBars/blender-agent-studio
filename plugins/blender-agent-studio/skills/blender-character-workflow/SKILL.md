@@ -5,6 +5,9 @@ description: Create, repair, rig, skin, animate, and export Blender characters, 
 
 # Blender Character Workflow
 
+Read [the shared execution guidance](references/astra-workflow.md) once per task
+for autonomous decisions, evidence cadence, and long-task continuity.
+
 Character completion requires deformation evidence. A mesh plus an armature is
 not a finished rig.
 

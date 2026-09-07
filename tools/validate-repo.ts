@@ -30,6 +30,7 @@ if (typeof relativePluginPath !== "string") {
 const pluginRoot = resolve(root, relativePluginPath);
 const manifestPath = join(pluginRoot, ".codex-plugin", "plugin.json");
 const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+const sharedGuidance = readFileSync(join(pluginRoot, "references/astra-workflow.md"), "utf8");
 
 if (manifest.name !== entry.name || manifest.name !== "blender-agent-studio") {
   throw new Error("Plugin names are not aligned");
@@ -54,11 +55,26 @@ for (const skillEntry of readdirSync(join(pluginRoot, "skills"), {
     throw new Error(`Missing SKILL.md for ${skillEntry.name}`);
   }
   const text = readFileSync(skillPath, "utf8");
+  const bundledGuidance = join(pluginRoot, "skills", skillEntry.name, "references/astra-workflow.md");
+  if (!existsSync(bundledGuidance) || readFileSync(bundledGuidance, "utf8") !== sharedGuidance) {
+    throw new Error(`Missing or stale guidance for ${skillEntry.name}; run bun tools/sync-guidance.ts`);
+  }
+  if (!text.includes("](references/astra-workflow.md)")) {
+    throw new Error(`Skill must link its bundled guidance: ${skillEntry.name}`);
+  }
   const match = text.match(/^---\r?\n([\s\S]*?)\r?\n---/);
   const name = match?.[1].match(/^name:\s*(.+)$/m)?.[1]?.trim();
   if (name !== skillEntry.name) {
     throw new Error(`Skill name mismatch: ${skillEntry.name} != ${name}`);
   }
+}
+
+const renderer = readFileSync(join(pluginRoot, "skills/blender-asset-validation/scripts/evidence_settings.py"), "utf8");
+const runner = readFileSync(join(pluginRoot, "skills/blender-agent-benchmark/scripts/run_benchmark.ts"), "utf8");
+const rendererVersion = renderer.match(/EVIDENCE_SETTINGS_VERSION\s*=\s*(\d+)/)?.[1];
+const recordedVersion = runner.match(/evidenceSettingsVersion:\s*(\d+)/)?.[1];
+if (!rendererVersion || rendererVersion !== recordedVersion) {
+  throw new Error("Benchmark manifest must record the current evidence settings version");
 }
 
 console.log(`Validated ${manifest.name} ${manifest.version}`);

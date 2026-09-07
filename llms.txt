@@ -15,6 +15,8 @@ Core capabilities:
 - reproducible procedural Blender modeling;
 - authored-scene and fresh-export validation;
 - standardized multiview and animation evidence;
+- adaptive studio presentation with explicit neutral, dark, and light presets;
+- Astra-aware workflows and explicit Astra/Sol/Terra/Luna benchmark profiles;
 - mechanical animation guidance;
 - isolated baseline/plugin/MCP agent benchmarks;
 - a bounded local evaluation MCP.
