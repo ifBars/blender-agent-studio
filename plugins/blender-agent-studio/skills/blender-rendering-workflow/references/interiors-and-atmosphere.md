@@ -43,6 +43,13 @@ cannot validate an authored interior's lighting or materials.
   intersections and lost silhouette. If the user prefers an earlier version,
   restore its geometry and material in the reproducible source, then verify the
   rebuilt render while retaining independent improvements.
+- Fit cushions and other soft props to evaluated support surfaces. A scan's
+  origin, original tilt or bounding-box height does not establish contact.
+  Check the underside, contact shadow and a plausible supported center of mass;
+  vertex-only clearance can miss triangles crossing curved bedding. Prefer a
+  stable resting pose with restrained contact compression before adding a
+  complex solver or large deformations. Inspect the close-up for floating edges,
+  intersections and deformation spikes, and reproduce the correction in source.
 - Give lampshades actual thickness/openings and appropriate transmission;
   solid capped cones can block their own practical light. Give glass a deliberate
   transport strategy and test whether it blocks the intended daylight.
