@@ -11,6 +11,39 @@ for autonomous decisions, evidence cadence, and long-task continuity.
 Treat a render as a reproducible deliverable, not a screenshot that happened to
 look acceptable once.
 
+For architecture, daylight shafts or fabric-heavy scenes, read
+[interiors and atmosphere](references/interiors-and-atmosphere.md).
+For photorealistic materials or environment lighting, use
+[scanned materials and HDRIs](references/poly-haven-materials.md): the bundled
+Poly Haven search/download tools acquire verified CC0 maps at up to 8K. Author
+the scene's important forms, but do not impose a from-scratch-only constraint
+that reduces realism.
+
+## Use the authored scene surface
+
+Use `blender_render_scene` for final beauty renders and lighting diagnosis.
+Call it with `inspectOnly: true` first when camera names, dependencies or render
+settings are unknown. Then select existing `cameras` by exact name and optional
+`frames`; at most 12 camera/frame combinations are allowed. The default uses the
+active camera/frame, caps the longest edge at 1280 and Cycles samples at 64, and
+automatically selects an available GPU with an explicit recorded CPU fallback.
+Choose `device: "cpu"` or a specific backend when reproducibility requires it.
+Use a fresh output directory for each run. Inspect the inline PNG and
+`render-manifest.json`; errors are not successful evidence.
+
+The standalone equivalent is bundled in this skill:
+
+```powershell
+& $env:BLENDER_EXECUTABLE --background --factory-startup --disable-autoexec `
+  --python-exit-code 1 --python "<skill-root>/scripts/render_scene.py" -- `
+  --input scene.blend --output-dir renders/preview-01 --max-edge 1280 --samples 64
+```
+
+This preserves authored lights, world, volumes, cameras, materials and color
+management. `blender_render_evidence` deliberately replaces cameras and lighting;
+use it for standardized geometry checks, not as an interior's final image.
+Neither tool substitutes for authoring the scene in durable source.
+
 ## Establish the render contract
 
 Before changing the scene, record:

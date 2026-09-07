@@ -7,6 +7,6 @@
   "scripts": {
     "check": "bun tools/validate-repo.ts",
     "test": "bun --cwd plugins/blender-agent-studio test",
-    "test:python": "python -m unittest discover -s plugins/blender-agent-studio/skills/blender-asset-validation/scripts -p \"test_*.py\""
+    "test:python": "python plugins/blender-agent-studio/scripts/test-python.py"
   }
 }

@@ -20,7 +20,34 @@ skills, and evaluation tools for turning a user request into inspectable
 export, read correctly from every side, and improve when the agent workflow
 changes?
 
-## Astra and adaptive presentation
+## Authored rendering and adaptive presentation
+
+Version 0.6.0 adds `blender_render_scene`: render interiors, atmospheric lighting
+and final beauty images through existing cameras while preserving the authored
+world, lights, volumes, materials and color management. Preflight lists cameras,
+settings and missing image/library dependencies. Renders return a PNG inline and
+a manifest with source/image hashes, effective device, settings and durations.
+Resolution, sample count, camera/frame count and process time are bounded.
+
+Use `inspectOnly: true` to discover a scene before rendering, and use a new output
+directory per run. The rendering skill also bundles the same tool as a standalone
+Python script. Neither path saves changes into the input `.blend`.
+
+It also adds **Powered by Poly Haven** asset search and verified downloads for
+CC0 PBR textures and HDRIs at 1K, 2K, 4K or 8K. Use
+`blender_search_polyhaven_assets` and `blender_download_polyhaven_asset` to obtain
+maps with source/license/hash manifests. The rendering skill includes a
+standalone Bun CLI and guidance for physical scale, color spaces, normal maps,
+texture packing and close-up review. Scanned materials complement authored
+modeling; high resolution alone is not a realism score.
+
+The bedroom study behind this update exposed over-regular textile folds,
+coincident atmosphere/ceiling boundaries, and the need to preserve authored light
+transport. The workflow now includes interior and atmosphere guidance. These are
+concrete dogfooding findings, not proof of a general model-quality improvement.
+
+Python failures now propagate as nonzero process exits and MCP errors. Loading a
+supplied `.blend` also happens after factory startup so its scene is preserved.
 
 Version 0.5.0 adds Astra-aware execution guidance, explicit model profiles,
 and an adaptive studio presentation. Routine choices use stated defaults;
@@ -314,11 +341,16 @@ universal claim across prompts, models, styles, or random variation. See the
 [methodology](plugins/blender-agent-studio/skills/blender-agent-benchmark/references/methodology.md)
 and [validated result](plugins/blender-agent-studio/skills/blender-agent-benchmark/references/validated-results.md).
 
+The [0.6 Astra development results](plugins/blender-agent-studio/skills/blender-agent-benchmark/references/astra-0.6-validation.md)
+record tested rendering/Poly Haven capabilities and mixed modeling outcomes:
+the lantern improved, but both workshop candidates lost the visual majority.
+This release has not passed a full-suite visual non-regression gate.
+
 ## Security
 
 Blender executes Python with the current user's permissions. Review untrusted
 scripts and `.blend` files before execution. The bundled MCP deliberately
-exposes version, inspection, and evidence-render tools instead of generic
+exposes bounded inspection, rendering, and Poly Haven asset tools instead of generic
 arbitrary Python.
 
 Do not commit private models, generated renders, benchmark traces, or sensitive

@@ -54,6 +54,8 @@ Use only for high-level, deterministic evaluation:
 - exact Blender build fingerprint;
 - asset metrics in a clean background process;
 - fixed multiview evidence and contact sheets;
+- authored-camera stills preserving lighting, world, volumes and color management;
+- render preflight, bounded device/sample/resolution controls and inline PNG review;
 - benchmark result preparation.
 
 It intentionally does not replace general live scene control or duplicate arbitrary-code execution.

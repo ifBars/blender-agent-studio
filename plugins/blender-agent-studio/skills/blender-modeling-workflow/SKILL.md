@@ -10,6 +10,12 @@ for autonomous decisions, evidence cadence, and long-task continuity.
 
 Create the asset as source-controlled Python plus generated `.blend` and `.glb` outputs. Treat the script as the durable source and Blender as the execution runtime.
 
+For a render-only scene, route final delivery through the rendering workflow:
+source, self-contained `.blend`, images and render manifest are sufficient.
+Require GLB and fresh-import gates when a downstream asset/export is part of the
+contract. Do not imply that procedural shaders, atmospheric volumes or Cycles
+lighting survive a GLB export unchanged.
+
 ## Establish the contract
 
 1. Resolve the exact Blender executable and record `blender --version`.
@@ -71,6 +77,10 @@ self-review at each relevant milestone and continue without asking.
 1. Create one deterministic entry script. Set seeds explicitly when randomness is used.
 2. Start from a clean scene and name semantic parts, assemblies, materials, actions, cameras, and anchors.
 3. Model readable primary forms before small surface detail.
+   For multi-zone scenes, plan finish coverage for the whole contracted asset.
+   Review secondary work areas and inspectable reverse/top surfaces before
+   spending the remaining detail budget on the hero object. Authored-camera
+   beauty renders supplement the promised multiview checks.
 4. Give every visibly moving or functional part a plausible connection, support, guide, hinge, sleeve, rail, or parent.
 5. Keep important dimensions and animation frames as named constants near the top of the script.
 6. Preserve editable construction where useful, but evaluate modifiers before measuring exported geometry.

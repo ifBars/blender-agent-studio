@@ -6,7 +6,7 @@
         "./mcp/server.ts"
       ],
       "cwd": ".",
-      "note": "Bounded Blender 5.2 execution, asset inspection, and evidence rendering tools."
+      "note": "Bounded Blender inspection, authored/evidence rendering, and verified Poly Haven texture/HDRI acquisition."
     }
   }
 }

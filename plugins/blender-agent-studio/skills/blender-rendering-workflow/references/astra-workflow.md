@@ -31,6 +31,14 @@ Never skip proportion review, hide unresolved structure with materials, or
 reduce the finish target to save steps. For a local repair, revisit affected
 milestones rather than rebuilding already accepted work.
 
+Before polishing a hero view, map the requested deliverable's review coverage:
+primary subject, secondary functional zones, reverse sides, broad surfaces and
+top/underside where inspectable. Spread the finish work across that scope before
+adding detail to the focal object. A complete asset or environment must not have
+a dressed hero area surrounded by primitive or blank construction. An explicitly
+interior-only/render-only brief does not require inventing an unseen exterior;
+an inspectable whole-asset brief does require its promised multiview finish.
+
 ## Spend tool time on evidence that changes the next decision
 
 Make the asset handoff visually useful by default: show a polished hero image
@@ -39,6 +47,13 @@ background. Use the renderer's automatic preset as a starting point and adapt
 after opening the image; provide two labeled looks only when both serve a useful
 purpose. Keep fixed diagnostic views alongside it. Pin a common preset for
 benchmark comparisons, where per-candidate adaptation would confound results.
+
+For photorealistic scenes, use authored cameras/lighting and suitable scanned
+materials or HDRIs. The rendering skill includes Poly Haven search/download
+tools and material setup guidance. Keep important modeling work authored, but
+do not equate originality with rebuilding every texture from procedural noise.
+Inspect material close-ups, record sourced assets, and preserve render-only
+deliverables without forcing an irrelevant GLB export.
 
 - During construction, run the relevant numerical checks and low-cost views
   after a coherent change. Inspect the whole contact sheet, then open original

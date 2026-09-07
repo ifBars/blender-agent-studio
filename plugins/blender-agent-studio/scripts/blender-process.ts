@@ -51,12 +51,12 @@ export async function runBlender(options: {
   const blenderPath = resolveBlenderExecutable(options.blenderPath);
   const scriptPath = resolveExistingPath(options.scriptPath, "Python script");
   const cwd = resolve(options.cwd ?? dirname(scriptPath));
-  const args: string[] = [];
+  const args: string[] = ["--background", "--factory-startup", "--disable-autoexec"];
 
   if (options.blendPath) {
     args.push(resolveExistingPath(options.blendPath, "Blend file"));
   }
-  args.push("--background", "--factory-startup", "--python", scriptPath);
+  args.push("--python-exit-code", "1", "--python", scriptPath);
   if (options.scriptArgs?.length) {
     args.push("--", ...options.scriptArgs);
   }

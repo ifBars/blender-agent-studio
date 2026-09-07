@@ -19,7 +19,7 @@ Core capabilities:
 - Astra-aware workflows and explicit Astra/Sol/Terra/Luna benchmark profiles;
 - mechanical animation guidance;
 - isolated baseline/plugin/MCP agent benchmarks;
-- a bounded local evaluation MCP.
+- a bounded local MCP for evaluation and authored-camera rendering, with scene preflight and inline PNG review.
 
 The plugin source is under `plugins/blender-agent-studio/`. Generated models,
 renders, exports, and benchmark runs are intentionally excluded from git.
