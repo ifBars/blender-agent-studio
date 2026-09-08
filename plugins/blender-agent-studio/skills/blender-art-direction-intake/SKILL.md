@@ -31,6 +31,11 @@ Respect explicit requests for consultation or approval at stage boundaries.
 
 ## Offer optional concept generation
 
+Reference retrieval is part of ordinary preparation for recognizable subjects;
+it does not require a concept-generation offer. Follow the shared guidance to
+find complementary angles and separate observed structure from intended style.
+Use existing user references first and record what remains uncertain.
+
 When requested, or when a concept would resolve a consequential visual
 ambiguity, offer an optional image-generation pass. Do not routinely interrupt
 an actionable modeling brief with a concept offer. A concept is not a

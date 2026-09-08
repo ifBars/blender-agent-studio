@@ -22,6 +22,14 @@ expression.
 
 ## Build and rig deliberately
 
+Retrieve anatomy references with compatible species, age and pose before building
+a new character or creature. For a low-poly brown bear, for example, look for
+whole-body front, profile and three-quarter views in a comparable stance, plus
+head and paw close-ups. Record body/head proportions, muzzle depth, shoulder
+shape and foot contact from those images. Use separate low-poly examples for
+plane simplification; do not replace anatomy with a generic animal silhouette
+or infer all four legs from one occluded photograph.
+
 1. Keep the authored mesh, armature, controls, deformation helpers, and export
    mesh in named collections. Apply or deliberately preserve transforms before
    skinning; document the choice.

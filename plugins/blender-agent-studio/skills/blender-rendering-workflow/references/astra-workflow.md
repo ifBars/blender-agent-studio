@@ -16,6 +16,48 @@ Explicit user instructions take precedence over skill guidelines. If a skill
 would force a pause, quote and link the specific instruction and explain why
 existing authorization does not cover the next step.
 
+## Gather references that answer modeling questions
+
+For a new recognizable subject or a substantial shape/anatomy repair, retrieve
+and inspect real reference images before detailed modeling. Start with images
+the user supplied. Use the host's image search or browser tools to fill gaps;
+ordinary text search is a discovery fallback, not a substitute for opening the
+images. Do not assume a particular search tool exists. For a small edit, reuse
+the accepted references and investigate only the affected feature.
+
+- Plan coverage by question: front for width/spacing, profile for depth and
+  proportions, three-quarter for volume, rear/top when relevant, and close-ups
+  for difficult joints, contact surfaces or identifying features. Start with
+  roughly 3-6 useful images, not a quota of near-duplicates. Include whole-subject
+  views; close-ups alone cannot establish overall proportions.
+- Search for the subject plus the missing angle, pose and feature. Prefer the
+  same individual, product variant or consistent photo series when possible.
+  Label different examples as analogues; do not combine ages, species, variants
+  or poses into an imaginary turnaround. Prefer original photographers,
+  manufacturers, museums, wildlife organizations or documented asset sources.
+- Inspect the actual images for occlusion, perspective distortion and uncertain
+  identity. Perspective photos are not calibrated orthographic measurements.
+  Record inferred hidden structure and conflicting evidence as assumptions.
+- Separate structure/anatomy references from style, palette and lighting
+  references. An explicit low-poly request still benefits from real form and
+  proportion references; simplify those forms deliberately. Generated concepts
+  can guide style but cannot verify unseen geometry or biological anatomy.
+- Keep a compact `reference_notes.md` beside the source: source page URL,
+  image URL or local path, angle/pose, the feature it informs, observed proportion
+  or relationship, and uncertainty. Record access/license information if saving
+  or reusing an image; viewing permission does not grant redistribution or
+  texture reuse. Keep reference images out of published assets unless permitted.
+
+Stop searching when the main modeling questions have useful coverage. If a
+needed view is unavailable or the host cannot inspect images, state that gap
+and proceed with explicit assumptions where practical; do not claim inspection
+or invent a reference. Compare the graybox and final model with the chosen
+references from similar angles. Record concrete mismatches and repair source,
+preserving the user's intended stylization. Retrieval alone is not validation.
+For benchmarks, hold reference access and research limits constant across
+conditions. Search for the subject, never fixture solutions, prior submissions
+or hidden rubrics.
+
 ## Reason across the whole asset
 
 Before detailed construction, connect the visual brief to a small set of

@@ -10,8 +10,12 @@ criteria are visible in evidence or measurable in the scene.
 - Record whether low-poly is explicitly requested.
 - Identify the intended view distance and the hardest silhouette or contact
   relationship to judge.
+- Retrieve and open complementary references for new recognizable subjects.
+  Record source URLs, useful angles, observed relationships and unresolved gaps
+  in `reference_notes.md`. Keep anatomy/structure separate from visual style.
 
-Exit when the modeling contract and review questions are explicit.
+Exit when the contract, reference observations and review questions are explicit.
+If retrieval is unavailable, record the limitation and modeling assumptions.
 
 ## 2. Graybox and proportion
 
@@ -19,6 +23,8 @@ Exit when the modeling contract and review questions are explicit.
 - Use neutral materials and labels where they improve spatial review.
 - Check scale, silhouette, negative space, access, and the relationship between
   every required major part.
+- Compare similar-angle references and graybox renders for the recorded
+  proportions. Resolve important silhouette errors before surface detail.
 
 Exit when proportions and layout work from front, side, top, and perspective
 views. A graybox is not a finished asset.

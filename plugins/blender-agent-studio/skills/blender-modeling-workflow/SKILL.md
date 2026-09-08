@@ -36,6 +36,11 @@ lighting survive a GLB export unchanged.
 
 ## Default to a finished-quality asset
 
+For new subjects, follow the shared guidance's reference-gathering step before
+the graybox. Write down the proportions and relationships the references imply,
+then compare matching graybox views against them. A folder of images without
+observations or a comparison pass does not complete the reference stage.
+
 Treat “game-ready,” “stylized,” and “optimized” as quality constraints, not as
 synonyms for visibly low-poly.
 
