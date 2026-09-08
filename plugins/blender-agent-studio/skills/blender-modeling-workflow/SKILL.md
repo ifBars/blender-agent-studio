@@ -56,6 +56,11 @@ synonyms for visibly low-poly.
 - A triangle ceiling is a limit, not a target. Do not celebrate being far under
   budget when the result still reads as a blockout.
 
+For characters, also use `$blender-agent-studio:blender-character-workflow`
+and its form/fit review. Low-poly style is not an exception to plausible torso
+and shoe proportions, connected garment surfaces, or fitted accessories. A
+beveled box and detailed texture do not by themselves resolve a blocky form.
+
 ## Work in named stages
 
 Read [references/staged-quality-workflow.md](references/staged-quality-workflow.md)

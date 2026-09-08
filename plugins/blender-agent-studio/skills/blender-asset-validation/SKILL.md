@@ -79,6 +79,15 @@ Open the hero and contact sheet with an image-viewing tool. Review:
   textures;
 - whether details remain legible at intended scale.
 
+For humanoids, apply the character workflow's form/fit review: full-body
+proportions plus close-ups of footwear, waist/crotch, shoulders, hands/thumbs,
+and face/nose/ears/neck. Inspect evaluated skin surfaces in motion; connected
+bones or a single mesh object do not prove continuous garments. Check skin tone
+and texture seams under neutral lighting as well as the target presentation.
+Treat blocky or oversized forms, unexplained overlaps and skin-tone discontinuity
+as visual defects when inconsistent with the brief, not as successful low-poly
+optimization. Use reference-relative judgments rather than universal ratios.
+
 ## Verify the exported artifact
 
 1. Export GLB from the authored `.blend`.

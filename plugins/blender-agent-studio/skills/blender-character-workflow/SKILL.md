@@ -20,6 +20,15 @@ constraints. Identify the minimum acceptance poses: neutral, extreme bend for
 each major joint, reach, twist, locomotion/contact, and any required facial
 expression.
 
+## Review character form and fit
+
+Read [character form and fit review](references/character-form-review.md) for
+humanoid creation and substantial anatomy/clothing repairs. Establish torso,
+pelvis, boot and hand proportions against the references before adding detail.
+Inspect continuous garment/joint surfaces, fitted accessories and skin-texture
+consistency in neutral and moving poses. These are visual acceptance criteria;
+passing rig/export metrics alone does not satisfy them.
+
 ## Build and rig deliberately
 
 Retrieve anatomy references with compatible species, age and pose before building
@@ -74,6 +83,10 @@ front, back, side, top, and perspective evidence. A Blender style visibility
 setup is not proof that Unity/VRChat expression-menu toggles were authored.
 
 ## Completion gate
+
+Resolve or explicitly report the form/fit review findings. Include full-body
+and feature close-ups from the final revision, with affected poses rechecked
+after the last geometry/material edit.
 
 Deliver the editable source, export, bone/control map, tested pose/action list,
 and fresh-import evidence. State any target-specific validation that could not

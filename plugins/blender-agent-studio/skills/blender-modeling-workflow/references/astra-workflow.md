@@ -81,6 +81,13 @@ a dressed hero area surrounded by primitive or blank construction. An explicitly
 interior-only/render-only brief does not require inventing an unseen exterior;
 an inspectable whole-asset brief does require its promised multiview finish.
 
+For humanoid work, use the character workflow's form/fit review proactively.
+Repeatedly observed failure patterns include oversized boxy torsos and shoes,
+disconnected pelvis/limbs, unfitted garment details, oversized thumbs and
+inconsistent skin patches. Check these against references before detail and
+again in motion; do not wait for serial user corrections. They are review
+priorities, not universal claims about a model or fixed anatomy thresholds.
+
 ## Spend tool time on evidence that changes the next decision
 
 Make the asset handoff visually useful by default: show a polished hero image
