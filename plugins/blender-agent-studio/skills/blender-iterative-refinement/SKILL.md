@@ -54,11 +54,15 @@ Thin, occluded, or low-contrast connections are `unclear`, even when numerical
 endpoint residuals pass.
 
 When available, retain `blender_quality_report` output for candidate and repair
-using identical selection and explicit constraints. Its errors cover the full
-selected assembly even if object results are paginated. Keep numeric findings
-separate from the visual ledger: `review_required` is not a pass, and bounds
-overlap alone cannot prove a mesh intersection. Compare actual evidence before
-retaining a repair; no aesthetic score or automatic checkpoint tool is implied.
+using identical selection and explicit constraints. Then call
+`blender_compare_scenes` with the preserved candidate as baseline. Declare
+required parts and invariants from the frozen contract; use `invariantObjects`
+when the repaired part is intentionally allowed to move or change dimensions.
+Its errors cover the full selected assembly even if object results are paginated.
+Keep numeric findings and factual diffs separate from the visual ledger:
+`review_required` is not a pass, and bounds overlap alone cannot prove a mesh
+intersection. Compare actual evidence before retaining a repair; no aesthetic
+score or automatic checkpoint tool is implied.
 
 ## Repair durable source
 
