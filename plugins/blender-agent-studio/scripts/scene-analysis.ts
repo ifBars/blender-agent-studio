@@ -12,9 +12,9 @@ export function runtimeExecutable(): string {
   return executable;
 }
 
-export async function analyzeSceneIR(scene: unknown, options: Record<string, unknown>, timeoutMs = 30_000) {
-  const input = JSON.stringify({ scene, options });
-  if (Buffer.byteLength(input) > 16 * 1024 * 1024) throw new Error("SceneIR request exceeds 16 MiB");
+async function runRuntime(request: unknown, maxBytes: number, timeoutMs: number) {
+  const input = JSON.stringify(request);
+  if (Buffer.byteLength(input) > maxBytes) throw new Error(`SceneIR runtime request exceeds ${maxBytes / 1024 / 1024} MiB`);
   const proc = Bun.spawn([runtimeExecutable()], { stdin: new Blob([input]), stdout: "pipe", stderr: "pipe", windowsHide: true });
   let timedOut = false;
   const timer = setTimeout(() => { timedOut = true; proc.kill(); }, timeoutMs);
@@ -26,6 +26,27 @@ export async function analyzeSceneIR(scene: unknown, options: Record<string, unk
   } finally { clearTimeout(timer); }
 }
 
+export async function analyzeSceneIR(scene: unknown, options: Record<string, unknown>, timeoutMs = 30_000) {
+  return runRuntime({ scene, options }, 16 * 1024 * 1024, timeoutMs);
+}
+
+export async function compareSceneIR(baseline: unknown, candidate: unknown, options: Record<string, unknown>, timeoutMs = 30_000) {
+  return runRuntime({ baseline, candidate, options }, 32 * 1024 * 1024, timeoutMs);
+}
+
+async function extractSceneIR(assetPath: string, blenderPath: string | undefined, timeoutMs: number) {
+  const temporary = await mkdtemp(join(tmpdir(), "bas-scene-ir-"));
+  try {
+    const sceneFile = join(temporary, "scene.json");
+    const process = await runBlender({ blenderPath,
+      scriptPath: join(pluginRoot, "skills/blender-asset-validation/scripts/extract_scene_ir.py"),
+      scriptArgs: ["--input", resolve(assetPath), "--output", sceneFile], timeoutMs });
+    if (process.timedOut || process.exitCode !== 0) throw new Error(`Scene extraction failed${process.timedOut ? " (timeout)" : ""}: ${process.stderr || process.stdout}`);
+    if ((await stat(sceneFile)).size > 15 * 1024 * 1024) throw new Error("SceneIR exceeds 15 MiB");
+    return JSON.parse(await readFile(sceneFile, "utf8"));
+  } finally { await rm(temporary, { recursive: true, force: true }); }
+}
+
 export async function describeAsset(args: {
   assetPath: string; outputJson?: string; blenderPath?: string; timeoutMs: number;
   options: Record<string, unknown>;
@@ -33,17 +54,22 @@ export async function describeAsset(args: {
   runtimeExecutable(); // Fail before starting Blender if setup is missing.
   const output = args.outputJson ? resolve(args.outputJson) : undefined;
   if (output && existsSync(output)) throw new Error("outputJson must be a new file");
-  const temporary = await mkdtemp(join(tmpdir(), "bas-scene-ir-"));
-  try {
-    const sceneFile = join(temporary, "scene.json");
-    const process = await runBlender({ blenderPath: args.blenderPath,
-      scriptPath: join(pluginRoot, "skills/blender-asset-validation/scripts/extract_scene_ir.py"),
-      scriptArgs: ["--input", resolve(args.assetPath), "--output", sceneFile], timeoutMs: args.timeoutMs });
-    if (process.timedOut || process.exitCode !== 0) throw new Error(`Scene extraction failed${process.timedOut ? " (timeout)" : ""}: ${process.stderr || process.stdout}`);
-    if ((await stat(sceneFile)).size > 15 * 1024 * 1024) throw new Error("SceneIR exceeds 15 MiB");
-    const scene = JSON.parse(await readFile(sceneFile, "utf8"));
-    const analysis = await analyzeSceneIR(scene, args.options);
-    if (output) await writeFile(output, JSON.stringify({ scene, analysis }, null, 2), { flag: "wx" });
-    return { ...analysis, outputJson: output ?? null };
-  } finally { await rm(temporary, { recursive: true, force: true }); }
+  const scene = await extractSceneIR(args.assetPath, args.blenderPath, args.timeoutMs);
+  const analysis = await analyzeSceneIR(scene, args.options);
+  if (output) await writeFile(output, JSON.stringify({ scene, analysis }, null, 2), { flag: "wx" });
+  return { ...analysis, outputJson: output ?? null };
+}
+
+export async function compareAssets(args: {
+  baselineAssetPath: string; candidateAssetPath: string; outputJson?: string;
+  blenderPath?: string; timeoutMs: number; options: Record<string, unknown>;
+}) {
+  runtimeExecutable();
+  const output = args.outputJson ? resolve(args.outputJson) : undefined;
+  if (output && existsSync(output)) throw new Error("outputJson must be a new file");
+  const baseline = await extractSceneIR(args.baselineAssetPath, args.blenderPath, args.timeoutMs);
+  const candidate = await extractSceneIR(args.candidateAssetPath, args.blenderPath, args.timeoutMs);
+  const diff = await compareSceneIR(baseline, candidate, args.options);
+  if (output) await writeFile(output, JSON.stringify({ baseline, candidate, diff }, null, 2), { flag: "wx" });
+  return { ...diff, outputJson: output ?? null };
 }
