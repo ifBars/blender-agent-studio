@@ -6,6 +6,7 @@ scene analysis between extraction and agent review:
 ```text
 .blend / exported asset -> evaluated Blender extraction -> SceneIR 0.1
                        -> bas-runtime -> compact description and quality report
+baseline + candidate SceneIR -> bas-runtime -> structural diff and declared regression gates
 ```
 
 This first implementation makes hierarchy, dimensions, topology and explicit
@@ -15,7 +16,8 @@ the agent creates better assets. That needs repeated, controlled benchmarks.
 ## Setup
 
 The existing inspection, rendering and download tools still work without Rust.
-For `blender_describe_scene` and `blender_quality_report`, install a stable Rust
+For `blender_describe_scene`, `blender_quality_report` and
+`blender_compare_scenes`, install a stable Rust
 toolchain and run this **from the installed plugin directory** (the directory
 containing `mcp`, `runtime` and `package.json`):
 
@@ -100,6 +102,36 @@ disables automatic script execution, and never saves the source. Failed runs
 return MCP errors, never a prior analysis artifact. Extraction has the supplied
 `timeoutMs`; Rust analysis has a separate 30-second limit.
 
+### Compare a repair with its baseline
+
+Use `blender_compare_scenes` after preserving a complete candidate and
+regenerating a repair. It extracts both assets independently and reports added,
+removed, changed and unchanged objects; aggregate triangle and bounds changes;
+and per-object transform, bounds, hierarchy, role and mesh-summary changes.
+Matching uses exact object IDs, so keep semantic names stable across iterations.
+
+The factual diff is not a quality verdict. Changes become failures only through
+explicit options grounded in the task contract:
+
+- `requiredObjects` must remain present;
+- `forbidRemovedObjects` rejects every removed object;
+- `preserveParenting` and `preserveSemanticRoles` protect those authored fields;
+- `maxTriangleIncrease` gates the complete-scene triangle delta;
+- `maxCenterShift` and `maxDimensionChange` gate matched objects;
+- `forbidNewTopologyFindings` rejects increased disconnected-component,
+  non-manifold-edge, degenerate-face or missing-material-face counts.
+
+Use `invariantObjects` to apply per-object preservation gates only to parts that
+the repair should not alter. An empty list applies them to every matched object.
+This prevents an intended local repair from failing merely because its target
+moved or changed size. Required and invariant names absent from the baseline are
+rejected or reported instead of silently weakening the comparison.
+
+`review_required` means no declared invariant failed; it is not proof that the
+candidate improved. Compare baseline and candidate with identical cameras,
+frames, render settings and export/import paths before retaining the repair.
+Use `outputJson` when the full snapshots and diff need to remain auditable.
+
 ### Declared contact checks
 
 `contactPairs` accepts up to 200 pairs of exact mesh-object IDs that the brief
@@ -122,8 +154,10 @@ automatically. The runtime equivalent option is `contact_pairs`.
 ## SceneIR 0.1 contract
 
 `runtime/src/lib.rs` defines the versioned, strict input schema. The executable
-reads one JSON request from stdin and writes one analysis JSON to stdout. Errors
-go to stderr with a nonzero exit status. It does not read assets or execute code.
+reads one JSON request from stdin and writes one analysis or diff JSON response
+to stdout. Errors go to stderr with a nonzero exit status. It does not read
+assets or execute code. Analysis requests contain `scene`; diff requests contain
+`baseline` and `candidate`.
 
 ```json
 {
@@ -153,7 +187,7 @@ fields, unsupported schema versions, duplicate or missing IDs, cyclic parents,
 non-finite coordinates, reversed bounds and invalid pagination are rejected.
 
 Limits: 2,048 scene objects; 2 million evaluated vertices across the scene;
-2 million polygons per object; 15 MiB extraction JSON; 16 MiB runtime request;
+2 million polygons per object; 15 MiB per extraction JSON; 32 MiB runtime request;
 200 returned objects per page; and 200 returned findings/relations per response.
 Totals and truncation flags identify omitted findings. Geometry limits are
 checked after Blender evaluates the mesh, so they do not cap modifier evaluation
@@ -172,6 +206,9 @@ memory. Isolate complex assemblies before extraction if needed.
   of physical connection. No symmetry or support relationship is inferred.
 - Exact triangle intersections, surface proximity, symmetry, reference-mask
   comparison, checkpoints and semantic modeling primitives are follow-on work.
+- Scene diffs compare exact object IDs and numeric summaries. They do not infer
+  correspondence after renaming, localize vertex-level edits, or prove that a
+  reported change is desirable.
 - Before claiming improved modeling reliability, compare the previous plugin
   and this runtime on the same tasks, model, effort, budgets and evidence
   settings, with repeated runs. Report completion, technical findings, visual
