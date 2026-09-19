@@ -31,6 +31,7 @@ describe("Blender Agent Studio MCP", () => {
       const listed = await client.listTools();
       expect(listed.tools.map((tool) => tool.name).sort()).toEqual([
         "blender_compare_reference",
+        "blender_compare_scenes",
         "blender_describe_scene",
         "blender_diagnose_topology",
         "blender_download_polyhaven_asset",
@@ -45,9 +46,12 @@ describe("Blender Agent Studio MCP", () => {
       const renderSchema = listed.tools.find((tool) => tool.name === "blender_render_evidence")!.inputSchema;
       // Codex's tool schema parser requires homogeneous array items, not tuple-schema arrays.
       const qualitySchema = listed.tools.find(tool => tool.name === 'blender_quality_report')!.inputSchema;
+      const diffSchema = listed.tools.find(tool => tool.name === 'blender_compare_scenes')!.inputSchema;
       expect((qualitySchema.properties?.contactPairs as any).items.items).toEqual({type: 'string'});
       expect((qualitySchema.properties?.contactPairs as any).items.minItems).toBe(2);
       expect((qualitySchema.properties?.connectionPoints as any).items.properties.pointA.items.type).toBe("number");
+      expect(diffSchema.properties?.invariantObjects).toMatchObject({default: [], maxItems: 2048});
+      expect(diffSchema.properties?.forbidNewTopologyFindings).toMatchObject({default: false});
       expect(renderSchema.properties?.presentation).toMatchObject({
         enum: ["auto", "neutral", "dark", "light"], default: "auto",
       });
