@@ -27,8 +27,8 @@ inline. A reviewed white-on-black mask optionally enables projection metrics;
 photos alone produce visual comparison, not guessed similarity scores. Author
 the reference camera with bpy or the live MCP before comparing geometry.
 
-`blender_describe_scene` and `blender_quality_report` use the bundled Rust
-SceneIR analyzer. Run `bun run setup:runtime` in the installed plugin root with
+`blender_describe_scene`, `blender_quality_report` and `blender_compare_scenes`
+use the bundled Rust SceneIR analyzer. Run `bun run setup:runtime` in the installed plugin root with
 a stable Rust toolchain, or set `BAS_RUNTIME_EXECUTABLE` to a compatible built
 binary. Rebuild after updates. The existing tools remain independent of Rust.
 
@@ -38,6 +38,11 @@ authored `bas_role` properties. Supply quality constraints from the brief;
 ground checks require named objects and `groundZ`. AABB relations are candidates,
 not exact mesh intersections. Keep the returned limitations and required visual
 questions attached to the findings. No numerical aesthetic score is produced.
+
+After a source-level repair, compare the preserved and regenerated assets with
+`blender_compare_scenes`. Keep its factual changes separate from explicitly
+declared invariant failures, and pair it with identical visual evidence. Use
+`invariantObjects` when preservation gates should exclude the edited component.
 
 ## Preserve reproducibility
 
