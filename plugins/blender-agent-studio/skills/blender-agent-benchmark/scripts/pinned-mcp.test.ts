@@ -20,6 +20,7 @@ test("preflight records the actual pinned server inventory", async()=>{
   const output=await preflightPinnedMcp(resolve(import.meta.dir,"../../.."));
   expect(output.tools).toContain("blender_describe_scene");
   expect(output.tools).toContain("blender_quality_report");
+  expect(output.tools).toContain("blender_compare_scenes");
   expect(output.version?.name).toBe("blender-agent-studio");
 },15000);
 
