@@ -115,15 +115,17 @@ Open boundaries are not automatically classified as defects.
 
 ## Scene understanding
 
-The optional Rust runtime powers `blender_describe_scene` and
-`blender_quality_report`. With Rust installed, run `bun run setup:runtime` from
-this directory, then start a new Codex task. Rebuild after plugin updates, or set
-`BAS_RUNTIME_EXECUTABLE` to a compatible compiled runtime. Existing tools do not
-require Rust.
+The optional Rust runtime powers `blender_describe_scene`,
+`blender_quality_report`, and `blender_compare_scenes`. With Rust installed, run
+`bun run setup:runtime` from this directory, then start a new Codex task. Rebuild
+after plugin updates, or set `BAS_RUNTIME_EXECUTABLE` to a compatible compiled
+runtime. Existing tools do not require Rust.
 
 Describe a scene first, then focus on an exact `objectId` and its descendants.
 The report separates measured geometry constraints from required visual review.
-Bounds overlap is a candidate, not a proven mesh intersection. See the
+After a repair, compare the preserved and regenerated assets to see structural
+changes and enforce only contract-derived invariants. Bounds overlap is a
+candidate, not a proven mesh intersection. See the
 [SceneIR guide](https://github.com/ifBars/blender-agent-studio/blob/main/docs/scene-understanding.md)
 for examples, setup and limits.
 
