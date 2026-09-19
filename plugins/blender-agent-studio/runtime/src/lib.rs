@@ -29,7 +29,7 @@ impl Bounds {
     }
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Mesh {
     pub vertices: u32,
@@ -117,6 +117,54 @@ pub struct Request {
     pub scene: Scene,
     #[serde(default)]
     pub options: Options,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct DiffOptions {
+    pub tolerance: f64,
+    pub required_objects: Vec<String>,
+    pub invariant_objects: Vec<String>,
+    pub forbid_removed_objects: bool,
+    pub preserve_parenting: bool,
+    pub preserve_semantic_roles: bool,
+    pub max_triangle_increase: Option<u64>,
+    pub max_center_shift: Option<f64>,
+    pub max_dimension_change: Option<f64>,
+    pub forbid_new_topology_findings: bool,
+}
+
+impl Default for DiffOptions {
+    fn default() -> Self {
+        Self {
+            tolerance: 1e-6,
+            required_objects: vec![],
+            invariant_objects: vec![],
+            forbid_removed_objects: false,
+            preserve_parenting: false,
+            preserve_semantic_roles: false,
+            max_triangle_increase: None,
+            max_center_shift: None,
+            max_dimension_change: None,
+            forbid_new_topology_findings: false,
+        }
+    }
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct DiffRequest {
+    pub baseline: Scene,
+    pub candidate: Scene,
+    #[serde(default)]
+    pub options: DiffOptions,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+pub enum RuntimeRequest {
+    Analyze(Request),
+    Diff(DiffRequest),
 }
 
 fn validate(scene: &Scene, options: &Options) -> Result<(), String> {
@@ -246,6 +294,325 @@ fn world_point(matrix: [[f64; 4]; 4], point: [f64; 3]) -> [f64; 3] {
             + matrix[row][2] * point[2]
             + matrix[row][3]
     })
+}
+
+fn aggregate_bounds<'a>(objects: impl Iterator<Item = &'a Object>) -> Option<Bounds> {
+    let mut aggregate: Option<Bounds> = None;
+    for object in objects {
+        if let Some(bounds) = &object.bounds {
+            aggregate = Some(match aggregate {
+                None => bounds.clone(),
+                Some(current) => Bounds {
+                    min: std::array::from_fn(|axis| current.min[axis].min(bounds.min[axis])),
+                    max: std::array::from_fn(|axis| current.max[axis].max(bounds.max[axis])),
+                },
+            });
+        }
+    }
+    aggregate
+}
+
+fn triangle_total(scene: &Scene) -> u64 {
+    scene
+        .objects
+        .iter()
+        .filter_map(|object| object.mesh.as_ref())
+        .map(|mesh| u64::from(mesh.triangles))
+        .sum()
+}
+
+fn max_abs(values: impl Iterator<Item = f64>) -> f64 {
+    values.map(f64::abs).fold(0.0, f64::max)
+}
+
+fn vec_delta(after: [f64; 3], before: [f64; 3]) -> [f64; 3] {
+    std::array::from_fn(|axis| after[axis] - before[axis])
+}
+
+fn vec_length(values: [f64; 3]) -> f64 {
+    values.iter().map(|value| value.powi(2)).sum::<f64>().sqrt()
+}
+
+fn mesh_delta(candidate: &Mesh, baseline: &Mesh) -> Value {
+    json!({
+        "vertices": i64::from(candidate.vertices) - i64::from(baseline.vertices),
+        "triangles": i64::from(candidate.triangles) - i64::from(baseline.triangles),
+        "connected_components": i64::from(candidate.connected_components) - i64::from(baseline.connected_components),
+        "non_manifold_edges": i64::from(candidate.non_manifold_edges) - i64::from(baseline.non_manifold_edges),
+        "degenerate_faces": i64::from(candidate.degenerate_faces) - i64::from(baseline.degenerate_faces),
+        "missing_material_faces": i64::from(candidate.missing_material_faces) - i64::from(baseline.missing_material_faces),
+    })
+}
+
+fn validate_diff(request: &DiffRequest) -> Result<(), String> {
+    validate(&request.baseline, &Options::default())?;
+    validate(&request.candidate, &Options::default())?;
+    let options = &request.options;
+    for value in [
+        Some(options.tolerance),
+        options.max_center_shift,
+        options.max_dimension_change,
+    ]
+    .into_iter()
+    .flatten()
+    {
+        if !value.is_finite() || !(0.0..=1e9).contains(&value) {
+            return Err("Diff distances must be finite and between 0 and 1e9".into());
+        }
+    }
+    if options.required_objects.len() > 2048 || options.invariant_objects.len() > 2048 {
+        return Err("At most 2048 required or invariant objects are allowed".into());
+    }
+    let baseline_ids: BTreeSet<_> = request
+        .baseline
+        .objects
+        .iter()
+        .map(|o| o.id.as_str())
+        .collect();
+    let candidate_ids: BTreeSet<_> = request
+        .candidate
+        .objects
+        .iter()
+        .map(|o| o.id.as_str())
+        .collect();
+    for id in &options.required_objects {
+        if !baseline_ids.contains(id.as_str()) && !candidate_ids.contains(id.as_str()) {
+            return Err(format!("Required object is absent from both scenes: {id}"));
+        }
+    }
+    for id in &options.invariant_objects {
+        if !baseline_ids.contains(id.as_str()) {
+            return Err(format!(
+                "Invariant object is absent from the baseline: {id}"
+            ));
+        }
+    }
+    Ok(())
+}
+
+pub fn compare(request: DiffRequest) -> Result<Value, String> {
+    validate_diff(&request)?;
+    let DiffRequest {
+        baseline,
+        candidate,
+        options,
+    } = request;
+    let baseline_by_id: BTreeMap<_, _> = baseline
+        .objects
+        .iter()
+        .map(|o| (o.id.as_str(), o))
+        .collect();
+    let candidate_by_id: BTreeMap<_, _> = candidate
+        .objects
+        .iter()
+        .map(|o| (o.id.as_str(), o))
+        .collect();
+    let baseline_ids: BTreeSet<_> = baseline_by_id.keys().copied().collect();
+    let candidate_ids: BTreeSet<_> = candidate_by_id.keys().copied().collect();
+    let added: Vec<_> = candidate_ids.difference(&baseline_ids).copied().collect();
+    let removed: Vec<_> = baseline_ids.difference(&candidate_ids).copied().collect();
+    let mut changed = vec![];
+    let mut regressions = vec![];
+    let mut unchanged_count = 0usize;
+    let is_invariant = |id: &str| {
+        options.invariant_objects.is_empty()
+            || options.invariant_objects.iter().any(|wanted| wanted == id)
+    };
+
+    for &id in baseline_ids.intersection(&candidate_ids) {
+        let before = baseline_by_id[id];
+        let after = candidate_by_id[id];
+        let mut fields = serde_json::Map::new();
+        if before.kind != after.kind {
+            fields.insert(
+                "kind".into(),
+                json!({"before":before.kind,"after":after.kind}),
+            );
+        }
+        if before.parent != after.parent {
+            fields.insert(
+                "parent".into(),
+                json!({"before":before.parent,"after":after.parent}),
+            );
+            if options.preserve_parenting && is_invariant(id) {
+                regressions.push(json!({"code":"parent_changed","object":id,"before":before.parent,"after":after.parent}));
+            }
+        }
+        if before.semantic_role != after.semantic_role {
+            fields.insert(
+                "semantic_role".into(),
+                json!({"before":before.semantic_role,"after":after.semantic_role}),
+            );
+            if options.preserve_semantic_roles && is_invariant(id) {
+                regressions.push(json!({"code":"semantic_role_changed","object":id,"before":before.semantic_role,"after":after.semantic_role}));
+            }
+        }
+        let transform_max_abs_delta = max_abs(
+            before
+                .world_matrix
+                .iter()
+                .flatten()
+                .zip(after.world_matrix.iter().flatten())
+                .map(|(before, after)| after - before),
+        );
+        if transform_max_abs_delta > options.tolerance {
+            fields.insert(
+                "transform".into(),
+                json!({"max_abs_delta":transform_max_abs_delta}),
+            );
+        }
+        match (&before.bounds, &after.bounds) {
+            (Some(before_bounds), Some(after_bounds)) => {
+                let center_delta = vec_delta(after_bounds.center(), before_bounds.center());
+                let center_shift = vec_length(center_delta);
+                let dimension_delta =
+                    vec_delta(after_bounds.dimensions(), before_bounds.dimensions());
+                let max_dimension_change = max_abs(dimension_delta.into_iter());
+                if center_shift > options.tolerance || max_dimension_change > options.tolerance {
+                    fields.insert(
+                        "bounds".into(),
+                        json!({
+                            "before":before_bounds,"after":after_bounds,"center_delta":center_delta,
+                            "center_shift":center_shift,"dimension_delta":dimension_delta,
+                            "max_abs_dimension_change":max_dimension_change
+                        }),
+                    );
+                }
+                if is_invariant(id)
+                    && options
+                        .max_center_shift
+                        .is_some_and(|maximum| center_shift > maximum)
+                {
+                    regressions.push(json!({"code":"center_shift","object":id,"actual":center_shift,"maximum":options.max_center_shift}));
+                }
+                if is_invariant(id)
+                    && options
+                        .max_dimension_change
+                        .is_some_and(|maximum| max_dimension_change > maximum)
+                {
+                    regressions.push(json!({"code":"dimension_change","object":id,"actual":max_dimension_change,"maximum":options.max_dimension_change}));
+                }
+            }
+            (before_bounds, after_bounds) if before_bounds.is_some() != after_bounds.is_some() => {
+                fields.insert(
+                    "bounds".into(),
+                    json!({"before":before_bounds,"after":after_bounds}),
+                );
+                if is_invariant(id)
+                    && (options.max_center_shift.is_some()
+                        || options.max_dimension_change.is_some())
+                {
+                    regressions.push(json!({"code":"invariant_bounds_unavailable","object":id,
+                        "before_has_bounds":before_bounds.is_some(),"after_has_bounds":after_bounds.is_some()}));
+                }
+            }
+            _ => {}
+        }
+        match (&before.mesh, &after.mesh) {
+            (Some(before_mesh), Some(after_mesh)) if before_mesh != after_mesh => {
+                fields.insert("mesh".into(), json!({"before":before_mesh,"after":after_mesh,"delta":mesh_delta(after_mesh,before_mesh)}));
+                if options.forbid_new_topology_findings && is_invariant(id) {
+                    for (code, before_count, after_count) in [
+                        (
+                            "disconnected_components",
+                            before_mesh.connected_components.saturating_sub(1),
+                            after_mesh.connected_components.saturating_sub(1),
+                        ),
+                        (
+                            "non_manifold_edges",
+                            before_mesh.non_manifold_edges,
+                            after_mesh.non_manifold_edges,
+                        ),
+                        (
+                            "degenerate_faces",
+                            before_mesh.degenerate_faces,
+                            after_mesh.degenerate_faces,
+                        ),
+                        (
+                            "missing_material_faces",
+                            before_mesh.missing_material_faces,
+                            after_mesh.missing_material_faces,
+                        ),
+                    ] {
+                        if after_count > before_count {
+                            regressions.push(json!({"code":"new_topology_finding","finding":code,"object":id,"before":before_count,"after":after_count}));
+                        }
+                    }
+                }
+            }
+            (before_mesh, after_mesh) if before_mesh.is_some() != after_mesh.is_some() => {
+                fields.insert(
+                    "mesh".into(),
+                    json!({"before":before_mesh,"after":after_mesh}),
+                );
+                if options.forbid_new_topology_findings && is_invariant(id) {
+                    regressions.push(json!({"code":"topology_comparison_unavailable","object":id,
+                        "before_has_mesh":before_mesh.is_some(),"after_has_mesh":after_mesh.is_some()}));
+                }
+            }
+            _ => {}
+        }
+        if fields.is_empty() {
+            unchanged_count += 1;
+        } else {
+            changed.push(json!({"id":id,"fields":fields}));
+        }
+    }
+
+    for id in &options.required_objects {
+        if !candidate_by_id.contains_key(id.as_str()) {
+            regressions.push(json!({"code":"required_object_missing","object":id}));
+        }
+    }
+    for id in &options.invariant_objects {
+        if !candidate_by_id.contains_key(id.as_str()) {
+            regressions.push(json!({"code":"invariant_object_missing","object":id}));
+        }
+    }
+    if options.forbid_removed_objects {
+        for id in &removed {
+            regressions.push(json!({"code":"object_removed","object":id}));
+        }
+    }
+
+    let baseline_triangles = triangle_total(&baseline);
+    let candidate_triangles = triangle_total(&candidate);
+    let triangle_delta = candidate_triangles as i64 - baseline_triangles as i64;
+    if options
+        .max_triangle_increase
+        .is_some_and(|maximum| triangle_delta > 0 && triangle_delta as u64 > maximum)
+    {
+        regressions.push(json!({"code":"triangle_increase","actual":triangle_delta,"maximum":options.max_triangle_increase}));
+    }
+    let baseline_bounds = aggregate_bounds(baseline.objects.iter());
+    let candidate_bounds = aggregate_bounds(candidate.objects.iter());
+    let regression_count = regressions.len();
+
+    Ok(json!({
+        "schema_version":"bas-scene-diff/0.1",
+        "runtime_version":env!("CARGO_PKG_VERSION"),
+        "evaluation_options":options,
+        "baseline":{"source":baseline.source,"blender_version":baseline.blender_version,"frame":baseline.frame,
+            "meters_per_unit":baseline.meters_per_unit,"object_count":baseline.objects.len(),"triangles":baseline_triangles,"bounds":baseline_bounds},
+        "candidate":{"source":candidate.source,"blender_version":candidate.blender_version,"frame":candidate.frame,
+            "meters_per_unit":candidate.meters_per_unit,"object_count":candidate.objects.len(),"triangles":candidate_triangles,"bounds":candidate_bounds},
+        "summary":{"added":added.len(),"removed":removed.len(),"changed":changed.len(),"unchanged":unchanged_count,
+            "triangle_delta":triangle_delta,"unit_scale_changed":baseline.meters_per_unit != candidate.meters_per_unit,
+            "blender_version_changed":baseline.blender_version != candidate.blender_version},
+        "objects":{"added":added,"removed":removed,"changed":changed},
+        "regression":{"status":if regression_count > 0 {"constraints_failed"} else {"review_required"},
+            "count":regression_count,"items":regressions,
+            "agent_review_required":["Review candidate and baseline with identical cameras, frames, render settings and export/import paths.","Confirm that every reported structural change was intended by the repair.","Do not treat an empty regression list as proof of improved appearance or task compliance."],
+            "not_measured":["visual or aesthetic improvement","surface contact and exact intersections","semantic correctness of added or changed parts","material and lighting equivalence"]},
+        "extraction_limitations":{"baseline":baseline.limitations,"candidate":candidate.limitations}
+    }))
+}
+
+pub fn execute(request: RuntimeRequest) -> Result<Value, String> {
+    match request {
+        RuntimeRequest::Analyze(request) => analyze(request),
+        RuntimeRequest::Diff(request) => compare(request),
+    }
 }
 
 pub fn analyze(request: Request) -> Result<Value, String> {
@@ -435,18 +802,7 @@ pub fn analyze(request: Request) -> Result<Value, String> {
             }
         }
     }
-    let mut bounds: Option<Bounds> = None;
-    for object in &selected {
-        if let Some(b) = &object.bounds {
-            bounds = Some(match bounds {
-                None => b.clone(),
-                Some(a) => Bounds {
-                    min: std::array::from_fn(|i| a.min[i].min(b.min[i])),
-                    max: std::array::from_fn(|i| a.max[i].max(b.max[i])),
-                },
-            });
-        }
-    }
+    let bounds = aggregate_bounds(selected.iter().copied());
     let issue_count = issues.len();
     let relation_count = relations.len();
     let error_count = issues.iter().filter(|i| i["severity"] == "error").count();
@@ -726,5 +1082,161 @@ mod tests {
             }]
         });
         assert!(serde_json::from_value::<Options>(options).is_err());
+    }
+
+    #[test]
+    fn scene_diff_separates_factual_changes_from_explicit_regressions() {
+        let baseline = request().scene;
+        let mut candidate = request().scene;
+        candidate.objects[1].bounds.as_mut().unwrap().min[0] += 0.25;
+        candidate.objects[1].bounds.as_mut().unwrap().max[0] += 0.25;
+        candidate.objects[1].mesh.as_mut().unwrap().triangles += 5;
+        candidate.objects[1]
+            .mesh
+            .as_mut()
+            .unwrap()
+            .non_manifold_edges = 2;
+        candidate.objects.remove(2);
+        let value = compare(DiffRequest {
+            baseline,
+            candidate,
+            options: DiffOptions::default(),
+        })
+        .unwrap();
+        assert_eq!(value["schema_version"], "bas-scene-diff/0.1");
+        assert_eq!(value["summary"]["removed"], 1);
+        assert_eq!(value["summary"]["changed"], 1);
+        assert_eq!(value["summary"]["triangle_delta"], -7);
+        assert_eq!(value["objects"]["removed"], json!(["far"]));
+        assert_eq!(value["objects"]["changed"][0]["id"], "part");
+        assert_eq!(
+            value["objects"]["changed"][0]["fields"]["bounds"]["center_shift"],
+            0.25
+        );
+        assert_eq!(value["regression"]["count"], 0);
+        assert_eq!(value["regression"]["status"], "review_required");
+    }
+
+    #[test]
+    fn scene_diff_enforces_only_declared_invariants() {
+        let baseline = request().scene;
+        let mut candidate = request().scene;
+        candidate.objects[0].semantic_role = Some("changed-role".into());
+        candidate.objects[1].parent = None;
+        candidate.objects[1].bounds.as_mut().unwrap().min[0] += 0.5;
+        candidate.objects[1].bounds.as_mut().unwrap().max[0] += 0.5;
+        candidate.objects[1].mesh.as_mut().unwrap().triangles += 20;
+        candidate.objects[1].mesh.as_mut().unwrap().degenerate_faces = 1;
+        candidate.objects.remove(2);
+        let value = compare(DiffRequest {
+            baseline,
+            candidate,
+            options: DiffOptions {
+                required_objects: vec!["far".into()],
+                forbid_removed_objects: true,
+                preserve_parenting: true,
+                preserve_semantic_roles: true,
+                max_triangle_increase: Some(5),
+                max_center_shift: Some(0.1),
+                max_dimension_change: Some(0.1),
+                forbid_new_topology_findings: true,
+                ..Default::default()
+            },
+        })
+        .unwrap();
+        let codes: Vec<_> = value["regression"]["items"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|item| item["code"].as_str().unwrap())
+            .collect();
+        assert!(codes.contains(&"semantic_role_changed"));
+        assert!(codes.contains(&"parent_changed"));
+        assert!(codes.contains(&"center_shift"));
+        assert!(codes.contains(&"new_topology_finding"));
+        assert!(codes.contains(&"required_object_missing"));
+        assert!(codes.contains(&"object_removed"));
+        assert!(codes.contains(&"triangle_increase"));
+        assert!(!codes.contains(&"dimension_change"));
+        assert_eq!(value["regression"]["status"], "constraints_failed");
+    }
+
+    #[test]
+    fn scene_diff_rejects_invalid_limits_and_unknown_required_objects() {
+        let mut options = DiffOptions::default();
+        options.tolerance = f64::NAN;
+        assert!(compare(DiffRequest {
+            baseline: request().scene,
+            candidate: request().scene,
+            options,
+        })
+        .is_err());
+        let mut options = DiffOptions::default();
+        options.required_objects = vec!["missing".into()];
+        assert!(compare(DiffRequest {
+            baseline: request().scene,
+            candidate: request().scene,
+            options,
+        })
+        .is_err());
+    }
+
+    #[test]
+    fn scene_diff_scopes_per_object_gates_to_declared_invariants() {
+        let baseline = request().scene;
+        let mut candidate = request().scene;
+        candidate.objects[0].semantic_role = Some("intentional-edit".into());
+        candidate.objects[0].bounds.as_mut().unwrap().min[0] += 1.0;
+        candidate.objects[0].bounds.as_mut().unwrap().max[0] += 1.0;
+        let value = compare(DiffRequest {
+            baseline,
+            candidate,
+            options: DiffOptions {
+                invariant_objects: vec!["part".into()],
+                preserve_semantic_roles: true,
+                max_center_shift: Some(0.0),
+                ..Default::default()
+            },
+        })
+        .unwrap();
+        assert_eq!(value["summary"]["changed"], 1);
+        assert_eq!(value["regression"]["count"], 0);
+    }
+
+    #[test]
+    fn scene_diff_does_not_silently_pass_missing_invariant_evidence() {
+        let mut baseline = request().scene;
+        let mut candidate = request().scene;
+        candidate.objects[0].bounds = None;
+        candidate.objects[0].mesh = None;
+        baseline.objects[1]
+            .mesh
+            .as_mut()
+            .unwrap()
+            .connected_components = 0;
+        candidate.objects[1]
+            .mesh
+            .as_mut()
+            .unwrap()
+            .connected_components = 1;
+        let value = compare(DiffRequest {
+            baseline,
+            candidate,
+            options: DiffOptions {
+                max_center_shift: Some(0.1),
+                forbid_new_topology_findings: true,
+                ..Default::default()
+            },
+        })
+        .unwrap();
+        let codes: Vec<_> = value["regression"]["items"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|item| item["code"].as_str().unwrap())
+            .collect();
+        assert!(codes.contains(&"invariant_bounds_unavailable"));
+        assert!(codes.contains(&"topology_comparison_unavailable"));
+        assert_eq!(codes.len(), 2);
     }
 }
