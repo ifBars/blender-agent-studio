@@ -113,7 +113,7 @@ Matching uses exact object IDs, so keep semantic names stable across iterations.
 The factual diff is not a quality verdict. Changes become failures only through
 explicit options grounded in the task contract:
 
-- `requiredObjects` must remain present;
+- `requiredObjects` must be present in the candidate, but may be newly added;
 - `forbidRemovedObjects` rejects every removed object;
 - `preserveParenting` and `preserveSemanticRoles` protect those authored fields;
 - `maxTriangleIncrease` gates the complete-scene triangle delta;
@@ -121,11 +121,13 @@ explicit options grounded in the task contract:
 - `forbidNewTopologyFindings` rejects increased disconnected-component,
   non-manifold-edge, degenerate-face or missing-material-face counts.
 
-Use `invariantObjects` to apply per-object preservation gates only to parts that
-the repair should not alter. An empty list applies them to every matched object.
-This prevents an intended local repair from failing merely because its target
-moved or changed size. Required and invariant names absent from the baseline are
-rejected or reported instead of silently weakening the comparison.
+Use `invariantObjects` to apply per-object preservation gates only to baseline
+parts that the repair should not alter. Each named invariant must exist in the
+baseline and retain the declared baseline properties. An empty list applies the
+gates to every matched object. This prevents an intended local repair from
+failing merely because its target moved or changed size. Required names absent
+from both scenes and invariant names absent from the baseline are rejected
+instead of silently weakening the comparison.
 
 `review_required` means no declared invariant failed; it is not proof that the
 candidate improved. Compare baseline and candidate with identical cameras,

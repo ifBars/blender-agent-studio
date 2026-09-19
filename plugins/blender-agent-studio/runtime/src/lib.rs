@@ -506,6 +506,14 @@ pub fn compare(request: DiffRequest) -> Result<Value, String> {
                         "before_has_bounds":before_bounds.is_some(),"after_has_bounds":after_bounds.is_some()}));
                 }
             }
+            (None, None)
+                if is_invariant(id)
+                    && (options.max_center_shift.is_some()
+                        || options.max_dimension_change.is_some()) =>
+            {
+                regressions.push(json!({"code":"invariant_bounds_unavailable","object":id,
+                    "before_has_bounds":false,"after_has_bounds":false}));
+            }
             _ => {}
         }
         match (&before.mesh, &after.mesh) {
@@ -549,6 +557,10 @@ pub fn compare(request: DiffRequest) -> Result<Value, String> {
                     regressions.push(json!({"code":"topology_comparison_unavailable","object":id,
                         "before_has_mesh":before_mesh.is_some(),"after_has_mesh":after_mesh.is_some()}));
                 }
+            }
+            (None, None) if options.forbid_new_topology_findings && is_invariant(id) => {
+                regressions.push(json!({"code":"topology_comparison_unavailable","object":id,
+                    "before_has_mesh":false,"after_has_mesh":false}));
             }
             _ => {}
         }
@@ -1238,5 +1250,39 @@ mod tests {
         assert!(codes.contains(&"invariant_bounds_unavailable"));
         assert!(codes.contains(&"topology_comparison_unavailable"));
         assert_eq!(codes.len(), 2);
+    }
+
+    #[test]
+    fn scene_diff_rejects_invariant_evidence_missing_from_both_snapshots() {
+        let mut baseline = request().scene;
+        let mut candidate = request().scene;
+        baseline.objects[0].bounds = None;
+        baseline.objects[0].mesh = None;
+        candidate.objects[0].bounds = None;
+        candidate.objects[0].mesh = None;
+        let value = compare(DiffRequest {
+            baseline,
+            candidate,
+            options: DiffOptions {
+                max_center_shift: Some(0.1),
+                max_dimension_change: Some(0.1),
+                forbid_new_topology_findings: true,
+                ..Default::default()
+            },
+        })
+        .unwrap();
+        let codes: Vec<_> = value["regression"]["items"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|item| item["code"].as_str().unwrap())
+            .collect();
+        assert_eq!(
+            codes,
+            vec![
+                "invariant_bounds_unavailable",
+                "topology_comparison_unavailable"
+            ]
+        );
     }
 }

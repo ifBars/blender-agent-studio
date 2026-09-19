@@ -69,7 +69,7 @@ export async function compareAssets(args: {
   if (output && existsSync(output)) throw new Error("outputJson must be a new file");
   const baseline = await extractSceneIR(args.baselineAssetPath, args.blenderPath, args.timeoutMs);
   const candidate = await extractSceneIR(args.candidateAssetPath, args.blenderPath, args.timeoutMs);
-  const diff = await compareSceneIR(baseline, candidate, args.options);
+  const diff = await compareSceneIR(baseline, candidate, args.options, args.timeoutMs);
   if (output) await writeFile(output, JSON.stringify({ baseline, candidate, diff }, null, 2), { flag: "wx" });
   return { ...diff, outputJson: output ?? null };
 }
