@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { describeAsset } from "../scripts/scene-analysis.ts";
+import { compareAssets, describeAsset } from "../scripts/scene-analysis.ts";
 import { createPolyHavenClient } from "../skills/blender-rendering-workflow/scripts/poly-haven.ts";
 import {
   readJsonFile,
@@ -403,5 +403,38 @@ for (const name of ["blender_describe_scene", "blender_quality_report"] as const
     } catch (error) { return errorResult(error); }
   });
 }
+
+server.registerTool("blender_compare_scenes", {
+  title: "Compare Blender scenes",
+  description: "Extract two SceneIR snapshots and report deterministic structural changes plus only explicitly requested regression constraints. Use after a repair with baseline and candidate assets. This does not measure aesthetic improvement, semantic correctness, exact contact, materials or lighting. Read-only; requires setup:runtime.",
+  inputSchema: z.object({
+    baselineAssetPath: z.string().describe("Preserved candidate or other baseline asset."),
+    candidateAssetPath: z.string().describe("Regenerated repair or comparison asset."),
+    outputJson: z.string().optional().describe("Optional new JSON file containing both SceneIR snapshots and the diff. Parent directory must exist."),
+    requiredObjects: z.array(z.string()).max(2048).default([]).describe("Objects that must exist in the candidate. Names absent from both scenes are rejected as likely mistakes."),
+    invariantObjects: z.array(z.string()).max(2048).default([]).describe("Objects to which parenting, role, movement, dimension and topology preservation gates apply. Empty means every matched object."),
+    forbidRemovedObjects: z.boolean().default(false),
+    preserveParenting: z.boolean().default(false),
+    preserveSemanticRoles: z.boolean().default(false),
+    maxTriangleIncrease: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER).optional().describe("Maximum allowed increase across the complete scene."),
+    maxCenterShift: z.number().min(0).max(1e9).optional().describe("Maximum world-unit center movement for each invariant object."),
+    maxDimensionChange: z.number().min(0).max(1e9).optional().describe("Maximum absolute world-unit dimension change on any axis for each invariant object."),
+    forbidNewTopologyFindings: z.boolean().default(false).describe("Fail increases in disconnected components, non-manifold edges, degenerate faces or missing-material faces on invariant objects."),
+    tolerance: z.number().min(0).max(1e9).default(1e-6).describe("Ignore smaller transform, center and dimension changes in the factual diff."),
+    blenderPath: z.string().optional(),
+    timeoutMs: z.number().int().min(1000).max(1_800_000).default(300_000),
+  }),
+}, async ({baselineAssetPath, candidateAssetPath, outputJson, requiredObjects, invariantObjects,
+  forbidRemovedObjects, preserveParenting, preserveSemanticRoles, maxTriangleIncrease,
+  maxCenterShift, maxDimensionChange, forbidNewTopologyFindings, tolerance, blenderPath, timeoutMs}) => {
+  try {
+    return result(await compareAssets({baselineAssetPath, candidateAssetPath, outputJson, blenderPath, timeoutMs,
+      options: {required_objects: requiredObjects, invariant_objects: invariantObjects,
+        forbid_removed_objects: forbidRemovedObjects, preserve_parenting: preserveParenting,
+        preserve_semantic_roles: preserveSemanticRoles, max_triangle_increase: maxTriangleIncrease,
+        max_center_shift: maxCenterShift, max_dimension_change: maxDimensionChange,
+        forbid_new_topology_findings: forbidNewTopologyFindings, tolerance}}));
+  } catch (error) { return errorResult(error); }
+});
 
 await server.connect(new StdioServerTransport());
