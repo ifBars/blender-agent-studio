@@ -61,6 +61,14 @@ fixed views below and answer its primary-form, reference and finish questions.
 If the runtime is missing, follow its setup message or continue with the existing
 inspector and visual evidence; do not claim unmeasured analysis.
 
+After a repair, use `blender_compare_scenes` on the preserved candidate and
+regenerated result. Declare `requiredObjects` and only the invariants supplied by
+the contract. Use `invariantObjects` to exclude the intentionally edited part
+from movement, dimension, hierarchy, role or topology-preservation gates. Review
+all factual changes even when no declared invariant fails. An empty regression
+list does not establish visual improvement; render both versions through the
+same cameras and settings before retaining the repair.
+
 For intended physical joints, declare `contactPairs` in the quality report as
 exact mesh-object pairs that should touch. Choose them from the construction
 contract, not from arbitrary nearby names. A positive bounds gap beyond
