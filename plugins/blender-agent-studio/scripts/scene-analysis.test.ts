@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { analyzeSceneIR, runtimeExecutable } from "./scene-analysis.ts";
+import { analyzeSceneIR, compareSceneIR, runtimeExecutable } from "./scene-analysis.ts";
 import { runBlender } from "./blender-process.ts";
 
 let runtimeAvailable = false;
@@ -19,6 +19,21 @@ test.skipIf(!runtimeAvailable)("runtime protocol rejects unsupported schemas and
   await expect(analyzeSceneIR(emptyScene, {limit:201})).rejects.toThrow("Invalid pagination");
   const output = await analyzeSceneIR(emptyScene, {});
   expect(output.quality.status).toBe("constraints_failed");
+});
+
+test.skipIf(!runtimeAvailable)("runtime compares SceneIR snapshots without treating undeclared changes as failures", async () => {
+  const object = {id:"part",kind:"MESH",parent:null,semantic_role:"body",
+    world_matrix:[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]],
+    bounds:{min:[0,0,0],max:[1,1,1]},mesh:{vertices:8,triangles:12,connected_components:1,non_manifold_edges:0,degenerate_faces:0,missing_material_faces:0}};
+  const baseline = {...emptyScene, objects:[object]};
+  const candidate = {...emptyScene, source:"candidate", objects:[{...object,
+    bounds:{min:[0.25,0,0],max:[1.25,1,1]},mesh:{...object.mesh,triangles:16}}]};
+  const factual = await compareSceneIR(baseline, candidate, {});
+  expect(factual.summary.changed).toBe(1);
+  expect(factual.regression.status).toBe("review_required");
+  const constrained = await compareSceneIR(baseline, candidate, {invariant_objects:["part"],max_center_shift:0.1,max_triangle_increase:2});
+  expect(constrained.regression.status).toBe("constraints_failed");
+  expect(constrained.regression.items.map((item:any)=>item.code)).toEqual(["center_shift","triangle_increase"]);
 });
 
 test.skipIf(!runtimeAvailable || !blender)("live Blender scene and fresh GLB import through MCP preserve source and evaluated transforms", async () => {
@@ -62,6 +77,13 @@ test.skipIf(!runtimeAvailable || !blender)("live Blender scene and fresh GLB imp
     expect(imported.isError, JSON.stringify(imported.content)).not.toBe(true);
     expect((imported.structuredContent as any).selection.triangles).toBe(36);
     expect((imported.structuredContent as any).selection.bounds).toEqual(data.selection.bounds);
+    const compared = await client.callTool({name:"blender_compare_scenes",arguments:{
+      baselineAssetPath:assetPath,candidateAssetPath:assetPath,blenderPath:blender,
+      invariantObjects:["body","foot"],preserveParenting:true,forbidNewTopologyFindings:true,
+    }});
+    expect(compared.isError, JSON.stringify(compared.content)).not.toBe(true);
+    expect((compared.structuredContent as any).summary).toMatchObject({added:0,removed:0,changed:0,unchanged:3,triangle_delta:0});
+    expect((compared.structuredContent as any).regression.status).toBe("review_required");
     const failed = await client.callTool({name:"blender_describe_scene",arguments:{assetPath,outputJson,blenderPath:blender}});
     expect(failed.isError).toBe(true);
     expect(JSON.stringify(failed.content)).toContain("new file");
