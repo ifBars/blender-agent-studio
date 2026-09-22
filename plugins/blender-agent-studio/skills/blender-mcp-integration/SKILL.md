@@ -19,6 +19,15 @@ Use the narrowest MCP layer that improves the task.
 
 Read [references/mcp-options.md](references/mcp-options.md) before installing or replacing a Blender add-on.
 
+## Mixamo browser integration
+
+`blender_prepare_mixamo_search` returns a browser search URL and workflow, not
+catalog results. Use host browser tools for live search, preview and download,
+then `blender_import_mixamo_animation` for a new standalone animated `.blend`.
+Adobe sign-in stays in the browser. See the animation workflow's
+[Mixamo guide](../blender-animation-workflow/references/mixamo.md) for the
+download settings, local import and retargeting limits.
+
 ## Optional scene analysis runtime
 
 Use `blender_compare_reference` for a camera-matched reference/silhouette/overlay

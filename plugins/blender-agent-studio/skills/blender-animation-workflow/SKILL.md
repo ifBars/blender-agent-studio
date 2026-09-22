@@ -10,6 +10,15 @@ for autonomous decisions, evidence cadence, and long-task continuity.
 
 Make the mechanism understandable in still critical frames before polishing curves.
 
+## Find humanoid motion with Mixamo
+
+For Mixamo search, preview, download and import, follow
+[the Mixamo workflow](references/mixamo.md). Use `blender_prepare_mixamo_search`
+to prepare the browser handoff, then `blender_import_mixamo_animation` to turn
+the downloaded FBX into a standalone animated `.blend`. Live catalog access
+requires host browser tools; applying motion to another rig requires a separate
+compatibility or retargeting workflow.
+
 ## Define semantic phases
 
 1. Name the start, anticipation, contact, transfer, release, landing, rebound, and settle frames that apply.

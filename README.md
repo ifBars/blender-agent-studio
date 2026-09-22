@@ -16,6 +16,7 @@ render them, and find textures.
 - Rig and animate models, or work with cloth, smoke, and other simulations.
 - Render through your scene's cameras with its lighting intact, or use studio views to inspect a model from every side.
 - Download CC0 textures and HDRIs from Poly Haven at 1K, 2K, 4K, or 8K.
+- Find Mixamo motion through your browser and import downloaded FBX animations into a new `.blend`. See the [Mixamo workflow](plugins/blender-agent-studio/skills/blender-animation-workflow/references/mixamo.md) for browser requirements and retargeting limits.
 - Check geometry and exported files, review renders, and repair what doesn't work.
 - Query scene parts and evaluated dimensions, check explicit geometry and ground constraints, and compare repairs against preserved SceneIR baselines with the optional Rust runtime.
 

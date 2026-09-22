@@ -8,6 +8,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import { compareAssets, describeAsset } from "../scripts/scene-analysis.ts";
 import { createPolyHavenClient } from "../skills/blender-rendering-workflow/scripts/poly-haven.ts";
+import { prepareMixamoSearch } from "../scripts/mixamo.ts";
 import {
   readJsonFile,
   resolveBlenderExecutable,
@@ -30,6 +31,34 @@ const server = new McpServer({
 });
 
 registerViewer(server);
+
+server.registerTool("blender_prepare_mixamo_search", {
+  title: "Prepare Mixamo browser search",
+  description: "Prepare a Mixamo search URL and browser workflow. Requires host browser tools to read live results, preview and download; does not itself search the catalog or handle Adobe credentials.",
+  inputSchema: z.object({query: z.string().trim().min(1).max(200)}),
+  annotations: {readOnlyHint: true, openWorldHint: false},
+}, async ({query}) => result(prepareMixamoSearch(query)));
+
+server.registerTool("blender_import_mixamo_animation", {
+  title: "Import downloaded Mixamo animation",
+  description: "Import one local animated FBX with its skeleton into a new standalone .blend. Keeps actions and reports frame ranges. No retargeting or modification of existing scenes. Output directory must not exist. Match fps to the Mixamo download setting.",
+  inputSchema: z.object({
+    fbxPath: z.string(), outputDir: z.string(), clipName: z.string().trim().min(1).max(120),
+    fps: z.union([z.literal(24), z.literal(30), z.literal(60)]).default(30),
+    blenderPath: z.string().optional(),
+    timeoutMs: z.number().int().min(1000).max(300000).default(60000),
+  }),
+}, async ({fbxPath, outputDir, clipName, fps, blenderPath, timeoutMs}) => {
+  try {
+    const output = resolve(outputDir);
+    const process = await runBlender({blenderPath, timeoutMs,
+      scriptPath: join(pluginRoot, "skills/blender-animation-workflow/scripts/import_mixamo.py"),
+      scriptArgs: ["--input", resolve(fbxPath), "--output-dir", output, "--clip-name", clipName, "--fps", String(fps)],
+    });
+    if (process.exitCode !== 0 || process.timedOut) return {...result({process, report: null}), isError: true};
+    return result({process, report: await readJsonFile(join(output, "mixamo-import.json"))});
+  } catch (error) { return errorResult(error); }
+});
 
 function result(output: unknown) {
   return {
