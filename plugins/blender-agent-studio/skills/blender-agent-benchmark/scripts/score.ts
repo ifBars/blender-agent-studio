@@ -1,4 +1,5 @@
 import type { BenchmarkTask } from "./tasks.ts";
+import { assessMotionEvidence } from "./motion-evidence.ts";
 
 type AssetMetrics = {
   hard_gate_pass?: boolean;
@@ -84,6 +85,8 @@ export function scoreSubmission(options: {
   glbExists: boolean;
   iterationReviewExists?: boolean;
   videoEvidence?: VideoEvidence | null;
+  motionEvidence?: unknown;
+  exportedMotionEvidence?: unknown;
   blendMetrics: AssetMetrics | null;
   glbMetrics: AssetMetrics | null;
 }): AutomatedScore {
@@ -361,6 +364,24 @@ export function scoreSubmission(options: {
     );
   }
 
+  if (task.requiredVideo && !task.rubric.requireAnimation) {
+    const video = options.videoEvidence;
+    const expected = task.requiredVideo;
+    add("rendered_video", Boolean(video?.exists) &&
+      Number.isFinite(video?.durationSeconds) && Math.abs(video!.durationSeconds! - expected.durationSeconds) <= expected.toleranceSeconds &&
+      Number.isFinite(video?.frameRate) && Math.abs(video!.frameRate! - expected.fps) <= 0.05 &&
+      Number.isFinite(video?.frameCount) && video!.frameCount! >= Math.floor(expected.durationSeconds * expected.fps - 1),
+      0, "Required simulation video metadata; does not prove continuous motion quality.");
+  }
+  if (task.motionRequirement) {
+    const authored = assessMotionEvidence(task.motionRequirement, options.motionEvidence);
+    add("observed_motion", authored.passed, 0, JSON.stringify(authored.checks));
+    if (task.motionRequirement.inspectExport) {
+      const exported = assessMotionEvidence(task.motionRequirement, options.exportedMotionEvidence, true);
+      add("exported_motion", exported.passed, 0, JSON.stringify(exported.checks));
+    }
+  }
+
   if (task.requireIterationReview) {
     add(
       "iteration_review",
@@ -456,6 +477,8 @@ export function scoreSubmission(options: {
           "rendered_video",
           "iteration_review",
           "deterministic_source",
+          "observed_motion",
+          "exported_motion",
         ].includes(check.id),
       )
       .every((check) => check.passed);

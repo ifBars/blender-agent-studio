@@ -8,15 +8,17 @@ description: Create, repair, rig, skin, animate, and export Blender characters, 
 Read [the shared execution guidance](references/astra-workflow.md) once per task
 for autonomous decisions, evidence cadence, and long-task continuity.
 
-Character completion requires deformation evidence. A mesh plus an armature is
-not a finished rig.
+Match completion to the requested character: a static sculpt needs form and
+surface evidence; a rigged or animated character also needs deformation
+evidence. A mesh plus an armature is not a finished rig. Clarify static versus
+rigged delivery if the request and context leave that consequential choice open.
 
 ## Establish the character contract
 
 Record intended platform and export format, body/face scope, scale and axis,
 triangle/material/texture budgets, bone naming and hierarchy requirements,
 required controls, facial shape keys, poses/actions, and engine/avatar
-constraints. Identify the minimum acceptance poses: neutral, extreme bend for
+constraints. For a requested rig, identify the minimum acceptance poses: neutral, extreme bend for
 each major joint, reach, twist, locomotion/contact, and any required facial
 expression.
 
@@ -30,6 +32,9 @@ consistency in neutral and moving poses. These are visual acceptance criteria;
 passing rig/export metrics alone does not satisfy them.
 
 ## Build and rig deliberately
+
+For static character requests, build and review the form without inventing a
+rigging requirement. The rigging and motion steps below apply when requested.
 
 Retrieve anatomy references with compatible species, age and pose before building
 a new character or creature. For a low-poly brown bear, for example, look for
@@ -88,7 +93,8 @@ Resolve or explicitly report the form/fit review findings. Include full-body
 and feature close-ups from the final revision, with affected poses rechecked
 after the last geometry/material edit.
 
-Deliver the editable source, export, bone/control map, tested pose/action list,
-and fresh-import evidence. State any target-specific validation that could not
+Deliver the editable source, requested export and fresh-import evidence. For a
+rigged/animated character, include the bone/control map and tested pose/action
+list. State any target-specific validation that could not
 be performed in Blender; a successful GLB import is not proof of runtime avatar
 compatibility.

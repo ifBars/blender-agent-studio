@@ -81,6 +81,12 @@ durable source, and rerun the same declared pairs before retaining the repair.
 
 ## Check specific connection points
 
+Supply `frame` to SceneIR description, quality and comparison tools when checking
+an animated pose. Use the same explicit frame for before/after evidence; paired
+asset comparison rejects differing saved frames and unit scales. Repeat the
+contract's checks at each required motion state. Setting a frame does not bake
+a simulation or prove behavior between samples.
+
 For cable terminals, hinge pivots or pipe ends, `contactPairs` can miss a wrong
 endpoint when whole-object boxes overlap. Add `connectionPoints` to
 `blender_quality_report` using a stable name, exact `objectA`/`objectB`,
@@ -95,6 +101,22 @@ source; when editing local coordinates, transform the world delta into that
 object's local space. Keep anchors derived from the geometry and verify the
 rendered joint; moving markers alone is not a repair. `within_tolerance` proves
 only anchor agreement, not mesh contact, watertightness or mechanical validity.
+
+## Inspect evaluated motion
+
+Use `blender_inspect_motion` with `assetPath`, a new `outputJson`, 2-12 distinct
+increasing `frames`, and 1-8 exact mesh `objectNames`. It reports local evaluated
+geometry hashes, world transforms and native modifier/bake metadata. It needs
+Blender, not Rust, and never bakes or saves the source. Inspect an existing cache
+for fluid/cloth and repeat on the exported file when animation export is required.
+
+A changing local hash can establish sampled deformation rather than mere root
+movement; it does not establish good deformation. Empty or unchanged samples,
+missing cache files and unbaked modifiers need investigation. Bake flags do not
+prove complete cache coverage. Use the domain workflow for contacts, collisions,
+timing, appearance and continuous playback. CLI fallback: run
+`scripts/inspect_motion.py` through Blender with `--input`, `--output`,
+`--frames 1,12,24` and `--targets Body`.
 
 ## Render evidence
 

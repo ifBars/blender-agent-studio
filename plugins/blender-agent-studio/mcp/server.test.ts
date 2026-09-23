@@ -38,6 +38,7 @@ describe("Blender Agent Studio MCP", () => {
         "blender_fit_reference_camera",
         "blender_import_mixamo_animation",
         "blender_inspect_asset",
+        "blender_inspect_motion",
         "blender_prepare_mixamo_search",
         "blender_quality_report",
         "blender_render_evidence",

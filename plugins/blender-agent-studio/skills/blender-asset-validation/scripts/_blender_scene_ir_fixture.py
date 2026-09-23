@@ -24,9 +24,18 @@ foot.name = 'foot'
 foot.parent = assembly
 foot.location = (0, 0, 3)
 foot['bas_role'] = 'foot'
+foot.keyframe_insert(data_path='location', frame=1)
+foot.location.z = 5
+foot.keyframe_insert(data_path='location', frame=20)
+bpy.context.scene.frame_set(1)
 material = bpy.data.materials.new('fixture')
 body.data.materials.append(material)
 foot.data.materials.append(material)
 bpy.context.view_layer.update()
 bpy.ops.wm.save_as_mainfile(filepath=str(destination / 'fixture.blend'))
 bpy.ops.export_scene.gltf(filepath=str(destination / 'fixture.glb'), export_apply=True)
+bpy.context.scene.frame_set(20)
+bpy.ops.wm.save_as_mainfile(filepath=str(destination / 'posed.blend'))
+bpy.context.scene.frame_set(1)
+bpy.context.scene.unit_settings.scale_length = 2
+bpy.ops.wm.save_as_mainfile(filepath=str(destination / 'units.blend'))

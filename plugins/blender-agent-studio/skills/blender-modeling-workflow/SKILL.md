@@ -21,8 +21,8 @@ lighting survive a GLB export unchanged.
 1. Resolve the exact Blender executable and record `blender --version`.
 2. Resolve routine visual and technical choices from context and state useful
    defaults. Use `$blender-agent-studio:blender-art-direction-intake` when an
-   unresolved decision would cause substantial rework and context provides no
-   reasonable default, or when the user explicitly requests a brief/concept.
+   competing interpretations change identity, style or deliverables and context
+   does not resolve them, or when the user explicitly requests a brief/concept.
 3. Convert the request into a short modeling contract before editing:
    - required parts and visible relationships;
    - intended style and materials;
@@ -42,6 +42,8 @@ then compare matching graybox views against them. A folder of images without
 observations or a comparison pass does not complete the reference stage.
 
 For supplied images, create a named reference camera in the bpy source. Match
+the [image-to-3D contract](references/image-to-3d.md) first, including which
+features are binding and which hidden surfaces require inference. Then match
 the image's projection, framing and pose before altering proportions. Use
 `blender_compare_reference` at `maxEdge: 256` or 512 to see the reference,
 projected model silhouette and overlay together. Fix the largest primary-form

@@ -7,6 +7,7 @@ import {
 } from "./tasks.ts";
 import { computeVerifiedCompositeScore } from "./verified_score.ts";
 import { isolatedAgentArgs } from "./pinned-mcp.ts";
+import { provenanceMismatches, readReferenceInput, type RunProvenance } from "./provenance.ts";
 
 type RunResult = {
   taskId: string;
@@ -17,9 +18,10 @@ type RunResult = {
   score: { hardGatePass: boolean; score: number };
   evidenceContactSheet: string | null;
   animationContactSheet?: string | null;
+  referenceImages?: string[];
 };
 
-type RunSummary = {
+type RunSummary = RunProvenance & {
   schemaVersion?: number;
   scorerVersion?: number;
   inspectorSchemaVersion?: number;
@@ -391,6 +393,10 @@ async function main(): Promise<void> {
   const baselineResults = taskFilter.size
     ? baseline.results.filter((result) => taskFilter.has(result.taskId))
     : baseline.results;
+  configurationMismatches.push(...provenanceMismatches(baseline,candidate,baselineResults.map(r=>r.taskId)));
+  if(process.argv.includes("--require-non-regression") && configurationMismatches.length) {
+    throw new Error(`Strict comparison controls failed before judging: ${configurationMismatches.join("; ")}`);
+  }
   const unknownTaskIds = [...taskFilter].filter(
     (taskId) => !baseline.results.some((result) => result.taskId === taskId),
   );
@@ -490,7 +496,23 @@ async function main(): Promise<void> {
         await copyFile(animationSourceB, animationB);
         attachedImages.push(animationA, animationB);
         animationPrompt =
-          " The third image shows candidate A at the requested critical animation frames; the fourth shows candidate B at those frames. Evaluate mechanical motion, pivots, continuity, and whether the sequence communicates the requested operation.";
+          " The third image shows candidate A at the requested critical animation frames; the fourth shows candidate B at those frames. Evaluate visible poses, contacts and state changes. Still frames cannot establish continuous timing, loop smoothness, absence of flicker or between-frame collision: mark those claims unclear unless directly supported. Do not invent video review.";
+      }
+      if(task.referenceFiles?.length) {
+        for(const file of task.referenceFiles) {
+          if(!baseline.referenceHashes?.[task.id]?.[file] || baseline.referenceHashes[task.id][file] !== candidate.referenceHashes?.[task.id]?.[file])
+            throw new Error("Reference comparison requires identical hashed inputs for both candidates");
+        }
+        const references=baselineResult.referenceImages ?? [];
+        if(references.length !== task.referenceFiles.length) throw new Error("Reference comparison lacks frozen input images");
+        for(let i=0;i<references.length;i++) {
+          const input=await readReferenceInput(references[i]);
+          if(input.hash !== baseline.referenceHashes?.[task.id]?.[task.referenceFiles[i]]) throw new Error("Frozen reference input hash changed");
+          const path=join(judgeDir,`reference-${i+1}.png`);
+          await writeFile(path,input.data);
+          attachedImages.push(path);
+        }
+        animationPrompt += " The final two images are the original front and side references shared by both candidates. Compare identity, proportions, openings, depth and material regions against these images.";
       }
       const mapping = reverse
         ? { A: candidate.mode, B: baseline.mode }

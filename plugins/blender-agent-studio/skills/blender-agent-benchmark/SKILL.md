@@ -92,6 +92,14 @@ Keep `full` as the historical regression suite. Use the opt-in `challenge`
 suite for harder environment, procedural, rigging/deformation, and simulation
 tasks so broader coverage does not silently change the legacy comparison:
 
+Use `quality` for static character form, walk cycles, facial combinations, liquid
+pouring and cloth draping. Use `reference` with `--reference-dir` for two-view
+image reconstruction. These suites add evaluated motion and bake prerequisites;
+they do not replace visual review. Read [quality suite protocol](references/quality-suites.md)
+for input contracts and limitations. Evaluate clarification separately using
+[intake cases](references/intake-cases.json); the fully specified asset fixtures
+deliberately forbid follow-up questions and cannot measure clarification quality.
+
 ```powershell
 bun "<skill-root>\scripts\run_benchmark.ts" `
   --suite challenge `

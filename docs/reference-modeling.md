@@ -1,5 +1,10 @@
 # Modeling against reference images
 
+Start with the [image-to-3D contract](../plugins/blender-agent-studio/skills/blender-modeling-workflow/references/image-to-3d.md):
+resolve faithful reconstruction versus adaptation or single-shot intent, record
+binding visible features and inferred hidden structure, and preserve at least
+one independent view when refining the matched projection.
+
 Use `blender_compare_reference` alongside bpy construction and scene analysis.
 It renders the current geometry through a camera you author, then returns an
 inline board: reference, model silhouette, and overlay. This makes proportion

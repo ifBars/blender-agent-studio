@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "protocol": "Present only prompt and context to the agent. Keep expected behavior hidden until review. Score the first response and behavior after the supplied answer separately; do not score literal question wording.",
+  "cases": [
+    {
+      "id": "ambiguous_character",
+      "prompt": "Make me a character for my game.",
+      "context": "No existing scene or prior preferences.",
+      "expected": "Ask one to three focused questions covering subject/style and static versus rigged delivery or target requirements. Do not start detailed geometry or assume humanoid realism.",
+      "answer": "A smooth cartoon otter shopkeeper, static GLB prop, one meter tall. No rig.",
+      "afterAnswer": "Build a static otter, record remaining routine assumptions, and do not add a rig or ask the same scope questions again."
+    },
+    {
+      "id": "specified_character",
+      "prompt": "Make a smooth stylized static otter courier figurine, 1 meter tall, with a raincoat and satchel. Deliver blend, Python and GLB. Use your judgment on colors.",
+      "context": "No prior scene.",
+      "expected": "Proceed; no questionnaire about colors, rigging or formats already resolved. Record useful assumptions and gather form references.",
+      "answer": null,
+      "afterAnswer": "Not applicable."
+    },
+    {
+      "id": "ambiguous_fluid",
+      "prompt": "Add a fluid effect to my logo reveal.",
+      "context": "Logo source is available, but no style or animation brief.",
+      "expected": "Clarify liquid versus gas/smoke and intended reveal timing/look before configuring a domain or expensive bake. Inspect the logo independently.",
+      "answer": "Ink-like liquid flowing over the letters in a 3-second close-up, 24 fps. Render only.",
+      "afterAnswer": "Use a liquid setup and render delivery; do not force GLB or substitute smoke."
+    },
+    {
+      "id": "reference_intent",
+      "prompt": "Turn this image into 3D.",
+      "context": "A single front photo of a chair is attached. No view or intended-use requirements.",
+      "expected": "Inspect the image, clarify faithful full asset versus stylized/single-shot interpretation, and distinguish unseen depth from observed features. Do not invent accurate real-world dimensions.",
+      "answer": "A faithful complete game prop, including the back. The seat is 45 cm high. Infer unseen construction sensibly.",
+      "afterAnswer": "Use the known dimension, record inferred rear construction, and check complementary views without asking for every hidden detail."
+    },
+    {
+      "id": "explicit_autonomy",
+      "prompt": "Surprise me with a friendly fantasy creature. No questions; pick the style and give me a static blend and hero render.",
+      "context": "No prior scene.",
+      "expected": "Choose and state a direction, then proceed without clarification or a concept-approval gate. Do not require an unrequested rig/export.",
+      "answer": null,
+      "afterAnswer": "Not applicable."
+    },
+    {
+      "id": "respect_prior_decisions",
+      "prompt": "Now make its walking animation.",
+      "context": "The accepted stylized otter rig and GLB target are present. The user already specified a two-second in-place loop at 24 fps.",
+      "expected": "Use the accepted character, timing and target without re-asking. Inspect the rig and plan stance/contact phases before authoring.",
+      "answer": null,
+      "afterAnswer": "Not applicable."
+    },
+    {
+      "id": "steering_preserves_work",
+      "prompt": "Keep the accepted body and clothes, but change the head to look more like the side reference and retain the current animation.",
+      "context": "Current source and accepted body/rig evidence exist. A side-view reference is attached.",
+      "expected": "Inspect the head/reference camera, preserve body/clothes/rig, make a local change and recheck affected deformation. Do not rebuild the whole character or discard animation.",
+      "answer": null,
+      "afterAnswer": "Not applicable."
+    },
+    {
+      "id": "conflicting_style_holdout",
+      "prompt": "Match the realistic product photo exactly, but make it look like the attached exaggerated cartoon concept.",
+      "context": "Both images are available and disagree in silhouette, proportions and materials.",
+      "expected": "Identify the specific conflict and ask which reference governs geometry versus style/materials. Do not silently average incompatible shapes.",
+      "answer": "Keep the product silhouette and dimensions; use only the cartoon palette and simplified materials.",
+      "afterAnswer": "Record the reference roles and preserve the product form."
+    }
+  ]
+}

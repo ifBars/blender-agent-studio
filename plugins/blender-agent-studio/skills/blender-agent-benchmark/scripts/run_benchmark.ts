@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   readJsonFile,
@@ -12,9 +12,10 @@ import { BENCHMARK_TASKS, type BenchmarkTask } from "./tasks.ts";
 import { summarizeAgentEvents } from "./trace.ts";
 import { resolveModelOptions } from "./model-options.ts";
 import { isolatedAgentArgs, pinnedMcpArgs, preflightPinnedMcp, sourceFingerprint } from "./pinned-mcp.ts";
+import { evaluatorFingerprint, readReferenceInput, taskFingerprint } from "./provenance.ts";
 
 type Mode = "baseline" | "skills" | "skills_mcp";
-type Suite = "smoke" | "quick" | "full" | "challenge" | "gauntlet";
+type Suite = BenchmarkTask["suites"][number];
 
 type Options = {
   suite: Suite;
@@ -30,6 +31,7 @@ type Options = {
   bypassApprovals: boolean;
   conditionLabel: string;
   skillRoot?: string;
+  referenceDir?: string;
 };
 
 function argument(name: string): string | undefined {
@@ -42,7 +44,7 @@ function parseOptions(): Options {
   const modeInput = argument("--mode") ?? "baseline";
   const mode = (modeInput === "plugin" ? "skills" : modeInput) as Mode;
   const output = argument("--output");
-  if (!["smoke", "quick", "full", "challenge", "gauntlet"].includes(suite)) {
+  if (!["smoke", "quick", "full", "challenge", "gauntlet", "quality", "reference"].includes(suite)) {
     throw new Error(`Unsupported suite: ${suite}`);
   }
   if (!["baseline", "skills", "skills_mcp"].includes(mode)) {
@@ -77,6 +79,7 @@ function parseOptions(): Options {
     bypassApprovals: process.argv.includes("--bypass-approvals"),
     conditionLabel: argument("--condition-label") ?? mode,
     skillRoot,
+    referenceDir: argument("--reference-dir") ? resolve(argument("--reference-dir")!) : undefined,
   };
 }
 
@@ -294,6 +297,17 @@ async function renderEvidence(options: {
   );
 }
 
+export async function inspectMotion(assetPath: string, output: string, task: BenchmarkTask, blenderPath: string) {
+  if (!task.motionRequirement || !existsSync(assetPath)) return null;
+  const requirement = task.motionRequirement;
+  const process = await runBlender({blenderPath,
+    scriptPath: resolve(import.meta.dir, "../../blender-asset-validation/scripts/inspect_motion.py"),
+    scriptArgs: ["--input", assetPath, "--output", output, "--frames", requirement.frames.join(","),
+      "--targets", ...requirement.targets.map(t => t.object)], timeoutMs: 300_000});
+  await writeFile(`${output}.process.json`, JSON.stringify(process, null, 2));
+  return process.exitCode === 0 && !process.timedOut && existsSync(output) ? readJsonFile(output) : null;
+}
+
 function parseRate(value: unknown): number | null {
   if (typeof value !== "string") return null;
   const [numeratorText, denominatorText = "1"] = value.split("/");
@@ -384,6 +398,7 @@ async function verifyReproduction(options: {
   sourcePath: string;
   workdir: string;
   blenderPath: string;
+  referencePaths?: string[];
 }): Promise<{
   passed: boolean;
   process: unknown | null;
@@ -402,6 +417,7 @@ async function verifyReproduction(options: {
   await mkdir(reproductionDir, { recursive: true });
   const copiedSource = join(reproductionDir, "create_asset.py");
   await copyFile(options.sourcePath, copiedSource);
+  for(const path of options.referencePaths ?? []) await copyFile(path,join(reproductionDir,basename(path)));
   const process = await runBlender({
     blenderPath: options.blenderPath,
     scriptPath: copiedSource,
@@ -454,6 +470,29 @@ async function main(): Promise<void> {
     throw new Error("No benchmark tasks matched the requested suite/task filter");
   }
 
+  const referenceHashes:Record<string,Record<string,string>>={};
+  const referenceImages:Record<string,string[]>={};
+  for(const task of selected) {
+    if(!task.referenceFiles?.length) continue;
+    if(!options.referenceDir) throw new Error("Reference suite requires --reference-dir with front/side PNGs of the same prop");
+    referenceHashes[task.id]={};referenceImages[task.id]=[];
+    const inputDir=join(options.output,"inputs",task.id);
+    await mkdir(inputDir,{recursive:true});
+    for(const filename of task.referenceFiles) {
+      const input=await readReferenceInput(join(options.referenceDir,filename));
+      const path=join(inputDir,filename);
+      await writeFile(path,input.data,{flag:"wx"});
+      referenceHashes[task.id][filename]=input.hash;
+      referenceImages[task.id].push(path);
+    }
+  }
+  const blenderVersionProc=Bun.spawn([options.blenderPath,"--version"],{stdout:"pipe",stderr:"pipe",windowsHide:true});
+  const versionTimer=setTimeout(()=>blenderVersionProc.kill(),30_000);
+  const [blenderBuild,blenderVersionError,blenderVersionExit]=await Promise.all([
+    new Response(blenderVersionProc.stdout).text(),new Response(blenderVersionProc.stderr).text(),blenderVersionProc.exited]);
+  clearTimeout(versionTimer);
+  if(blenderVersionExit !== 0 || !blenderBuild.trim()) throw new Error(`Cannot fingerprint Blender: ${blenderVersionError}`);
+
   const versionProc = Bun.spawn(["codex", "--version"], {
     stdout: "pipe",
     stderr: "pipe",
@@ -466,7 +505,8 @@ async function main(): Promise<void> {
   ]);
   const runManifest = {
     schemaVersion: 3,
-    scorerVersion: 4,
+    scorerVersion: 5,
+    motionEvidenceVersion: 1,
     inspectorSchemaVersion: 3,
     evidenceSettingsVersion: 2,
     evidencePresentation: "neutral",
@@ -479,6 +519,11 @@ async function main(): Promise<void> {
     modelProfile: options.modelProfile,
     reasoning: options.reasoning,
     blenderPath: options.blenderPath,
+    blenderBuild: blenderBuild.trim(),
+    timeoutMinutes: options.timeoutMinutes,
+    evaluatorFingerprint: await evaluatorFingerprint(),
+    taskFingerprints: Object.fromEntries(selected.map(task=>[task.id,taskFingerprint(task)])),
+    referenceHashes,
     codexVersion: codexVersion.trim(),
     codexVersionError: codexVersionError.trim(),
     taskIds: selected.map((task) => task.id),
@@ -509,6 +554,9 @@ async function main(): Promise<void> {
         `${task.id}-r${String(repetition).padStart(2, "0")}`,
       );
       await mkdir(workdir, { recursive: true });
+      for(const path of referenceImages[task.id] ?? []) {
+        await copyFile(path,join(workdir,basename(path)));
+      }
       const taskPrompt = task.prompt.replaceAll(
         "{{BLENDER_EXECUTABLE}}",
         options.blenderPath,
@@ -584,7 +632,12 @@ async function main(): Promise<void> {
         sourcePath,
         workdir,
         blenderPath: options.blenderPath,
+        referencePaths: referenceImages[task.id],
       });
+
+      const motionEvidence = await inspectMotion(blendPath, join(workdir, "motion-blend.json"), task, options.blenderPath);
+      const exportedMotionEvidence = task.motionRequirement?.inspectExport
+        ? await inspectMotion(glbPath, join(workdir, "motion-glb.json"), task, options.blenderPath) : null;
 
       const score = scoreSubmission({
         task,
@@ -595,12 +648,15 @@ async function main(): Promise<void> {
         glbExists: existsSync(glbPath),
         iterationReviewExists: existsSync(join(workdir, "iteration_review.json")),
         videoEvidence,
+        motionEvidence,
+        exportedMotionEvidence,
         blendMetrics: blendMetrics as never,
         glbMetrics: glbMetrics as never,
       });
       const result = {
         taskId: task.id,
         taskTitle: task.title,
+        referenceImages: referenceImages[task.id] ?? [],
         repetition,
         mode: options.mode,
         workdir,
@@ -623,6 +679,8 @@ async function main(): Promise<void> {
           : null,
         renderedVideo: videoPath && existsSync(videoPath) ? videoPath : null,
         videoEvidence,
+        motionEvidence,
+        exportedMotionEvidence,
       };
       await writeFile(
         join(workdir, "result.json"),

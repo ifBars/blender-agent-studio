@@ -58,6 +58,10 @@ async function main(): Promise<void> {
         Boolean(reproductionGlb?.hard_gate_pass),
       blendExists: existsSync(join(workdir, "asset.blend")),
       glbExists: existsSync(join(workdir, "asset.glb")),
+      iterationReviewExists: existsSync(join(workdir, "iteration_review.json")),
+      videoEvidence: (await optionalJson(join(workdir, "video-probe.json"))) as never,
+      motionEvidence: await optionalJson(join(workdir, "motion-blend.json")),
+      exportedMotionEvidence: await optionalJson(join(workdir, "motion-glb.json")),
       blendMetrics: (await optionalJson(join(workdir, "metrics-blend.json"))) as never,
       glbMetrics: (await optionalJson(join(workdir, "metrics-glb.json"))) as never,
     });
@@ -67,7 +71,7 @@ async function main(): Promise<void> {
   const rescored = {
     ...summary,
     rescoredAt: new Date().toISOString(),
-    scorerVersion: 4,
+    scorerVersion: 5,
     hardGatePasses: results.filter((item) => item.score.hardGatePass).length,
     meanAutomatedScore: Number(
       (

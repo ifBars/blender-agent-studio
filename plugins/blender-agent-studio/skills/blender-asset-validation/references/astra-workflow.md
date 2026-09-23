@@ -8,10 +8,16 @@ does not select the model or change the user's Codex settings.
 
 Infer routine choices from the request, references, and existing scene. Record
 reasonable defaults briefly and continue through the requested deliverables.
-Ask only when an unresolved choice would cause substantial rework and no
-reasonable default follows from context. Continue independent work while the
+Ask when competing plausible interpretations change subject identity, style,
+motion, simulation type or the usable deliverable and context does not resolve
+them. A convenient default does not resolve a consequential ambiguity. Use the
+art-direction intake workflow to ask one to three focused questions; default
+routine implementation settings without a survey. Continue independent work while the
 answer is pending. Do not turn the contract, optional concept art, or an
-internal stage review into an approval gate. Respect gates the user requested.
+internal stage review into an approval gate. Keep work that depends on a
+necessary answer pending; optional preferences may use stated assumptions after
+giving the user time to respond. Honor explicit no-question requests. Respect
+gates the user requested.
 Explicit user instructions take precedence over skill guidelines. If a skill
 would force a pause, quote and link the specific instruction and explain why
 existing authorization does not cover the next step.

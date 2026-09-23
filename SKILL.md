@@ -49,6 +49,10 @@ their respective capability is required.
 1. Resolve and record the exact Blender executable and version.
 2. Convert the request into explicit parts, relationships, style, scale,
    animation, finish quality, export, evidence, and approval requirements.
+   Ask focused clarification questions when competing interpretations change
+   the subject, style, motion or usable deliverable. Record routine assumptions
+   and map each must-have to its acceptance evidence; do not ask again about
+   decisions the user has already supplied.
 3. Unless the user explicitly requests low-poly, blockout-only, or another
    constrained style, target a polished smooth asset with intentional
    secondary and tertiary detail rather than a primitive-looking low-density

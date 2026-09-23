@@ -87,6 +87,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--input', required=True)
     parser.add_argument('--output', required=True)
+    parser.add_argument('--frame', type=int)
     args = parser.parse_args(script_args())
     source, output = Path(args.input).resolve(), Path(args.output).resolve()
     if not source.is_file():
@@ -94,6 +95,10 @@ def main():
     if source == output or output.exists():
         raise ValueError('SceneIR output must be a new file distinct from the asset')
     load_asset(source)
+    if args.frame is not None:
+        if not -1_048_574 <= args.frame <= 1_048_574:
+            raise ValueError('frame outside Blender range')
+        bpy.context.scene.frame_set(args.frame)
     result = extract_scene()
     result['source'] = str(source)
     output.parent.mkdir(parents=True, exist_ok=True)

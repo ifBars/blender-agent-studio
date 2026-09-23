@@ -60,6 +60,11 @@ test.skipIf(!runtimeAvailable || !blender)("live Blender scene and fresh GLB imp
     expect(body.bounds.max).toEqual([17,1,0.5]);
     expect(body.mesh.connected_components).toBe(2);
     expect(body.mesh.triangles).toBe(24);
+    const posed = await client.callTool({name:"blender_describe_scene",arguments:{assetPath,blenderPath:blender,frame:20,objectId:"foot"}});
+    expect(posed.isError, JSON.stringify(posed.content)).not.toBe(true);
+    expect((posed.structuredContent as any).selection.bounds.min[2]).toBe(4);
+    const badFrame = await client.callTool({name:"blender_describe_scene",arguments:{assetPath,frame:1.5}});
+    expect(badFrame.isError).toBe(true);
     const quality = await client.callTool({name:"blender_quality_report",arguments:{assetPath,blenderPath:blender,triangleBudget:35,groundZ:0,groundObjects:["foot"],limit:1}});
     expect(quality.isError, JSON.stringify(quality.content)).not.toBe(true);
     expect((quality.structuredContent as any).quality.status).toBe("constraints_failed");
@@ -84,6 +89,15 @@ test.skipIf(!runtimeAvailable || !blender)("live Blender scene and fresh GLB imp
     expect(compared.isError, JSON.stringify(compared.content)).not.toBe(true);
     expect((compared.structuredContent as any).summary).toMatchObject({added:0,removed:0,changed:0,unchanged:3,triangle_delta:0});
     expect((compared.structuredContent as any).regression.status).toBe("review_required");
+    const mismatchedFrame = await client.callTool({name:"blender_compare_scenes",arguments:{baselineAssetPath:assetPath,candidateAssetPath:join(temporary,"posed.blend"),blenderPath:blender}});
+    expect(mismatchedFrame.isError).toBe(true);
+    expect(JSON.stringify(mismatchedFrame.content)).toContain("Scene frames differ");
+    const sameFrame = await client.callTool({name:"blender_compare_scenes",arguments:{baselineAssetPath:assetPath,candidateAssetPath:join(temporary,"posed.blend"),blenderPath:blender,frame:20}});
+    expect(sameFrame.isError,JSON.stringify(sameFrame.content)).not.toBe(true);
+    expect((sameFrame.structuredContent as any).summary.changed).toBe(0);
+    const mismatchedUnits = await client.callTool({name:"blender_compare_scenes",arguments:{baselineAssetPath:assetPath,candidateAssetPath:join(temporary,"units.blend"),blenderPath:blender,frame:1}});
+    expect(mismatchedUnits.isError).toBe(true);
+    expect(JSON.stringify(mismatchedUnits.content)).toContain("unit scales differ");
     const failed = await client.callTool({name:"blender_describe_scene",arguments:{assetPath,outputJson,blenderPath:blender}});
     expect(failed.isError).toBe(true);
     expect(JSON.stringify(failed.content)).toContain("new file");

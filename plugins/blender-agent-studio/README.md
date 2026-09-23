@@ -95,6 +95,12 @@ filtering. Sample caps do not increase automatically.
 
 ## Connection-point diagnostics
 
+SceneIR tools accept `frame` to inspect the requested pose without resaving it.
+Paired scene comparisons require the same frame and unit scale.
+`blender_inspect_motion` separately samples evaluated mesh deformation and
+transforms, plus fluid/cloth bake metadata, without needing Rust or baking.
+It does not judge physical plausibility or between-frame animation quality.
+
 SceneIR quality reports accept explicit `connectionPoints` for cable ends,
 pivots and other intended joints. Checks transform object-local anchors into
 world space and return the gap plus correction direction, even when object
@@ -102,6 +108,12 @@ bounding boxes overlap. They preserve whole-assembly selection and pagination.
 Anchor agreement requires visual verification and does not prove surface contact.
 
 ## Reference framing and repair diagnostics
+
+The [image-to-3D workflow](skills/blender-modeling-workflow/references/image-to-3d.md)
+resolves reconstruction intent, separates observed and inferred features, and
+checks complementary views with frozen camera/reference inputs. The optional
+`quality` and `reference` benchmark suites and eight intake review cases are
+described in the [quality protocol](skills/blender-agent-benchmark/references/quality-suites.md).
 
 `blender_fit_reference_camera` fits scale/focal length and lens shift from
 explicit reference landmarks, saving a candidate scene without changing meshes

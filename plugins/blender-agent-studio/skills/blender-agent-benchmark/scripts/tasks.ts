@@ -1,3 +1,6 @@
+import { QUALITY_TASKS } from "./quality-tasks.ts";
+import type { MotionRequirement } from "./motion-evidence.ts";
+
 export type VisualCriterion = {
   id: string;
   category:
@@ -55,7 +58,9 @@ export type BenchmarkTask = {
     | "deformation"
     | "simulation"
   >;
-  suites: Array<"smoke" | "quick" | "full" | "challenge" | "gauntlet">;
+  suites: Array<"smoke" | "quick" | "full" | "challenge" | "gauntlet" | "quality" | "reference">;
+  referenceFiles?: string[];
+  motionRequirement?: MotionRequirement;
   difficultyProfile?: "gauntlet";
   prompt: string;
   visualBrief: string;
@@ -903,4 +908,5 @@ Do not ask follow-up questions. Produce a complete first candidate, run a separa
       ],
     },
   },
+  ...QUALITY_TASKS,
 ];

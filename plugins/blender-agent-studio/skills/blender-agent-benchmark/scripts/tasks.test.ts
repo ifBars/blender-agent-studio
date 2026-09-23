@@ -2,6 +2,20 @@ import { describe, expect, test } from "bun:test";
 import { BENCHMARK_TASKS } from "./tasks.ts";
 
 describe("benchmark task coverage", () => {
+  test("separates quality and reference suites from historical tasks", () => {
+    const quality=BENCHMARK_TASKS.filter(task=>task.suites.includes("quality"));
+    expect(quality).toHaveLength(5);
+    expect(quality.filter(t=>t.motionRequirement)).toHaveLength(4);
+    expect(quality.every(t=>t.suites.length===1)).toBe(true);
+    const reference=BENCHMARK_TASKS.filter(t=>t.suites.includes("reference"));
+    expect(reference).toHaveLength(1);
+    expect(reference[0].referenceFiles).toEqual(["reference-front.png","reference-side.png"]);
+    for(const task of quality.filter(t=>t.category==="simulation_creation")) {
+      expect(task.rubric.requireAnimation).toBe(false);
+      expect(task.requiredVideo).toBeDefined();
+      expect(task.motionRequirement).toBeDefined();
+    }
+  });
   test("preserves the historical full-suite task set", () => {
     expect(
       BENCHMARK_TASKS.filter((task) => task.suites.includes("full")).map(

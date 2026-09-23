@@ -82,6 +82,12 @@ In the 0.6 Astra tests, the revised workflow won the lantern comparison and lost
 the workshop comparisons. See the [results and limits](plugins/blender-agent-studio/skills/blender-agent-benchmark/references/astra-0.6-validation.md)
 and [benchmark methodology](plugins/blender-agent-studio/skills/blender-agent-benchmark/references/methodology.md).
 
+The new optional quality suites cover character form, walk cycles, facial
+expressions, liquid, cloth and two-view reconstruction. See
+[quality development and evidence limits](docs/quality-development.md) for the
+clarification cases, motion checks and controlled comparison protocol. These
+add evaluation coverage; they are not published evidence of a capability gain.
+
 ## Star history
 
 <a href="https://www.star-history.com/?repos=ifBars%2Fblender-agent-studio&type=date&legend=top-left">

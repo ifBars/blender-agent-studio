@@ -394,7 +394,32 @@ server.registerTool("blender_download_polyhaven_asset", {
   try {return result(await polyHaven.download(options));} catch(error) {return errorResult(error);}
 });
 
+server.registerTool("blender_inspect_motion", {
+  title: "Inspect evaluated motion and bake evidence",
+  description: "Read-only samples of 1-8 named meshes at 2-12 increasing frames. Reports evaluated local geometry hashes, transforms and native bake metadata. Does not bake, measure physical correctness or judge animation quality. Writes a new JSON file; no Rust runtime required.",
+  inputSchema: z.object({
+    assetPath: z.string(), outputJson: z.string().describe("New JSON path in an existing directory."),
+    frames: z.array(z.number().int().min(-1_048_574).max(1_048_574)).min(2).max(12),
+    objectNames: z.array(z.string().min(1).max(1024)).min(1).max(8),
+    blenderPath: z.string().optional(),
+    timeoutMs: z.number().int().min(1000).max(300_000).default(60_000),
+  }),
+}, async ({assetPath, outputJson, frames, objectNames, blenderPath, timeoutMs}) => {
+  try {
+    if(frames.some((frame,i)=>i>0 && frame<=frames[i-1])) throw new Error("frames must be distinct and increasing");
+    if(new Set(objectNames).size!==objectNames.length) throw new Error("objectNames must be distinct");
+    const output=resolve(outputJson);
+    if(existsSync(output)) throw new Error("outputJson must be a new file");
+    const process=await runBlender({blenderPath,timeoutMs,
+      scriptPath:join(validationScripts,"inspect_motion.py"),
+      scriptArgs:["--input",resolve(assetPath),"--output",output,"--frames",frames.join(","),"--targets",...objectNames]});
+    if(process.exitCode!==0 || process.timedOut) return {...result({process,report:null}),isError:true};
+    return result({report:await readJsonFile(output),outputJson:output});
+  } catch(error) {return errorResult(error);}
+});
+
 const sceneSchema = z.object({
+  frame: z.number().int().min(-1_048_574).max(1_048_574).optional().describe("Evaluate this frame without saving the source; omitted uses its saved frame. Does not bake simulations. Use the same explicit frame for repair evidence."),
   assetPath: z.string(), outputJson: z.string().optional().describe("Optional new JSON file for full SceneIR and analysis. Parent directory must exist."),
   objectId: z.string().optional().describe("Exact object ID from describe_scene; omit for whole active scene."),
   includeDescendants: z.boolean().default(true),
@@ -423,10 +448,10 @@ for (const name of ["blender_describe_scene", "blender_quality_report"] as const
       ? "Extract SceneIR and analyze with the Rust runtime. Returns compact evaluated bounds, authored roles, hierarchy and paginated AABB relation candidates. Read-only; requires setup:runtime."
       : "Evaluate explicit triangle, closed-mesh, named ground and intended contact constraints with the Rust runtime. Returns measurable findings and required visual-review questions, never an aesthetic score. Constraints cover the full selected assembly, independent of pagination. Read-only; requires setup:runtime.",
     inputSchema: sceneSchema,
-  }, async ({ assetPath, outputJson, blenderPath, timeoutMs, objectId, includeDescendants, offset, limit, proximity, groundZ, groundObjects, contactPairs, connectionPoints, tolerance, triangleBudget, requireClosedMesh }) => {
+  }, async ({ assetPath, outputJson, blenderPath, timeoutMs, frame, objectId, includeDescendants, offset, limit, proximity, groundZ, groundObjects, contactPairs, connectionPoints, tolerance, triangleBudget, requireClosedMesh }) => {
     try {
       if (groundObjects.length && groundZ === undefined) throw new Error("groundObjects requires explicit groundZ");
-      return result(await describeAsset({ assetPath, outputJson, blenderPath, timeoutMs,
+      return result(await describeAsset({ assetPath, outputJson, blenderPath, timeoutMs, frame,
         options: { object_id: objectId, include_descendants: includeDescendants, offset, limit, proximity,
           ground_z: groundZ, ground_objects: groundObjects, contact_pairs: contactPairs, connection_points: connectionPoints.map(c=>({name:c.name,object_a:c.objectA,point_a:c.pointA,object_b:c.objectB,point_b:c.pointB,max_distance:c.maxDistance})), tolerance, triangle_budget: triangleBudget, require_closed_mesh: requireClosedMesh } }));
     } catch (error) { return errorResult(error); }
@@ -438,6 +463,7 @@ server.registerTool("blender_compare_scenes", {
   description: "Extract two SceneIR snapshots and report deterministic structural changes plus only explicitly requested regression constraints. Use after a repair with baseline and candidate assets. This does not measure aesthetic improvement, semantic correctness, exact contact, materials or lighting. Read-only; requires setup:runtime.",
   inputSchema: z.object({
     baselineAssetPath: z.string().describe("Preserved candidate or other baseline asset."),
+    frame: z.number().int().min(-1_048_574).max(1_048_574).optional().describe("Evaluate both assets at this same frame; differing saved frames or unit scales are rejected. Does not bake simulations."),
     candidateAssetPath: z.string().describe("Regenerated repair or comparison asset."),
     outputJson: z.string().optional().describe("Optional new JSON file containing both SceneIR snapshots and the diff. Parent directory must exist."),
     requiredObjects: z.array(z.string()).max(2048).default([]).describe("Objects that must exist in the candidate. Names absent from both scenes are rejected as likely mistakes."),
@@ -453,11 +479,11 @@ server.registerTool("blender_compare_scenes", {
     blenderPath: z.string().optional(),
     timeoutMs: z.number().int().min(1000).max(1_800_000).default(300_000),
   }),
-}, async ({baselineAssetPath, candidateAssetPath, outputJson, requiredObjects, invariantObjects,
+}, async ({baselineAssetPath, candidateAssetPath, outputJson, frame, requiredObjects, invariantObjects,
   forbidRemovedObjects, preserveParenting, preserveSemanticRoles, maxTriangleIncrease,
   maxCenterShift, maxDimensionChange, forbidNewTopologyFindings, tolerance, blenderPath, timeoutMs}) => {
   try {
-    return result(await compareAssets({baselineAssetPath, candidateAssetPath, outputJson, blenderPath, timeoutMs,
+    return result(await compareAssets({baselineAssetPath, candidateAssetPath, outputJson, blenderPath, timeoutMs, frame,
       options: {required_objects: requiredObjects, invariant_objects: invariantObjects,
         forbid_removed_objects: forbidRemovedObjects, preserve_parenting: preserveParenting,
         preserve_semantic_roles: preserveSemanticRoles, max_triangle_increase: maxTriangleIncrease,

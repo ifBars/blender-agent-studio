@@ -54,6 +54,13 @@ approval.
 4. Bake final data only after the preview passes. Verify every expected cache
    stage/file is present and the timeline reads it rather than recomputing an
    implicit temporary state.
+   Reopen the saved scene in a fresh Blender process and inspect the same
+   frames with `blender_inspect_motion`. For liquid, use the evaluated domain
+   mesh as a target; confirm nonempty changing surfaces and native data/mesh
+   bake metadata. A fluid modifier, replay cache, or static proxy is not a
+   completed bake. Final cache uses the Python enum `ALL`; UI labels are not
+   necessarily enum identifiers. Cloth requires the baked point cache as well
+   as visible deformation. These checks do not prove physical correctness.
 5. Render the requested critical frames and, when timing matters, an encoded
    preview or final sequence using `$blender-agent-studio:blender-rendering-workflow`.
 

@@ -30,12 +30,23 @@ reported when a task genuinely exposes those dimensions.
 
 ## Required controls
 
+The additional `quality` suite tests static character form, walk cycles, facial
+combinations, liquid and cloth independently. The `reference` suite uses frozen,
+hashed front/side images and gives those inputs to blinded judges. Read
+[quality-suites.md](quality-suites.md) for the technical gates and remaining
+visual-review requirements. Use [intake-cases.json](intake-cases.json) for
+interactive clarification review; no-question generation fixtures do not measure
+whether an agent asks the right questions.
+
 - same model and reasoning effort;
 - same prompt and attached references;
 - same wall-clock and tool permissions;
 - same exact Blender executable;
 - clean task directories;
 - deterministic evaluator version;
+- exact task/evaluator source fingerprints, reference hashes, time budget and
+  permission mode (recorded by new runners; strict comparisons reject missing
+  controls rather than inferring them from a current installation);
 - hidden condition labels and counterbalanced A/B image order for visual
   judging.
 - raw Codex JSON events plus summarized duration, tool calls, tool failures,

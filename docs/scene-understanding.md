@@ -47,6 +47,7 @@ Then focus on an object or assembly:
 ```json
 {
   "assetPath": "/assets/deer.blend",
+  "frame": 24,
   "objectId": "deer",
   "includeDescendants": true,
   "limit": 40,
@@ -59,6 +60,11 @@ library identity stay stable. Roles come exclusively from an authored string
 custom property, for example `obj["bas_role"] = "torso"`. Names do not prove
 anatomy, physical attachment or correct proportions. Collection membership alone
 does not define an assembly: assembly selection follows object parenting.
+
+`frame` evaluates an explicit animation state without saving the source. Omit
+it to use the saved frame. For motion, repeat the same declared checks at the
+contract's contact, extreme-pose and settle frames. It does not bake simulations;
+use an existing verified cache. One passing frame does not validate a timeline.
 
 Use `pagination.next_offset` to request another page. Bounds and quality
 constraints cover the **entire selection**, regardless of the returned page.
@@ -109,6 +115,11 @@ regenerating a repair. It extracts both assets independently and reports added,
 removed, changed and unchanged objects; aggregate triangle and bounds changes;
 and per-object transform, bounds, hierarchy, role and mesh-summary changes.
 Matching uses exact object IDs, so keep semantic names stable across iterations.
+
+Supply `frame` to compare both files at the same explicit pose. If omitted,
+differing saved frames are rejected. Differing unit scales are also rejected by
+the asset comparison tool; normalize them before applying world-space repair
+constraints. The lower-level Rust factual diff can still describe unit changes.
 
 The factual diff is not a quality verdict. Changes become failures only through
 explicit options grounded in the task contract:
