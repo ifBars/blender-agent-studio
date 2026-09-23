@@ -3,10 +3,10 @@
 Describe what you want to make. Keep the Blender file and the Python that built it.
 
 A Codex plugin for creating and refining Blender models, animations, and scenes.
-It gives your agent workflows for the creative work, plus tools to inspect assets,
-render them, and find textures.
+It gives your agent a way to plan the work, build it in your local Blender
+installation, and inspect the result before delivery.
 
-[Install](#install) · [Try it](#try-it) · [Workflows](plugins/blender-agent-studio/skills) · [Development](docs/development.md) · [Report a bug](https://github.com/ifBars/blender-agent-studio/issues)
+[Install](#install) · [Try it](#try-it) · [How it works](#how-it-works) · [Workflows](plugins/blender-agent-studio/skills) · [Development](docs/development.md) · [Report a bug](https://github.com/ifBars/blender-agent-studio/issues)
 
 ## What you can do
 
@@ -23,6 +23,18 @@ render them, and find textures.
 The plugin includes eleven specialist skills and a local MCP server for
 inspection, rendering, and asset downloads. Generated scenes come with Python
 source so you can rebuild them and keep making changes.
+
+## How it works
+
+The skills guide the agent through modeling, rendering, animation, and other
+tasks. Blender runs locally to build or inspect the saved scene; you do not need
+to keep its interface open. The agent can render views, check the `.blend` and
+any requested export, and revise the source when something needs work.
+
+The `.blend` is the editable result. The Python source records the build steps,
+so you can regenerate it or ask the agent to change it later. The [workflow
+guide](SKILL.md#route-the-request) explains which specialist skills apply to
+each kind of task.
 
 ## Install
 
@@ -69,24 +81,21 @@ Include the style, dimensions, and intended use when they matter. For a game
 asset, ask for a GLB export and a check that it imports correctly. For a render,
 you can specify a camera angle, lighting, or reference image.
 
-The [workflow guide](SKILL.md#route-the-request) covers modeling, rendering,
-animation, characters, simulations, and more. You can also ask for a second
-review of an existing scene.
+You can also give the agent an existing `.blend` and ask it to inspect or refine
+the scene. For a second review, ask it to check the result from multiple views.
 
 ## How well does it work?
 
-The workflow includes visual review alongside file checks. Results still depend
-on the model, the brief, and the scene.
+It can produce editable Blender scenes, renders, and exports, then inspect and
+revise them. The result depends on the model, the brief, and the scene. Expect
+to review the work from several angles and request changes when the shape,
+materials, motion, or simulation need to be right.
 
-In the 0.6 Astra tests, the revised workflow won the lantern comparison and lost
-the workshop comparisons. See the [results and limits](plugins/blender-agent-studio/skills/blender-agent-benchmark/references/astra-0.6-validation.md)
-and [benchmark methodology](plugins/blender-agent-studio/skills/blender-agent-benchmark/references/methodology.md).
-
-The new optional quality suites cover character form, walk cycles, facial
-expressions, liquid, cloth and two-view reconstruction. See
-[quality development and evidence limits](docs/quality-development.md) for the
-clarification cases, motion checks and controlled comparison protocol. These
-add evaluation coverage; they are not published evidence of a capability gain.
+File checks can catch technical problems, but a valid `.blend` or export does
+not mean the asset looks right. Visual comparisons so far have had mixed
+results, so we cannot claim the plugin consistently improves the finished
+work. See [quality development and evidence limits](docs/quality-development.md)
+and the [benchmark methodology](plugins/blender-agent-studio/skills/blender-agent-benchmark/references/methodology.md).
 
 ## Star history
 
