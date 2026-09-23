@@ -86,15 +86,25 @@ the scene. For a second review, ask it to check the result from multiple views.
 
 ## How well does it work?
 
-It can produce editable Blender scenes, renders, and exports, then inspect and
-revise them. The result depends on the model, the brief, and the scene. Expect
-to review the work from several angles and request changes when the shape,
-materials, motion, or simulation need to be right.
+In a controlled comparison against an agent without the plugin, its final
+results won all 10 blinded visual votes across four tested prop and mechanism
+tasks. On one holdout task, the plugin also passed a technical check that the
+baseline failed. The plugin runs took about 48% longer on average because they
+included more validation and animation evidence work. An earlier plugin attempt
+at the drawbridge task lost before we revised the guidance.
 
-File checks can catch technical problems, but a valid `.blend` or export does
-not mean the asset looks right. Visual comparisons so far have had mixed
-results, so we cannot claim the plugin consistently improves the finished
-work. See [quality development and evidence limits](docs/quality-development.md)
+A harder integrated task was less clear: neither the plugin nor the baseline
+met the required technical gates. Judges preferred the plugin's overall look
+2 to 1, but it satisfied fewer specific visual requirements. Read the
+[paired results and their limits](plugins/blender-agent-studio/skills/blender-agent-benchmark/references/validated-results.md).
+
+These are small samples using one model, with one generation in each final
+paired comparison. They do not give a success rate for every prompt.
+Comparisons between plugin revisions have also shown both gains and
+regressions. The plugin guides building, inspection, and revision, but cannot
+guarantee a better-looking asset. Expect to review the result, especially when
+shape, materials, motion, or simulation matter. See
+[quality development](docs/quality-development.md)
 and the [benchmark methodology](plugins/blender-agent-studio/skills/blender-agent-benchmark/references/methodology.md).
 
 ## Star history
