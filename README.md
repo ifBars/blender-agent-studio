@@ -28,13 +28,28 @@ source so you can rebuild them and keep making changes.
 
 The skills guide the agent through modeling, rendering, animation, and other
 tasks. Blender runs locally to build or inspect the saved scene; you do not need
-to keep its interface open. The agent can render views, check the `.blend` and
-any requested export, and revise the source when something needs work.
+to keep its interface open. The agent chooses the relevant steps for your
+request. The workflows and tools help it:
+
+- Turn the brief into parts, proportions, finish goals, and delivery checks.
+  Review a graybox before spending time on materials and small details.
+- Check geometry, materials, dimensions, and other scene details. For an export,
+  it can reopen the file in a fresh Blender process to check what survived.
+- Render a hero view plus fixed front, back, left, right, and top views. During
+  repairs, it can use two smaller views for faster feedback before the full check.
+- Light diagnostic views with a studio setup scaled to the asset. The `auto`
+  preset picks a contrasting background from simple material color hints; the
+  agent still needs to inspect the image and adjust it when the choice fails.
+- Render through the scene's own cameras and lighting for beauty images. The
+  tool caps resolution, samples, and render time. It offers faster `preview`
+  and higher-quality `final` denoising policies; by default, it preserves the
+  scene's authored denoising settings. The agent selects the policy for the job.
 
 The `.blend` is the editable result. The Python source records the build steps,
 so you can regenerate it or ask the agent to change it later. The [workflow
 guide](SKILL.md#route-the-request) explains which specialist skills apply to
-each kind of task.
+each kind of task. Studio views are for inspection and do not replace your
+scene's authored lighting in beauty renders.
 
 ## Install
 
@@ -86,26 +101,27 @@ the scene. For a second review, ask it to check the result from multiple views.
 
 ## How well does it work?
 
-In a controlled comparison against an agent without the plugin, its final
-results won all 10 blinded visual votes across four tested prop and mechanism
-tasks. On one holdout task, the plugin also passed a technical check that the
-baseline failed. The plugin runs took about 48% longer on average because they
-included more validation and animation evidence work. An earlier plugin attempt
-at the drawbridge task lost before we revised the guidance.
+In five fresh, matched pairs covering a lantern, lever press, and animated
+drawbridge, the plugin's guided workflow passed the technical gate five times;
+the agent without it failed five times. Three blinded visual judges preferred
+the plugin asset in four of the five pairs. On one lantern repeat, all three
+preferred the baseline's appearance even though its geometry failed the
+technical gate. The plugin used more reported tokens. Lantern build time was
+about even across three pairs; the press and drawbridge plugin runs took about
+twice as long. See the [current paired evidence](docs/plugin-quality-evidence.md)
+for scores, controls, and defects.
 
-A harder integrated task was less clear: neither the plugin nor the baseline
-met the required technical gates. Judges preferred the plugin's overall look
-2 to 1, but it satisfied fewer specific visual requirements. Read the
-[paired results and their limits](plugins/blender-agent-studio/skills/blender-agent-benchmark/references/validated-results.md).
-
-These are small samples using one model, with one generation in each final
-paired comparison. They do not give a success rate for every prompt.
-Comparisons between plugin revisions have also shown both gains and
-regressions. The plugin guides building, inspection, and revision, but cannot
-guarantee a better-looking asset. Expect to review the result, especially when
-shape, materials, motion, or simulation matter. See
-[quality development](docs/quality-development.md)
-and the [benchmark methodology](plugins/blender-agent-studio/skills/blender-agent-benchmark/references/methodology.md).
+These results show a quality gain for delivery checks on the tested prompts,
+with less consistent visual gains. Five pairs cannot give a reliable success
+rate for arbitrary prompts, models, or art styles. The three judges in each
+pair reviewed the same two assets; their votes are not separate generations.
+The comparison used the plugin's skills without its optional MCP tools, so it
+does not measure the extra benefit of those tools. An [earlier four-task
+comparison](plugins/blender-agent-studio/skills/blender-agent-benchmark/references/validated-results.md)
+also favored the plugin's final runs, but a harder integrated task had mixed
+results. Plugin revisions have shown [both gains and
+regressions](docs/quality-development.md). Review the result yourself,
+particularly its shape, materials, animation, and exported files.
 
 ## Star history
 
