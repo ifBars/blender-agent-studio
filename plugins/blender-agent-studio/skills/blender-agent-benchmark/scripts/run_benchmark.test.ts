@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { buildCodexArgs, pluginPrefix } from "./run_benchmark.ts";
+import { buildCodexArgs, pluginPrefix, createReproductionDirectory } from "./run_benchmark.ts";
 import { resolveModelOptions } from "./model-options.ts";
 import { BENCHMARK_TASKS } from "./tasks.ts";
 import { resolve } from "node:path";
@@ -106,4 +106,24 @@ describe("benchmark execution isolation", () => {
     expect(() => buildCodexArgs({...base,mode:"skills_mcp"})).toThrow("pinned skillRoot");
     expect(buildCodexArgs({...base,mode:"skills",skillRootPinned:true,skillRoot}).some(value => value.startsWith("mcp_servers."))).toBe(false);
   });
+});
+
+
+test("reproduction allocates fresh directories and preserves agent-authored cache evidence", async () => {
+  const {mkdtemp, mkdir, writeFile, readFile, readdir, rm} = await import("node:fs/promises");
+  const {tmpdir} = await import("node:os");
+  const {join} = await import("node:path");
+  const root = await mkdtemp(join(tmpdir(), "bas-reproduction-test-"));
+  try {
+    await mkdir(join(root, "reproduction"));
+    const existing = join(root, "reproduction", "cache.json");
+    await writeFile(existing, "preserve this bake");
+    const first = await createReproductionDirectory(root);
+    await writeFile(join(first, "stale.blend"), "previous evaluator output");
+    const second = await createReproductionDirectory(root);
+    expect(first).not.toBe(second);
+    expect(await readdir(second)).toEqual([]);
+    expect(await readFile(existing, "utf8")).toBe("preserve this bake");
+    expect(await readFile(join(first, "stale.blend"), "utf8")).toBe("previous evaluator output");
+  } finally { await rm(root, {recursive: true, force: true}); }
 });

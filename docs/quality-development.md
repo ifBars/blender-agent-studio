@@ -115,6 +115,14 @@ camera fitting from shape repair, freezes comparison inputs, and checks an
 independent view before accepting changes. This reduces the incentive to distort
 the model to fit one projection.
 
+## Measured snapshot
+
+The [September 2026 paired campaign](quality-campaign-2026-09-23.md) found a
+character visual win and a liquid visual regression, with higher time/token use
+in both revised runs. A reproduction-directory collision invalidated the liquid
+technical-score delta and led to an isolation repair. These mixed results do not
+establish an overall quality gain.
+
 ## Next evidence to collect
 
 Run old/revised workflows on the same explicit model, effort and controls, with

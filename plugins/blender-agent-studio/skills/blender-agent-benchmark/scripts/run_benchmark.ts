@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -394,6 +394,11 @@ async function probeVideo(videoPath: string): Promise<VideoEvidence> {
   }
 }
 
+export async function createReproductionDirectory(workdir: string): Promise<string> {
+  // Agent-authored reproduction folders and prior evaluator output must remain untouched.
+  return mkdtemp(join(workdir, "evaluator-reproduction-"));
+}
+
 async function verifyReproduction(options: {
   sourcePath: string;
   workdir: string;
@@ -401,6 +406,7 @@ async function verifyReproduction(options: {
   referencePaths?: string[];
 }): Promise<{
   passed: boolean;
+  directory: string | null;
   process: unknown | null;
   blendMetrics: unknown | null;
   glbMetrics: unknown | null;
@@ -408,13 +414,13 @@ async function verifyReproduction(options: {
   if (!existsSync(options.sourcePath)) {
     return {
       passed: false,
+      directory: null,
       process: null,
       blendMetrics: null,
       glbMetrics: null,
     };
   }
-  const reproductionDir = join(options.workdir, "reproduction");
-  await mkdir(reproductionDir, { recursive: true });
+  const reproductionDir = await createReproductionDirectory(options.workdir);
   const copiedSource = join(reproductionDir, "create_asset.py");
   await copyFile(options.sourcePath, copiedSource);
   for(const path of options.referencePaths ?? []) await copyFile(path,join(reproductionDir,basename(path)));
@@ -446,6 +452,7 @@ async function verifyReproduction(options: {
       process.exitCode === 0 &&
       Boolean((blendMetrics as { hard_gate_pass?: boolean } | null)?.hard_gate_pass) &&
       Boolean((glbMetrics as { hard_gate_pass?: boolean } | null)?.hard_gate_pass),
+    directory: reproductionDir,
     process,
     blendMetrics,
     glbMetrics,
@@ -667,6 +674,7 @@ async function main(): Promise<void> {
           trace: agentTrace,
         },
         score,
+        reproductionDirectory: reproduction.directory,
         evidenceContactSheet: existsSync(
           join(workdir, "evidence", "contact_sheet.png"),
         )

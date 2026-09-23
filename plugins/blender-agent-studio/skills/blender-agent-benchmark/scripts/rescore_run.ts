@@ -30,6 +30,7 @@ async function main(): Promise<void> {
     results: Array<{
       taskId: string;
       workdir: string;
+      reproductionDirectory?: string | null;
       agent: { exitCode: number };
       score: unknown;
     }>;
@@ -43,17 +44,20 @@ async function main(): Promise<void> {
       throw new Error(`Unknown task in summary: ${result.taskId}`);
     }
     const workdir = resolve(result.workdir);
+    const reproductionDir = result.reproductionDirectory ?? join(workdir, "reproduction");
+    const reproductionProcess = await optionalJson(join(reproductionDir, "generation-process.json")) as {exitCode?: number} | null;
     const reproductionBlend = (await optionalJson(
-      join(workdir, "reproduction", "metrics-blend.json"),
+      join(reproductionDir, "metrics-blend.json"),
     )) as { hard_gate_pass?: boolean } | null;
     const reproductionGlb = (await optionalJson(
-      join(workdir, "reproduction", "metrics-glb.json"),
+      join(reproductionDir, "metrics-glb.json"),
     )) as { hard_gate_pass?: boolean } | null;
     const score = scoreSubmission({
       task,
       agentExitCode: result.agent.exitCode,
       sourceExists: existsSync(join(workdir, "create_asset.py")),
       reproductionPass:
+        reproductionProcess?.exitCode === 0 &&
         Boolean(reproductionBlend?.hard_gate_pass) &&
         Boolean(reproductionGlb?.hard_gate_pass),
       blendExists: existsSync(join(workdir, "asset.blend")),
