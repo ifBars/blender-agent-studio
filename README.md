@@ -2,7 +2,8 @@
 
 Describe what you want to make. Keep the Blender file and the Python that built it.
 
-A Codex plugin for creating and refining Blender models, animations, and scenes.
+A plugin for Codex and Claude Code for creating and refining Blender models,
+animations, and scenes.
 It gives your agent a way to plan the work, build it in your local Blender
 installation, and inspect the result before delivery.
 
@@ -53,13 +54,28 @@ scene's authored lighting in beauty renders.
 
 ## Install
 
-You'll need Codex with plugin support, [Bun](https://bun.sh), and Blender.
-Blender 5.2 LTS is the tested version; use Bun 1.3.5 or newer.
+You'll need [Codex](https://developers.openai.com/codex) or [Claude
+Code](https://code.claude.com) with plugin support, [Bun](https://bun.sh), and
+Blender. Blender 5.2 LTS is the tested version; use Bun 1.3.5 or newer. Both
+hosts install the same skills, MCP server, and SceneIR tools from this
+repository.
+
+**Codex**
 
 ```bash
 codex plugin marketplace add ifBars/blender-agent-studio
 codex plugin add blender-agent-studio@blender-agent-studio
 ```
+
+**Claude Code**
+
+```bash
+claude plugin marketplace add ifBars/blender-agent-studio
+claude plugin install blender-agent-studio@blender-agent-studio
+```
+
+Inside a Claude Code session, `/plugin marketplace add ifBars/blender-agent-studio`
+and `/plugin install blender-agent-studio@blender-agent-studio` do the same.
 
 Put `blender` on your `PATH`, or set `BLENDER_EXECUTABLE` to its location.
 For example, in PowerShell:
@@ -68,7 +84,10 @@ For example, in PowerShell:
 $env:BLENDER_EXECUTABLE = "C:\path\to\Blender\blender.exe"
 ```
 
-Start a new Codex task after installing or updating the plugin.
+Start a new Codex task or Claude Code session after installing or updating the
+plugin. In Codex, invoke a skill as `$blender-agent-studio:blender-modeling-workflow`;
+in Claude Code, as `/blender-agent-studio:blender-modeling-workflow`. Both hosts
+also pick the relevant skill from a plain request.
 
 For the optional scene-understanding tools, build the Rust runtime in the
 installed plugin directory with `bun run setup:runtime`. See
@@ -78,9 +97,18 @@ measurement limits. The existing tools do not require Rust.
 <details>
 <summary>Update an existing GitHub installation</summary>
 
+Codex:
+
 ```bash
 codex plugin marketplace upgrade blender-agent-studio
 codex plugin add blender-agent-studio@blender-agent-studio
+```
+
+Claude Code:
+
+```bash
+claude plugin marketplace update blender-agent-studio
+claude plugin update blender-agent-studio@blender-agent-studio
 ```
 
 </details>
@@ -122,6 +150,10 @@ also favored the plugin's final runs, but a harder integrated task had mixed
 results. Plugin revisions have shown [both gains and
 regressions](docs/quality-development.md). Review the result yourself,
 particularly its shape, materials, animation, and exported files.
+
+All of these measurements ran the agent in Codex. Claude Code loads the same
+skills and MCP tools, but its results have not been measured, so do not read
+these results as evidence for Claude Code.
 
 ## Star history
 

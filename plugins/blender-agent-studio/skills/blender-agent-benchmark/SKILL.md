@@ -10,6 +10,10 @@ for autonomous decisions, evidence cadence, and long-task continuity.
 
 Measure changes with the same tasks, model, effort, limits, Blender build, and evaluator. Preserve natural agent behavior.
 
+The bundled runner drives the Codex CLI as the agent under test, including when
+you start it from Claude Code. Its results describe Codex runs; do not report
+them as Claude Code evidence.
+
 ## Protect benchmark integrity
 
 1. Create isolated directories for every condition and repetition.
