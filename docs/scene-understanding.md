@@ -26,8 +26,11 @@ bun run setup:runtime
 ```
 
 This builds the committed Cargo lockfile into `runtime/target/release`. Rebuild
-after updating the plugin. Alternatively, set `BAS_RUNTIME_EXECUTABLE` to a
-compatible built `bas-runtime` executable before starting Codex. Binaries and
+after updating the plugin. Claude Code keeps each installed version in its own
+directory under `~/.claude/plugins/cache/blender-agent-studio/blender-agent-studio/`;
+run the build in the newest one. Alternatively, set `BAS_RUNTIME_EXECUTABLE` to
+a compatible built `bas-runtime` executable before starting Codex or Claude
+Code. Binaries and
 build directories are not committed or downloaded automatically. The MCP does
 not invoke Cargo or install dependencies during analysis.
 

@@ -1,7 +1,21 @@
 # Development and setup
 
-The repository is a Codex marketplace. The plugin lives in
+The repository is both a Codex and a Claude Code marketplace. The plugin lives in
 `plugins/blender-agent-studio`; the root `SKILL.md` routes skills-only requests.
+
+| Host | Marketplace | Plugin manifest | MCP config |
+| --- | --- | --- | --- |
+| Codex | `.agents/plugins/marketplace.json` | `.codex-plugin/plugin.json` | `.mcp.json` |
+| Claude Code | `.claude-plugin/marketplace.json` | `.claude-plugin/plugin.json` | inline `mcpServers` in the manifest |
+
+Claude Code also loads `.mcp.json`, then replaces its same-named server with the
+manifest entry, which starts `mcp/server.ts` through `${CLAUDE_PLUGIN_ROOT}`.
+`bun run check` keeps the names, version, description, and MCP entry point of
+both hosts aligned. With the Claude Code CLI installed, also run
+`claude plugin validate .` and `claude plugin validate plugins/blender-agent-studio`.
+
+To try an uncommitted checkout in Claude Code, run
+`claude --plugin-dir plugins/blender-agent-studio` from the repository root.
 
 ## Local checks
 
@@ -48,6 +62,8 @@ Or install the umbrella and all eleven specialist skills:
 ```bash
 bunx skills add -g ifBars/blender-agent-studio --skill "*" --agent codex --full-depth -y
 ```
+
+For Claude Code, replace `--agent codex` with `--agent claude-code`.
 
 This route installs skills without the MCP server or plugin presentation metadata.
 

@@ -1,0 +1,27 @@
+{
+  "name": "blender-agent-studio",
+  "version": "0.6.3+codex.20260923000100",
+  "description": "Iterative, evidence-driven Blender 5.2 creation, validation, repair, animation, and regression-safe benchmark workflows.",
+  "author": {
+    "name": "Bars",
+    "url": "https://github.com/ifBars"
+  },
+  "homepage": "https://github.com/ifBars/blender-agent-studio#readme",
+  "repository": "https://github.com/ifBars/blender-agent-studio",
+  "license": "MIT",
+  "keywords": [
+    "blender",
+    "claude-code",
+    "agent-skills",
+    "mcp",
+    "benchmarking"
+  ],
+  "mcpServers": {
+    "blender-agent-studio": {
+      "command": "bun",
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/mcp/server.ts"
+      ]
+    }
+  }
+}

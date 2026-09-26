@@ -1,8 +1,18 @@
 # Blender Agent Studio
 
-Blender Agent Studio is a global Codex plugin for reproducible Blender 5.2
+Blender Agent Studio is a Codex and Claude Code plugin for reproducible Blender 5.2
 modeling, procedural systems, rendering, simulation, character work, technical
 and visual validation, animation, MCP selection, and paired agent benchmarking.
+
+## Host support
+
+Both hosts load the same `skills/`, bounded MCP server, and SceneIR runtime.
+Codex reads `.codex-plugin/plugin.json` and `.mcp.json`. Claude Code reads
+`.claude-plugin/plugin.json`, which starts the same `mcp/server.ts` through
+`${CLAUDE_PLUGIN_ROOT}`. Claude Code resolves relative MCP paths from the
+session's project directory; pass absolute paths when the location matters.
+The benchmark harness drives the Codex CLI as the agent under test, so it
+needs Codex installed even when you start it from Claude Code.
 
 ## Astra adaptation
 
@@ -129,7 +139,8 @@ Open boundaries are not automatically classified as defects.
 
 The optional Rust runtime powers `blender_describe_scene`,
 `blender_quality_report`, and `blender_compare_scenes`. With Rust installed, run
-`bun run setup:runtime` from this directory, then start a new Codex task. Rebuild
+`bun run setup:runtime` from this directory, then start a new Codex task or
+Claude Code session. Rebuild
 after plugin updates, or set `BAS_RUNTIME_EXECUTABLE` to a compatible compiled
 runtime. Existing tools do not require Rust.
 
@@ -150,8 +161,12 @@ $blender-agent-studio:blender-modeling-workflow Build a stylized game-ready
 coffee grinder as create_asset.py, asset.blend, and asset.glb.
 ```
 
+In Claude Code, use `/blender-agent-studio:blender-modeling-workflow` with the
+same request.
+
 Add `$blender-agent-studio:blender-animation-workflow` for articulated assets
-and `$blender-agent-studio:blender-asset-validation` for review-only work.
+and `$blender-agent-studio:blender-asset-validation` for review-only work, or the
+same names with a `/` prefix in Claude Code.
 
 Run the benchmark from this plugin directory with Bun:
 

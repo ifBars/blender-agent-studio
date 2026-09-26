@@ -1,0 +1,15 @@
+{
+  "name": "blender-agent-studio",
+  "description": "Claude Code marketplace for reproducible Blender modeling, validation, animation, and agent benchmarking.",
+  "owner": {
+    "name": "Bars"
+  },
+  "plugins": [
+    {
+      "name": "blender-agent-studio",
+      "source": "./plugins/blender-agent-studio",
+      "description": "Iterative, evidence-driven Blender 5.2 creation, validation, repair, animation, and regression-safe benchmark workflows.",
+      "category": "development"
+    }
+  ]
+}

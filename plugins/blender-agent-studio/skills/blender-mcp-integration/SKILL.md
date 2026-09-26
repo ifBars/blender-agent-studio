@@ -1,6 +1,6 @@
 ---
 name: blender-mcp-integration
-description: Choose, configure, and use Blender MCP integrations for live scene control or deterministic asset evaluation. Use when connecting Codex to an open Blender instance, deciding between Blender Lab MCP and community Blender MCP servers, troubleshooting Blender MCP connectivity, or evaluating whether MCP tools improve a Blender modeling workflow.
+description: Choose, configure, and use Blender MCP integrations for live scene control or deterministic asset evaluation. Use when connecting Codex or Claude Code to an open Blender instance, deciding between Blender Lab MCP and community Blender MCP servers, troubleshooting Blender MCP connectivity, or evaluating whether MCP tools improve a Blender modeling workflow.
 ---
 
 # Blender MCP Integration
