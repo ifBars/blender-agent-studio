@@ -40,6 +40,7 @@ describe("Blender Agent Studio MCP", () => {
         "blender_inspect_asset",
         "blender_inspect_motion",
         "blender_prepare_mixamo_search",
+        "blender_prepare_pixabay_sound_search",
         "blender_quality_report",
         "blender_render_evidence",
         "blender_render_scene",
@@ -57,6 +58,12 @@ describe("Blender Agent Studio MCP", () => {
       expect(diffSchema.properties?.forbidNewTopologyFindings).toMatchObject({default: false});
       expect(renderSchema.properties?.presentation).toMatchObject({
         enum: ["auto", "neutral", "dark", "light"], default: "auto",
+      });
+      const pixabay = await client.callTool({name: "blender_prepare_pixabay_sound_search", arguments: {query: "door slam"}});
+      expect(pixabay.isError).not.toBe(true);
+      expect(pixabay.structuredContent).toMatchObject({
+        status: "browser_required",
+        url: "https://pixabay.com/sound-effects/search/door%20slam/",
       });
       const authored = listed.tools.find((tool) => tool.name === "blender_render_scene")!.inputSchema;
       expect(authored.properties?.denoise).toMatchObject({enum: ["preserve", "preview", "final", "off"], default: "preserve"});
