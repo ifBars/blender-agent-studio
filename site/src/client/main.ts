@@ -1,4 +1,5 @@
 import { rankSections, highlight, type SearchEntry } from "./search";
+import { copyButton } from "./copy";
 
 const root = document.documentElement;
 const base = document.body.dataset.base ?? "/";
@@ -27,13 +28,7 @@ matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (event) =>
 document.addEventListener("click", async (event) => {
   const button = (event.target as Element).closest<HTMLButtonElement>("[data-copy]");
   if (!button) return;
-  const { copyText, copySrc } = button.dataset;
-  const text = copyText
-    ?? (copySrc ? await fetch(copySrc).then((response) => response.text()) : button.parentElement?.querySelector("pre")?.textContent);
-  if (!text) return;
-  await navigator.clipboard.writeText(text);
-  button.classList.add("copied");
-  setTimeout(() => button.classList.remove("copied"), 1600);
+  await copyButton(button);
 });
 
 // Mobile navigation drawer.
