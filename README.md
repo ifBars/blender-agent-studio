@@ -6,7 +6,7 @@ A Codex plugin for creating and refining Blender models, animations, and scenes.
 It gives your agent a way to plan the work, build it in your local Blender
 installation, and inspect the result before delivery.
 
-[Install](#install) · [Try it](#try-it) · [How it works](#how-it-works) · [Workflows](plugins/blender-agent-studio/skills) · [Development](docs/development.md) · [Report a bug](https://github.com/ifBars/blender-agent-studio/issues)
+[Docs](https://ifbars.github.io/blender-agent-studio/) · [Install](#install) · [Try it](#try-it) · [How it works](#how-it-works) · [Workflows](plugins/blender-agent-studio/skills) · [Development](docs/development.md) · [Report a bug](https://github.com/ifBars/blender-agent-studio/issues)
 
 ## What you can do
 

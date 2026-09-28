@@ -12,6 +12,10 @@ updates:
     directory: "/plugins/blender-agent-studio"
     schedule:
       interval: weekly
+  - package-ecosystem: bun
+    directory: "/site"
+    schedule:
+      interval: weekly
   - package-ecosystem: cargo
     directory: "/plugins/blender-agent-studio/runtime"
     schedule:
