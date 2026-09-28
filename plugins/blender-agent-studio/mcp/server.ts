@@ -5,7 +5,9 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { z } from "zod";
+// SDK v1's bundled Zod 4 converter predates current constraint metadata.
+// Use Zod 4's v3 compatibility API until the MCP SDK v2 migration.
+import { z } from "zod/v3";
 import { compareAssets, describeAsset } from "../scripts/scene-analysis.ts";
 import { createPolyHavenClient } from "../skills/blender-rendering-workflow/scripts/poly-haven.ts";
 import { prepareMixamoSearch } from "../scripts/mixamo.ts";

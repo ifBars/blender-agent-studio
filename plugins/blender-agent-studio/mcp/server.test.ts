@@ -53,7 +53,10 @@ describe("Blender Agent Studio MCP", () => {
       const diffSchema = listed.tools.find(tool => tool.name === 'blender_compare_scenes')!.inputSchema;
       expect((qualitySchema.properties?.contactPairs as any).items.items).toEqual({type: 'string'});
       expect((qualitySchema.properties?.contactPairs as any).items.minItems).toBe(2);
+      expect((qualitySchema.properties?.contactPairs as any).items.maxItems).toBe(2);
       expect((qualitySchema.properties?.connectionPoints as any).items.properties.pointA.items.type).toBe("number");
+      expect((qualitySchema.properties?.connectionPoints as any).items.properties.pointA).toMatchObject({minItems: 3, maxItems: 3});
+      expect((qualitySchema.properties?.connectionPoints as any).items.properties.pointB).toMatchObject({minItems: 3, maxItems: 3});
       expect(diffSchema.properties?.invariantObjects).toMatchObject({default: [], maxItems: 2048});
       expect(diffSchema.properties?.forbidNewTopologyFindings).toMatchObject({default: false});
       expect(renderSchema.properties?.presentation).toMatchObject({
