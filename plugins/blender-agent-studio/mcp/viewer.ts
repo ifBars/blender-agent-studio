@@ -1,7 +1,7 @@
 import {readFile, realpath, stat} from 'node:fs/promises';
 import {basename, join, relative, isAbsolute} from 'node:path';
 import {registerAppResource, RESOURCE_MIME_TYPE} from '@modelcontextprotocol/ext-apps/server';
-import type {McpServer} from '@modelcontextprotocol/sdk/server/mcp.js';
+import type {McpServer} from '@modelcontextprotocol/server';
 export const VIEWER_URI = 'ui://blender-agent-studio/render-viewer.html';
 export const viewerToolMeta = {ui: {resourceUri: VIEWER_URI}};
 export type Gallery = {title:string; status:string; images:Array<{label:string; src:string}>; details:Array<[string,string]>; notice:string};
