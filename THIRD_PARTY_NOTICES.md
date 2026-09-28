@@ -15,3 +15,12 @@ Blender Foundation.
 The plugin uses the Model Context Protocol TypeScript SDK and Zod under their
 respective licenses. See `plugins/blender-agent-studio/package.json` and the
 dependency packages for details.
+
+## Documentation site
+
+The documentation site under `site/` self-hosts the
+[Inter](https://github.com/rsms/inter) typeface, distributed under the SIL Open
+Font License 1.1 through `@fontsource-variable/inter`. The build publishes the
+license beside the font file. Markdown rendering and syntax highlighting use
+`marked` and `shiki` under their MIT licenses.
+
