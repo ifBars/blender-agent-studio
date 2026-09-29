@@ -3,8 +3,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {mkdtemp, writeFile, rm, readFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { Client } from "@modelcontextprotocol/client";
+import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 
 let client: Client | undefined;
 
@@ -40,6 +40,7 @@ describe("Blender Agent Studio MCP", () => {
         "blender_inspect_asset",
         "blender_inspect_motion",
         "blender_prepare_mixamo_search",
+        "blender_prepare_pixabay_sound_search",
         "blender_quality_report",
         "blender_render_evidence",
         "blender_render_scene",
@@ -52,11 +53,20 @@ describe("Blender Agent Studio MCP", () => {
       const diffSchema = listed.tools.find(tool => tool.name === 'blender_compare_scenes')!.inputSchema;
       expect((qualitySchema.properties?.contactPairs as any).items.items).toEqual({type: 'string'});
       expect((qualitySchema.properties?.contactPairs as any).items.minItems).toBe(2);
+      expect((qualitySchema.properties?.contactPairs as any).items.maxItems).toBe(2);
       expect((qualitySchema.properties?.connectionPoints as any).items.properties.pointA.items.type).toBe("number");
+      expect((qualitySchema.properties?.connectionPoints as any).items.properties.pointA).toMatchObject({minItems: 3, maxItems: 3});
+      expect((qualitySchema.properties?.connectionPoints as any).items.properties.pointB).toMatchObject({minItems: 3, maxItems: 3});
       expect(diffSchema.properties?.invariantObjects).toMatchObject({default: [], maxItems: 2048});
       expect(diffSchema.properties?.forbidNewTopologyFindings).toMatchObject({default: false});
       expect(renderSchema.properties?.presentation).toMatchObject({
         enum: ["auto", "neutral", "dark", "light"], default: "auto",
+      });
+      const pixabay = await client.callTool({name: "blender_prepare_pixabay_sound_search", arguments: {query: "door slam"}});
+      expect(pixabay.isError).not.toBe(true);
+      expect(pixabay.structuredContent).toMatchObject({
+        status: "browser_required",
+        url: "https://pixabay.com/sound-effects/search/door%20slam/",
       });
       const authored = listed.tools.find((tool) => tool.name === "blender_render_scene")!.inputSchema;
       expect(authored.properties?.denoise).toMatchObject({enum: ["preserve", "preview", "final", "off"], default: "preserve"});

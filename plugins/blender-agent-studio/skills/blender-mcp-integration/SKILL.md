@@ -28,6 +28,18 @@ Adobe sign-in stays in the browser. See the animation workflow's
 [Mixamo guide](../blender-animation-workflow/references/mixamo.md) for the
 download settings, local import and retargeting limits.
 
+## Pixabay sound-effects browser integration
+
+`blender_prepare_pixabay_sound_search` returns a sound-effects search URL and
+browser workflow, not live catalog results. Use host browser tools to inspect
+results, preview candidates, and download the selected sound. Record its title,
+creator, duration, and source page beside the local audio file. Check the
+current [Pixabay Content License](https://pixabay.com/service/license-summary/)
+for the intended use; do not redistribute the sound as a standalone asset.
+Pixabay's [documented API](https://pixabay.com/api/docs/) covers images and
+videos, so this tool does not use an audio API or scrape the catalog. It does
+not import audio into a Blender scene.
+
 ## Optional scene analysis runtime
 
 Use `blender_compare_reference` for a camera-matched reference/silhouette/overlay

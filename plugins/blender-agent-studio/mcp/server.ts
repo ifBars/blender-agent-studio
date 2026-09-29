@@ -3,12 +3,13 @@ import { existsSync } from "node:fs";
 import { mkdir, readFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { McpServer } from "@modelcontextprotocol/server";
+import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
 import { z } from "zod";
 import { compareAssets, describeAsset } from "../scripts/scene-analysis.ts";
 import { createPolyHavenClient } from "../skills/blender-rendering-workflow/scripts/poly-haven.ts";
 import { prepareMixamoSearch } from "../scripts/mixamo.ts";
+import { preparePixabaySoundSearch } from "../scripts/pixabay.ts";
 import {
   readJsonFile,
   resolveBlenderExecutable,
@@ -38,6 +39,13 @@ server.registerTool("blender_prepare_mixamo_search", {
   inputSchema: z.object({query: z.string().trim().min(1).max(200)}),
   annotations: {readOnlyHint: true, openWorldHint: false},
 }, async ({query}) => result(prepareMixamoSearch(query)));
+
+server.registerTool("blender_prepare_pixabay_sound_search", {
+  title: "Prepare Pixabay sound-effects browser search",
+  description: "Prepare a Pixabay sound-effects search URL and browser workflow. Requires host browser tools to read live results, preview, and download; does not search the catalog or use an audio API.",
+  inputSchema: z.object({query: z.string().trim().min(1).max(200)}),
+  annotations: {readOnlyHint: true, openWorldHint: false},
+}, async ({query}) => result(preparePixabaySoundSearch(query)));
 
 server.registerTool("blender_import_mixamo_animation", {
   title: "Import downloaded Mixamo animation",

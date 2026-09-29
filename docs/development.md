@@ -49,6 +49,23 @@ Each specialist skill bundles that guidance. The check rejects stale copies.
 Generated models, exports, renders, benchmark runs, and agent traces stay outside
 source control.
 
+## Documentation site
+
+The [docs site](https://ifbars.github.io/blender-agent-studio/) is built from
+`site/content` by a small Bun and TypeScript generator in `site/src`:
+
+```bash
+bun install --cwd site
+bun run docs:dev
+bun run docs:test
+bun run docs:build
+```
+
+`docs:dev` serves the site at `http://localhost:4321` and reloads on save. The
+build fails when a skill or MCP tool is missing from the site, or when a link
+points to a missing page or heading. Pushes to `main` deploy it to GitHub Pages
+through `.github/workflows/docs.yml`.
+
 ## Skills-only installation
 
 Install the umbrella skill:

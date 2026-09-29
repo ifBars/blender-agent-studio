@@ -7,7 +7,7 @@ animations, and scenes.
 It gives your agent a way to plan the work, build it in your local Blender
 installation, and inspect the result before delivery.
 
-[Install](#install) · [Try it](#try-it) · [How it works](#how-it-works) · [Workflows](plugins/blender-agent-studio/skills) · [Development](docs/development.md) · [Report a bug](https://github.com/ifBars/blender-agent-studio/issues)
+[Docs](https://ifbars.github.io/blender-agent-studio/) · [Install](#install) · [Try it](#try-it) · [How it works](#how-it-works) · [Workflows](plugins/blender-agent-studio/skills) · [Development](docs/development.md) · [Report a bug](https://github.com/ifBars/blender-agent-studio/issues)
 
 ## What you can do
 
@@ -18,6 +18,7 @@ installation, and inspect the result before delivery.
 - Render through your scene's cameras with its lighting intact, or use studio views to inspect a model from every side.
 - Download CC0 textures and HDRIs from Poly Haven at 1K, 2K, 4K, or 8K.
 - Find Mixamo motion through your browser and import downloaded FBX animations into a new `.blend`. See the [Mixamo workflow](plugins/blender-agent-studio/skills/blender-animation-workflow/references/mixamo.md) for browser requirements and retargeting limits.
+- Find and preview Pixabay sound effects through a browser handoff. The tool provides a search URL and workflow; it does not return live results or import audio. See the [MCP integration guide](plugins/blender-agent-studio/skills/blender-mcp-integration/SKILL.md#pixabay-sound-effects-browser-integration).
 - Check geometry and exported files, review renders, and repair what doesn't work.
 - Query scene parts and evaluated dimensions, check explicit geometry and ground constraints, and compare repairs against preserved SceneIR baselines with the optional Rust runtime.
 

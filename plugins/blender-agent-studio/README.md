@@ -75,6 +75,9 @@ Measure skill changes on one fixed model before comparing different models.
   an unchanged regression anchor, and opt-in harder challenge tasks.
 - `blender-mcp-integration`: guidance for Blender Lab MCP, the bundled bounded
   evaluator MCP, and optional community integrations.
+- `blender_prepare_pixabay_sound_search`: browser handoff for finding and
+  previewing Pixabay sound effects; live search and downloads require host
+  browser tools. The public Pixabay API does not document audio search.
 - A local MCP with exact Blender version, asset inspection, and evidence render
   tools. It deliberately does not expose generic arbitrary Python execution.
 

@@ -1,0 +1,34 @@
+# Mirrors local, generated, and secret paths for hosts that support this file.
+# Codex CLI does not currently document or enforce .codexignore.
+.env
+.env.*
+!.env.example
+
+node_modules/
+target/
+.tmp/
+dist/
+coverage/
+
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+benchmarks/
+benchmark-output/
+evidence/
+renders/
+*.blend
+*.blend1
+*.glb
+*.gltf
+*.fbx
+*.obj
+*.mp4
+*.webm
+*.avi
+*.mov
+
+.DS_Store
+Thumbs.db
