@@ -19,7 +19,7 @@ Strengths:
 - deliberately small implementation;
 - weak sandbox blocks selected dangerous operations.
 
-The interactive path needs the Blender extension enabled and connects over a local TCP socket. The MCP process uses stdio toward Codex.
+The interactive path needs the Blender extension enabled and connects over a local TCP socket. The MCP process uses stdio toward the agent host (Codex or Claude Code).
 
 ## ahujasid/blender-mcp
 

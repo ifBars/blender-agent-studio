@@ -2,7 +2,7 @@
 
 Apply this guidance with the domain skill's actual geometry, render, animation,
 simulation, and export gates. It also works with Sol, Terra, and Luna. A skill
-does not select the model or change the user's Codex settings.
+does not select the model or change the user's Codex or Claude Code settings.
 
 ## Complete the requested result
 
@@ -148,7 +148,7 @@ Use subagents only when the user or applicable instructions request delegation
 and the host supports it. Assign independent work and explicit file ownership;
 do not let multiple agents edit one live scene. Prefer Terra over Sol for
 bounded delegated work unless explicitly directed otherwise. Keep art direction
-and final acceptance with the lead agent. Do not spawn a separate Codex task
+and final acceptance with the lead agent. Do not spawn a separate agent task
 merely to obtain a second opinion.
 
 ## Model choice and evidence limits

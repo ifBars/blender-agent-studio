@@ -70,4 +70,4 @@ their respective capability is required.
    limitations alongside improvements.
 
 Prefer the bundled bounded inspection and evidence tools when installed as a
-Codex plugin. Do not add generic arbitrary-Python MCP execution.
+Codex or Claude Code plugin. Do not add generic arbitrary-Python MCP execution.

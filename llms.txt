@@ -1,13 +1,20 @@
 # Blender Agent Studio
 
-This repository is a Codex plugin marketplace containing the
+This repository is a Codex and Claude Code plugin marketplace containing the
 `blender-agent-studio` plugin.
 
-Install:
+Install in Codex:
 
 ```bash
 codex plugin marketplace add ifBars/blender-agent-studio
 codex plugin add blender-agent-studio@blender-agent-studio
+```
+
+Install in Claude Code:
+
+```bash
+claude plugin marketplace add ifBars/blender-agent-studio
+claude plugin install blender-agent-studio@blender-agent-studio
 ```
 
 Core capabilities:
