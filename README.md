@@ -152,9 +152,14 @@ results. Plugin revisions have shown [both gains and
 regressions](docs/quality-development.md). Review the result yourself,
 particularly its shape, materials, animation, and exported files.
 
-All of these measurements ran the agent in Codex. Claude Code loads the same
-skills and MCP tools, but its results have not been measured, so do not read
-these results as evidence for Claude Code.
+The paired measurements ran the agent in Codex. Claude Code loads the same
+skills and MCP tools. It has only two single-run samples so far, one
+generation each for Claude Sonnet 5.5 and Claude Opus 5.5 on the lantern task
+with no baseline: Opus passed the technical gate at 100 and Sonnet failed a
+part-naming check at 95.83 despite a visually complete lantern. See the
+[Claude Code samples](docs/plugin-quality-evidence.md#claude-code-samples). Do
+not read the Codex pairs as evidence for Claude Code, or these two runs as a
+model comparison.
 
 ## Star history
 
