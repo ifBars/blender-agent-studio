@@ -62,6 +62,41 @@ about 578,000 / 1,662,000, baseline / skills. These totals include
 cached inputs and are usage proxies, not dollar costs. The plugin condition
 used more reported tokens in every pair. Its build time varied by task and run.
 
+## Claude Code samples
+
+The samples above ran in Codex. On 2026-09-29 we ran the same stylized signal
+lantern task once each with Claude Sonnet 5.5 and Claude Opus 5.5 in Claude
+Code, using the plugin's skills condition (no MCP tools). Each run got a fresh
+task directory, medium effort, a 20-minute limit, and the same evaluator and
+Blender build as the Codex lantern pairs above. There is no baseline condition
+and no blinded visual vote for these runs, so they show what the plugin's
+workflow produces under Claude; they do not measure its benefit over no skills.
+
+| Generator | Technical score and gate | Generation time | Tool calls (failed) | Triangles | Reported cost |
+| --- | --- | --- | --- | --- | --- |
+| Claude Sonnet 5.5 | 95.83 fail | 5.6 min | 27 (0) | 21,452 | about $1.02 |
+| Claude Opus 5.5 | 100 pass | 6.9 min | 26 (0) | 23,352 | about $1.68 |
+
+Both agents produced a lantern that met the task's visible requirements in the
+six-view evidence: base, body, glass chamber with a visible flame, cap, and a
+handle attached at both sides. Both exports and clean-directory reproductions
+passed their geometry gates. The Sonnet failure came from the deterministic
+naming check: it found five of the six required semantic part groups, because no
+object name contained `body`, `housing`, or `frame`. That is a naming-proxy
+result, not a visible defect. Each run used about 1.41 million reported total
+tokens including cached inputs, a usage proxy rather than a bill; the dollar
+figures are the Claude Code API-equivalent estimates.
+
+Read these as two single generations. One sample per model cannot rank Sonnet
+against Opus or against the GPT generators. The Codex pairs used an older
+plugin snapshot, and the Claude runs came from a separate driver script that is
+not part of this repository (the bundled runner launches Codex only). It
+mirrored the runner's isolation: pinned skill files read by path, no MCP, and no
+user plugins or settings. The runs were reproducible only as far as those
+controls go; Claude Code 2.1.284 and plugin fingerprint
+`c2ec78f74677295cca762853636a95f3c0e2d3dcbc9355c99b4853277a5f4781` were used.
+The raw runs are kept locally, outside Git.
+
 ## Controls and limits
 
 - Generator effort was medium for both conditions in each pair. Blender was

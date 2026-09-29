@@ -21,11 +21,23 @@ Scores and build times read baseline / plugin. The lanterns were generated with 
 
 Every baseline failed the geometry check, with invalid elements such as degenerate faces or zero-length edges. Three also exported a 200-meter studio floor with an asset limited to a few meters. The plugin used more tokens in every pair. Lantern build times were about even; the press and drawbridge took about twice as long.
 
+## Claude Code samples
+
+Those pairs ran in Codex. We also ran the lantern task once each with Claude Sonnet 5.5 and Claude Opus 5.5 in Claude Code, using the plugin's skills and no baseline.
+
+| Generator | Technical score | Build time | Tool calls (failed) |
+| --- | --- | --- | --- |
+| Claude Sonnet 5.5 | 95.83 fail | 5.6 min | 27 (0) |
+| Claude Opus 5.5 | 100 pass | 6.9 min | 26 (0) |
+
+Both lanterns showed every required part. Sonnet failed only the automated part-naming check, because no object was named body, housing, or frame. These are single generations with no judges and no baseline, so they don't show a benefit over working without the plugin or rank the models. The [full evidence](https://github.com/ifBars/blender-agent-studio/blob/main/docs/plugin-quality-evidence.md#claude-code-samples) has the controls.
+
 ## What this doesn't show
 
 - **A general success rate.** Five pairs can't predict results for arbitrary prompts, models, or art styles.
 - **Independent votes.** Three judges on one pair are three opinions about the same two assets.
 - **What the MCP tools add.** These runs used the skills without the MCP tools.
+- **Claude Code performance.** The paired samples ran in Codex; the two Claude runs are single generations.
 - **Consistent visual gains.** In lantern repeat 2, every judge preferred the baseline's appearance, even though its geometry failed the technical gate.
 
 Plugin revisions have also shown [both gains and regressions](https://github.com/ifBars/blender-agent-studio/blob/main/docs/quality-development.md). Review results yourself, particularly shape, materials, animation, and exports.
