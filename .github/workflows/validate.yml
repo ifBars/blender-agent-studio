@@ -22,6 +22,7 @@ jobs:
       - run: bun install --cwd plugins/blender-agent-studio --frozen-lockfile
       - run: bun install --cwd site --frozen-lockfile
       - run: bun run check
+      - run: bun run docs:assets
       - run: bun run docs:test
       - run: bun run docs:build
       - run: bun --cwd plugins/blender-agent-studio run setup:runtime
