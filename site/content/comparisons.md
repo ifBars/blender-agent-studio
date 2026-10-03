@@ -4,7 +4,7 @@ description: Same task, same model. Drag the slider to compare.
 ---
 
 These runs compare vanilla agents with Blender Agent Studio's skills and scripts.
-The lantern has three runs; use **Run** to switch between them.
+Choose a task, model, and camera view.
 
 See [results and methodology](results.md) for the full reports, limitations,
 and whole-scene benchmark.

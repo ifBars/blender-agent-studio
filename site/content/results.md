@@ -93,13 +93,26 @@ Read the [whole-scene protocol](https://github.com/ifBars/blender-agent-studio/b
 
 ## Gallery previews
 
-The gallery includes the five earlier lantern, press and drawbridge pairs
-alongside the eight spatial pairs. Their original models, dates and scores stay
-separate. Use **Run** to see each lantern attempt, including the repeat where
-all three reviewers preferred the no-plugin result.
+The gallery covers five tasks with GPT 6 Astra, GPT 6.1 Sol, Opus 5.5, and
+Sonnet 5.5. Each entry compares no plugin with the pinned plugin workflow.
+Original dates, scores, and study conditions remain attached to each pair.
+
+The older GPT 6 Sol lantern is a separate historical example. The gallery owner
+selected run 3 after viewing all three attempts; all three reviewers preferred
+its no-plugin result. The other attempts remain in the
+[archived gallery](https://github.com/ifBars/blender-agent-studio/releases/tag/gallery-hd-2026-10-02).
+This selection is not an average or a random sample.
 
 HD previews are new 1536-pixel Cycles renders with 64 samples and
 OpenImageDenoise. Saved studio floors and backdrops are hidden where needed to
 frame the asset; their names appear under **Scores & review**. The saved models
-and technical results are unchanged. Choose **Original review** for the images
+and technical results are unchanged. Choose **Review images** for the images
 used by the judges. Their votes describe those images, not the new previews.
+
+For the matrix expansion, review views exclude the listed studio meshes too.
+This prevents oversized floors from hiding the modeled asset. Original
+submission views are linked inside **Scores & review**, and their technical
+failures remain recorded.
+
+The [matrix protocol](https://github.com/ifBars/blender-agent-studio/blob/main/docs/gallery-matrix.md)
+lists the generation controls and selection policy.

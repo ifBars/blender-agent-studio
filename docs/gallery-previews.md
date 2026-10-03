@@ -1,9 +1,11 @@
 # Comparison gallery previews
 
-The gallery contains thirteen no-plugin / plugin pairs: eight from the October
+The first HD gallery contained thirteen no-plugin / plugin pairs: eight from the October
 spatial pilot and five from the September quality study. The earlier set adds
 three signal lantern attempts, a lever press and a winch drawbridge. Models and
-cohorts are kept separate; the lantern uses GPT 6 Sol, not GPT 6.1 Sol.
+cohorts are kept separate; that lantern uses GPT 6 Sol, not GPT 6.1 Sol.
+The [current model matrix](gallery-matrix.md) adds the missing model/task pairs
+and retains only run 3 of the historical lantern in the viewer.
 
 ## Why the old images looked soft
 

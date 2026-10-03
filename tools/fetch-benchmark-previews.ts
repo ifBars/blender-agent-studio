@@ -39,7 +39,7 @@ export async function fetchBenchmarkPreviews(root = resolve(import.meta.dir, "..
     if (dataset.pairs.length !== manifest.pairs || entries.filter(path => path.endsWith(".png")).length !== manifest.images)
       throw new Error("Gallery contents do not match the pinned manifest");
     for (const pair of dataset.pairs) for (const condition of dataset.schemaVersion === 2 ? [pair.vanilla, pair.plugin] : [pair.current, pair.guided]) {
-      for (const [images, hashes] of [[condition.images, condition.imageHashes], [condition.originalImages ?? {}, condition.originalImageHashes ?? {}]])
+      for (const [images, hashes] of [[condition.images, condition.imageHashes], [condition.originalImages ?? {}, condition.originalImageHashes ?? {}], [condition.rawImages ?? {}, condition.rawImageHashes ?? {}]])
       for (const [view, path] of Object.entries(images) as Array<[string, string]>) {
         validatePreviewPaths([path]);
         const image = await readFile(join(staging, path));
