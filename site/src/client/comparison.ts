@@ -1,4 +1,4 @@
-type Condition = { score: number; rawScore: number; hardGate: boolean; rawHardGate: boolean; seconds: number; triangles: number; images: Record<string, string>; originalImages?: Record<string, string>; preview?: { hiddenStagingObjects: string[] }; executionMode: string; guidanceHash: string | null; skillFingerprint: string | null };
+type Condition = { score: number; rawScore: number; hardGate: boolean; rawHardGate: boolean; seconds: number; triangles: number; images: Record<string, string>; originalImages?: Record<string, string>; rawImages?: Record<string, string>; preview?: { hiddenStagingObjects: string[] }; executionMode: string; guidanceHash: string | null; skillFingerprint: string | null };
 type Pair = { id?: string; repetition?: number; cohort?: string; limitation?: string; task: string; taskTitle: string; model: string; modelTitle: string; vanilla: Condition; plugin: Condition;
   votes: { baseline: number; candidate: number; tie: number }; note: string;
   criteria: Array<{ id: string; label: string; vanilla: Record<string, number>; plugin: Record<string, number> }> };
@@ -14,8 +14,8 @@ export function modelOptions(pairs: Pair[], task: string): Array<[string, string
   return [...new Map(pairs.filter(pair => pair.task === task).map(pair => [pair.model, pair.modelTitle])).entries()];
 }
 
-export function findPair(pairs: Pair[], task: string, model: string, repetition: string): Pair | undefined {
-  return pairs.find(pair => pair.task === task && pair.model === model && String(pair.repetition ?? 1) === repetition);
+export function findPair(pairs: Pair[], task: string, model: string): Pair | undefined {
+  return pairs.find(pair => pair.task === task && pair.model === model);
 }
 
 export function splitPosition(clientX: number, left: number, width: number): number {
@@ -24,7 +24,7 @@ export function splitPosition(clientX: number, left: number, width: number): num
 
 export function initComparison(element: HTMLElement, base: string) {
   const select = (name: string) => element.querySelector<HTMLSelectElement>(`[data-compare-${name}]`)!;
-  const task = select("task"), model = select("model"), view = select("view"), run = select("run"), quality = select("quality");
+  const task = select("task"), model = select("model"), view = select("view"), quality = select("quality");
   const stage = element.querySelector<HTMLElement>("[data-compare-stage]")!;
   const range = element.querySelector<HTMLInputElement>("[data-compare-range]")!;
   const status = element.querySelector<HTMLElement>("[data-compare-status]")!;
@@ -53,7 +53,7 @@ export function initComparison(element: HTMLElement, base: string) {
     target.replaceChildren(...options.map(([value, label]) => new Option(label, value)));
     target.value = options.some(([value]) => value === preferred) ? preferred : options[0]?.[0] ?? "";
   };
-  const selected = () => findPair(data.pairs, task.value, model.value, run.value)!;
+  const selected = () => findPair(data.pairs, task.value, model.value)!;
   const images = (condition: Condition) => quality.value === "original" ? condition.originalImages ?? condition.images : condition.images;
   const duration = (seconds: number) => `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
   const renderDetails = (pair: Pair) => {
@@ -72,6 +72,14 @@ export function initComparison(element: HTMLElement, base: string) {
     for (const criterion of pair.criteria) row([criterion.label, counts(criterion.vanilla), counts(criterion.plugin)]);
     const detail = element.querySelector<HTMLElement>("[data-compare-details]")!;
     detail.replaceChildren(table);
+    if (pair.vanilla.rawImages?.[view.value] && pair.plugin.rawImages?.[view.value]) {
+      const raw = document.createElement("p"); raw.append("Original submission evidence: ");
+      for (const [label, path] of [["No plugin", pair.vanilla.rawImages[view.value]], ["With plugin", pair.plugin.rawImages[view.value]]]) {
+        const link = document.createElement("a"); link.textContent = label; link.href = base + path; link.target = "_blank"; link.rel = "noopener";
+        raw.append(link, " ");
+      }
+      detail.append(raw);
+    }
     if (pair.vanilla.rawScore !== pair.vanilla.score || pair.plugin.rawScore !== pair.plugin.score) {
       const note = document.createElement("p");
       note.textContent = `Naming-check correction applied: raw scores were ${pair.vanilla.rawScore} / ${pair.plugin.rawScore}. Screws count as hardware. Original scores remain in the downloadable data; geometry and visual judgments are unchanged.`;
@@ -80,7 +88,7 @@ export function initComparison(element: HTMLElement, base: string) {
     const limitation = document.createElement("p"); limitation.textContent = pair.limitation ?? data.limitation; detail.append(limitation);
     const staging = [...new Set([...(pair.vanilla.preview?.hiddenStagingObjects ?? []), ...(pair.plugin.preview?.hiddenStagingObjects ?? [])])];
     const preview = document.createElement("p");
-    preview.textContent = "HD previews use Cycles at 1536 px with denoising. Reviews refer to the original images. " +
+    preview.textContent = "HD previews use Cycles at 1536 px with denoising. Choose Review images to see the views used by the judges. " +
       (staging.length ? `Studio meshes hidden in HD: ${staging.join(", ")}. Saved models and technical scores are unchanged.` : "Saved models are unchanged.");
     detail.append(preview);
   };
@@ -100,12 +108,12 @@ export function initComparison(element: HTMLElement, base: string) {
       vanilla.hidden = false; plugin.hidden = false; status.hidden = true;
       text("verdict", `${pair.votes.baseline} preferred no plugin · ${pair.votes.candidate} preferred plugin${pair.votes.tie ? ` · ${pair.votes.tie} tied` : ""}`);
       text("note", pair.note);
-      text("framing", quality.value === "original" ? "Original review images" : "HD preview · 1536 px · denoised · Reviews use original images");
+      text("framing", quality.value === "original" ? "Review images · 384 px" : "HD preview · 1536 px · denoised · Reviews use the 384 px views");
       text("cohort", pair.cohort ?? "");
       for (const [key, src] of [["vanilla", a.src], ["plugin", b.src]])
         element.querySelector<HTMLAnchorElement>(`[data-compare-open-${key}]`)!.href = src;
       renderDetails(pair);
-      const url = new URL(location.href); url.searchParams.set("task", pair.task); url.searchParams.set("model", pair.model); url.searchParams.set("view", view.value); url.searchParams.set("run", run.value); url.searchParams.set("quality", quality.value);
+      const url = new URL(location.href); url.searchParams.set("task", pair.task); url.searchParams.set("model", pair.model); url.searchParams.set("view", view.value); url.searchParams.delete("run"); url.searchParams.set("quality", quality.value);
       history.replaceState(null, "", url);
     } catch {
       if (token === revision) { status.hidden = false; status.textContent = "This image pair could not load. Choose another view or reload the page."; }
@@ -117,19 +125,12 @@ export function initComparison(element: HTMLElement, base: string) {
     fill(view, views.map(name => [name, name === "bottom" ? "Underside" : name[0].toUpperCase() + name.slice(1)]), view.value || new URLSearchParams(location.search).get("view") || "perspective");
     void update();
   };
-  const updateRuns = () => {
-    const options = data.pairs.filter(pair => pair.task === task.value && pair.model === model.value)
-      .map(pair => [String(pair.repetition ?? 1), `Run ${pair.repetition ?? 1}`] as [string, string]);
-    fill(run, options, run.value || new URLSearchParams(location.search).get("run") || "1");
-    run.parentElement!.hidden = options.length < 2;
-    updateViews();
-  };
   const updateModels = () => {
     fill(model, modelOptions(data.pairs, task.value), model.value || new URLSearchParams(location.search).get("model") || "");
-    updateRuns();
+    updateViews();
   };
-  task.addEventListener("change", updateModels); model.addEventListener("change", updateRuns);
-  run.addEventListener("change", updateViews); quality.addEventListener("change", updateViews);
+  task.addEventListener("change", updateModels); model.addEventListener("change", updateViews);
+  quality.addEventListener("change", updateViews);
   view.addEventListener("change", () => void update());
   quality.value = new URLSearchParams(location.search).get("quality") === "original" ? "original" : "hd";
   void fetch(element.dataset.source!).then(async response => {

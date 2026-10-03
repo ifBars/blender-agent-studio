@@ -1293,7 +1293,7 @@ mark {
 .comparison-details th { color: var(--fg-2); font-weight: 550; }.comparison-details p { color: var(--fg-2); }
 @media (max-width: 880px) { .comparison-page .shell { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 600px) {
-  .comparison-controls { grid-template-columns: 1fr 1fr; gap: 12px; }.comparison-controls label:first-child { grid-column: 1 / -1; }
+  .comparison-controls { grid-template-columns: 1fr 1fr; gap: 12px; }
   .comparison-stage { aspect-ratio: 1; }.comparison-label { top: 10px; padding: 5px 7px; font-size: 9px; }.comparison-label-before { left: 10px; }.comparison-label-after { right: 10px; }
   .comparison-caption { font-size: 11px; }.comparison-verdict > p:nth-child(2) { font-size: 16px; }
 }

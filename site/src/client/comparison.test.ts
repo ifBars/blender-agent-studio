@@ -18,9 +18,9 @@ test("viewer refuses the previous plugin-versus-guidance dataset", () => {
 });
 
 
-test("lantern repetitions stay distinct without duplicate model options", () => {
-  const pairs = [1, 2, 3].map(repetition => ({task:"signal_lantern",model:"gpt-6-sol",modelTitle:"GPT 6 Sol",repetition})) as any;
+test("selected historical lantern keeps run 3 provenance without a run selector", () => {
+  const pairs = [{task:"signal_lantern",model:"gpt-6-sol",modelTitle:"GPT 6 Sol",repetition:3}] as any;
   expect(modelOptions(pairs, "signal_lantern")).toEqual([["gpt-6-sol", "GPT 6 Sol"]]);
-  expect(findPair(pairs, "signal_lantern", "gpt-6-sol", "3")?.repetition).toBe(3);
-  expect(findPair(pairs, "signal_lantern", "gpt-6-sol", "4")).toBeUndefined();
+  expect(findPair(pairs, "signal_lantern", "gpt-6-sol")?.repetition).toBe(3);
+  expect(findPair(pairs, "signal_lantern", "gpt-6.1-sol")).toBeUndefined();
 });
