@@ -10,6 +10,7 @@
     "test:python": "python plugins/blender-agent-studio/scripts/test-python.py",
     "docs:dev": "bun run --cwd site dev",
     "docs:build": "bun run --cwd site build",
+    "docs:assets": "bun tools/fetch-benchmark-previews.ts",
     "docs:test": "bun --cwd site test"
   }
 }

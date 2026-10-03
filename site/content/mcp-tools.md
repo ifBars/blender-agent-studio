@@ -15,6 +15,13 @@ The plugin runs a local MCP server with Bun. Each tool starts Blender in the bac
 | `blender_diagnose_topology` | Locates degenerate faces and zero-length edges in world space. |
 | `blender_inspect_motion` | Samples named meshes across frames: transforms, geometry hashes, and bake metadata. |
 
+For joint inspection, `blender_render_evidence` also accepts a `bottom` view
+and `focusObjects`, an array of exact mesh names used for close framing.
+Surrounding geometry stays visible. Bottom views hide only the generated studio
+floor and add underside fill lighting; an authored floor can still occlude the
+asset. Focused evidence is marked `detail_preview` and does not replace a
+whole-asset review. The six default views remain unchanged.
+
 ## Render
 
 | Tool | What it does |

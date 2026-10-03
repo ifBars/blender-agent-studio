@@ -1,3 +1,4 @@
+import { comparisonViewer } from "./comparison-template";
 import { site } from "../site.config";
 import { icons } from "./icons";
 import { escapeHtml, pageUrl, type Heading } from "./markdown";
@@ -141,7 +142,7 @@ export function renderPage(ctx: LayoutContext, page: PageData): string {
 </header>`;
   const edit = `${site.repo}/edit/${site.branch}/site/content/${page.slug}.md`;
   return `${head(ctx, title, page.description, page.slug)}
-<body data-base="${ctx.base}"${home ? ' class="home"' : ""}>
+<body data-base="${ctx.base}"${home ? ' class="home"' : page.slug === "comparisons" ? ' class="comparison-page"' : ""}>
 <a class="skip" href="#content">Skip to content</a>
 ${topbar(ctx)}
 <div class="shell">
@@ -149,6 +150,7 @@ ${sidebar(ctx, page.slug)}
 <main class="main" id="content">
 <article class="doc">
 ${header}
+${page.slug === "comparisons" ? comparisonViewer(ctx.base) : ""}
 <div class="prose">
 ${page.html}
 </div>

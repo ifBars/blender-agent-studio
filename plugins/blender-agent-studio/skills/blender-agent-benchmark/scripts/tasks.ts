@@ -1,3 +1,5 @@
+import { WHOLE_SCENE_TASK } from "./scene-tasks.ts";
+import { SPATIAL_TASKS } from "./spatial-tasks.ts";
 import { QUALITY_TASKS } from "./quality-tasks.ts";
 import type { MotionRequirement } from "./motion-evidence.ts";
 
@@ -58,7 +60,8 @@ export type BenchmarkTask = {
     | "deformation"
     | "simulation"
   >;
-  suites: Array<"smoke" | "quick" | "full" | "challenge" | "gauntlet" | "quality" | "reference">;
+  suites: Array<"smoke" | "quick" | "full" | "challenge" | "gauntlet" | "quality" | "reference" | "spatial" | "whole_scene">;
+  wholeScene?: boolean;
   referenceFiles?: string[];
   motionRequirement?: MotionRequirement;
   difficultyProfile?: "gauntlet";
@@ -909,4 +912,6 @@ Do not ask follow-up questions. Produce a complete first candidate, run a separa
     },
   },
   ...QUALITY_TASKS,
+  ...SPATIAL_TASKS,
+  WHOLE_SCENE_TASK,
 ];

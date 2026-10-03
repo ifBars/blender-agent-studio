@@ -3,9 +3,30 @@ title: Results
 description: What paired tests show about the plugin, and what they don't.
 ---
 
-We compare the same agent with and without the plugin's skills, holding the prompt, Blender build, model, time limit, and evaluators fixed. Each pair is one generation per condition, so read these as directional evidence rather than a success rate.
+Paired experiments hold prompts, Blender builds, model settings and evaluators
+fixed. Each pair is one generation per condition, so read these as directional
+evidence rather than a success rate.
 
-## Current paired samples
+## Spatial pilot: October 2, 2026
+
+The [interactive comparisons](comparisons.md) cover **16 generations** across
+GPT 6 Astra, GPT 6.1 Sol, Opus 5.5 and Sonnet 5.5: a joinery stool and an
+articulated lamp, each with the current skills and with added spatial checks.
+Both conditions have the same tools and 12-minute generation budget.
+
+Two counterbalanced Astra reviews preferred the current workflow unanimously
+in six pairs, the added checks in Sonnet's lamp pair, and split on Sonnet's
+stool. The extra guidance remains experimental. Fourteen submissions pass the
+technical gates after correcting a hardware-name false negative; the remaining
+failures are a timeout and invalid geometry. Structural validity does not
+settle visual quality or ambiguous contacts.
+
+This comparison measures added guidance on top of existing skills. It is
+separate from the older **without-plugin / with-plugin** samples below. The
+[full pilot report](https://github.com/ifBars/blender-agent-studio/blob/main/docs/spatial-campaign-2026-10-02.md)
+preserves the correction, limitations and per-pair outcomes.
+
+## Earlier paired samples
 
 In five fresh pairs, the plugin's workflow passed the technical gate every time and the agent without it failed every time. Three blinded judges preferred the plugin's asset in four of the five pairs.
 
@@ -37,7 +58,7 @@ Both lanterns showed every required part. Sonnet failed only the automated part-
 - **A general success rate.** Five pairs can't predict results for arbitrary prompts, models, or art styles.
 - **Independent votes.** Three judges on one pair are three opinions about the same two assets.
 - **What the MCP tools add.** These runs used the skills without the MCP tools.
-- **Claude Code performance.** The paired samples ran in Codex; the two Claude runs are single generations.
+- **A Claude Code baseline for the earlier study.** Its paired samples ran in Codex; its two Claude runs were single generations. The separate spatial pilot above includes paired Claude workflows.
 - **Consistent visual gains.** In lantern repeat 2, every judge preferred the baseline's appearance, even though its geometry failed the technical gate.
 
 Plugin revisions have also shown [both gains and regressions](https://github.com/ifBars/blender-agent-studio/blob/main/docs/quality-development.md). Review results yourself, particularly shape, materials, animation, and exports.
