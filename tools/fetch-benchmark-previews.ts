@@ -39,10 +39,11 @@ export async function fetchBenchmarkPreviews(root = resolve(import.meta.dir, "..
     if (dataset.pairs.length !== manifest.pairs || entries.filter(path => path.endsWith(".png")).length !== manifest.images)
       throw new Error("Gallery contents do not match the pinned manifest");
     for (const pair of dataset.pairs) for (const condition of dataset.schemaVersion === 2 ? [pair.vanilla, pair.plugin] : [pair.current, pair.guided]) {
-      for (const [view, path] of Object.entries(condition.images) as Array<[string, string]>) {
+      for (const [images, hashes] of [[condition.images, condition.imageHashes], [condition.originalImages ?? {}, condition.originalImageHashes ?? {}]])
+      for (const [view, path] of Object.entries(images) as Array<[string, string]>) {
         validatePreviewPaths([path]);
         const image = await readFile(join(staging, path));
-        if (createHash("sha256").update(image).digest("hex") !== condition.imageHashes[view])
+        if (createHash("sha256").update(image).digest("hex") !== hashes[view])
           throw new Error(`Image checksum mismatch: ${path}`);
       }
     }

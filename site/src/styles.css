@@ -1263,8 +1263,8 @@ mark {
 .comparison-page .toc { display: none; }
 .comparison-page .doc { max-width: 1020px; }
 .comparison-page .doc-header { margin-bottom: 28px; }
-.comparison { margin-bottom: 52px; }
-.comparison-controls { display: grid; grid-template-columns: 1.6fr 1.2fr 1fr; gap: 18px; margin-bottom: 18px; }
+.comparison { margin-bottom: 24px; }
+.comparison-controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(125px, 1fr)); gap: 12px; margin-bottom: 18px; }
 .comparison-controls label { display: grid; gap: 7px; color: var(--fg-2); font-size: 12px; font-weight: 600; }
 .comparison-controls select { min-width: 0; width: 100%; font: 500 14px var(--font-sans); color: var(--fg); background: var(--bg); padding: 10px 32px 10px 12px; border: 1px solid var(--border-strong); border-radius: 5px; }
 .comparison-controls select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -1282,7 +1282,7 @@ mark {
 .comparison-status { position: absolute; inset: 0; margin: 0; display: grid; place-content: center; text-align: center; padding: 40px; background: #171b20; color: #eee; z-index: 4; pointer-events: none; }
 .comparison-caption { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding-top: 12px; color: var(--fg-2); font-size: 12px; }
 .comparison-caption button { font: inherit; color: var(--fg-2); background: none; border: 0; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
-.comparison-framing { color: var(--fg-3); font-size: 12px; margin: 7px 0 22px; }
+.comparison-framing { color: var(--fg-3); font-size: 12px; margin: 7px 0 12px; }
 .comparison-verdict { border-top: 1px solid var(--border); padding-top: 21px; }
 .comparison-verdict > p { margin: 0 0 8px; }.comparison-verdict > p:nth-child(2) { font-size: 18px; font-weight: 550; letter-spacing: -.025em; }
 .comparison-note { max-width: 74ch; font-size: 14px; color: var(--fg-2); }
@@ -1297,3 +1297,8 @@ mark {
   .comparison-stage { aspect-ratio: 1; }.comparison-label { top: 10px; padding: 5px 7px; font-size: 9px; }.comparison-label-before { left: 10px; }.comparison-label-after { right: 10px; }
   .comparison-caption { font-size: 11px; }.comparison-verdict > p:nth-child(2) { font-size: 16px; }
 }
+
+.comparison-controls label[hidden] { display: none; }
+.comparison-links { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; margin-top: 9px; }
+.comparison-links a { color: var(--accent-fg); }
+.comparison-details .comparison-verdict { border-top: 0; padding-top: 8px; }

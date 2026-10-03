@@ -41,7 +41,7 @@ logs. One repetition is a pilot; a general improvement claim needs multiple
 repetitions, varied task types and a holdout. Do not promote experimental
 guidance into default skills solely on a pilot's score.
 
-## Build the comparison gallery
+## Build the spatial comparison dataset
 
 The gallery compares `baseline` execution without plugin access against
 `skills` execution with a pinned plugin and no experimental guidance. Its
@@ -60,7 +60,8 @@ bun run docs:build
 bun run docs:dev
 ```
 
-Open `/comparisons/`. The slider supports pointer dragging, keyboard arrows,
+The [expanded gallery](gallery-previews.md) uses this dataset as input and adds
+older pairs plus separate HD previews. The slider supports pointer dragging, keyboard arrows,
 model/task/view selection and shareable query parameters. The downloaded JSON
 retains raw and corrected scores, artifact/image hashes, provenance and both
 blinded reviews. Each submitted scene is framed to fit under the same camera-view
