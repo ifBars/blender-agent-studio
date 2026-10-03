@@ -1,8 +1,11 @@
+import { initComparison } from "./comparison";
 import { rankSections, highlight, type SearchEntry } from "./search";
 import { copyButton } from "./copy";
 
 const root = document.documentElement;
 const base = document.body.dataset.base ?? "/";
+const comparison = document.querySelector<HTMLElement>("[data-comparison]");
+if (comparison) initComparison(comparison, base);
 const $ = <T extends Element>(selector: string) => document.querySelector<T>(selector);
 
 // Theme: an explicit choice is stored; otherwise follow the system setting.

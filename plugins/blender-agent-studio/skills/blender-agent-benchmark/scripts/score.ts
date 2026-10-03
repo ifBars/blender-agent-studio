@@ -1,6 +1,8 @@
 import type { BenchmarkTask } from "./tasks.ts";
 import { assessMotionEvidence } from "./motion-evidence.ts";
 
+export const SCORER_VERSION = 6;
+
 type AssetMetrics = {
   hard_gate_pass?: boolean;
   materials?: string[];
@@ -87,6 +89,7 @@ export function scoreSubmission(options: {
   videoEvidence?: VideoEvidence | null;
   motionEvidence?: unknown;
   exportedMotionEvidence?: unknown;
+  gameSceneEvidence?: { technicalPass: boolean; errors: string[] } | null;
   blendMetrics: AssetMetrics | null;
   glbMetrics: AssetMetrics | null;
 }): AutomatedScore {
@@ -112,7 +115,7 @@ export function scoreSubmission(options: {
     "agent_completed",
     options.agentExitCode === 0,
     4,
-    `Codex exit code ${options.agentExitCode}`,
+    `Agent exit code ${options.agentExitCode}`,
   );
   add("source_exists", options.sourceExists, 3, "create_asset.py");
   add("blend_exists", options.blendExists, 4, "asset.blend");
@@ -457,6 +460,10 @@ export function scoreSubmission(options: {
     )
     .reduce((sum, check) => sum + check.earned, 0);
 
+  if (task.wholeScene) add("whole_scene_technical_contract", options.gameSceneEvidence?.technicalPass === true, 0,
+    options.gameSceneEvidence?.technicalPass ? "Per-instance and scene checks passed; visual quality remains unreviewed"
+      : options.gameSceneEvidence?.errors.join("; ") || "Whole-scene evaluation evidence missing");
+
   const hardGatePass =
     options.agentExitCode === 0 &&
     options.sourceExists &&
@@ -479,6 +486,7 @@ export function scoreSubmission(options: {
           "deterministic_source",
           "observed_motion",
           "exported_motion",
+          "whole_scene_technical_contract",
         ].includes(check.id),
       )
       .every((check) => check.passed);

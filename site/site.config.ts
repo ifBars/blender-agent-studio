@@ -24,7 +24,7 @@ export const site = {
     { title: "Get started", pages: ["index", "install", "quickstart"] },
     { title: "Using the plugin", pages: ["how-it-works", "skills", "mcp-tools"] },
     { title: "Guides", pages: ["reference-images", "scene-analysis"] },
-    { title: "Project", pages: ["results", "contributing"] },
+    { title: "Project", pages: ["comparisons", "results", "contributing"] },
   ] satisfies NavGroup[],
   features: [
     {

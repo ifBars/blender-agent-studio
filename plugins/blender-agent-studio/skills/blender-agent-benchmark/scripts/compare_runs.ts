@@ -19,6 +19,7 @@ type RunResult = {
   evidenceContactSheet: string | null;
   animationContactSheet?: string | null;
   referenceImages?: string[];
+  gameSceneEvidence?: { assetEvidence?: Array<{ root: string; contactSheet: string | null; contextSheet?: string | null }> };
 };
 
 type RunSummary = RunProvenance & {
@@ -227,6 +228,39 @@ async function judgePair(options: {
     stderr,
     exitCode,
   };
+}
+
+async function judgeSceneAssets(options: {
+  criteria: VisualCriterion[]; sourceA: RunResult; sourceB: RunResult;
+  directory: string; schemaPath: string; model: string; reasoning: string;
+}): Promise<JudgeResult["criterionResults"]> {
+  const results: JudgeResult["criterionResults"] = [];
+  // Three instances per request keeps close views readable and bounds context.
+  for (let start = 0; start < options.criteria.length; start += 3) {
+    const batch = options.criteria.slice(start, start + 3);
+    const directory = join(options.directory, `asset-review-${String(start / 3 + 1).padStart(2, "0")}`);
+    await mkdir(directory, { recursive: true });
+    const images: string[] = [];
+    for (const criterion of batch) {
+      const root = criterion.id.slice("asset_".length);
+      for (const [label, submission] of [["a", options.sourceA], ["b", options.sourceB]] as const) {
+        const evidence = submission.gameSceneEvidence?.assetEvidence?.find(asset => asset.root === root);
+        for (const [scope, source] of [["isolated", evidence?.contactSheet], ["context", evidence?.contextSheet]]) {
+          if (!source || !existsSync(source)) throw new Error(`Missing ${scope} asset evidence: ${root}/${label}`);
+          const image = join(directory, `${root}-${label}-${scope}.png`);
+          await copyFile(source, image);
+          images.push(image);
+        }
+      }
+    }
+    const judged = await judgePair({ cwd: directory, images, schemaPath: options.schemaPath,
+      model: options.model, reasoning: options.reasoning,
+      prompt: `You are a blinded low-poly game-asset reviewer. For each instance, four sheets are ordered: A isolated, A in context, B isolated, B in context. Instance order: ${batch.map(criterion => criterion.id.slice(6)).join(", ")}. Each sheet contains perspective, front and back views. Isolated sheets hide the rest of the scene and establish individual finish, proportions, details, hard-edge style and reverse-side construction. Context sheets frame the same asset with surrounding geometry retained; use them to check placement, support and unintended intersections. Isolated sheets cannot prove scene contact. A pass requires both a finished asset and credible visible integration. Occluded or ambiguous contacts remain unclear; do not infer them from an isolated view. Use only these images and requirements; do not read source, listings, other submissions, mappings or earlier judgments. Answer exactly these criterion IDs and return the required JSON:\n${batch.map(criterion => `${criterion.id}: ${criterion.question}`).join("\n")}` });
+    validateCriterionResults(batch, judged.result.criterionResults);
+    await writeFile(join(directory, "judge-process.json"), JSON.stringify(judged, null, 2));
+    results.push(...judged.result.criterionResults);
+  }
+  return results;
 }
 
 const schema = {
@@ -519,13 +553,15 @@ async function main(): Promise<void> {
         : { A: baseline.mode, B: candidate.mode };
       // Keep identities in memory until the completed comparison report.
       // A file named "hidden" in the judge's directory is still readable.
-      const criterionPrompt = task.visualCriteria
+      const overviewCriteria = task.wholeScene ? task.visualCriteria.filter(criterion => !criterion.id.startsWith("asset_")) : task.visualCriteria;
+      const criterionPrompt = overviewCriteria
         .map(
           (criterion) =>
             `- ${criterion.id} [${criterion.category}${criterion.critical ? ", critical" : ""}]: ${criterion.question}`,
         )
         .join("\n");
-      const prompt = `You are a strict blinded 3D asset art director. The first attached contact sheet is candidate A and the second is candidate B. Both show fixed perspective, front, back, left, right, and top views of assets made from the same request.${animationPrompt}
+      const spatialPrompt = task.suites.includes("spatial") ? " The seventh tile is the underside; empty trailing tiles are layout padding. Underside evidence hides only the generated studio floor. Open seams, contact and clearance must be supported by visible surfaces, not inferred from broad silhouettes." : "";
+      const prompt = `You are a strict blinded 3D asset art director. The first attached contact sheet is candidate A and the second is candidate B. Both show fixed perspective, front, back, left, right, and top views of assets made from the same request.${spatialPrompt}${animationPrompt}
 
 Compare only visible evidence. Do not infer quality from filenames or likely generation method. Penalize floating or mechanically unexplained parts, accidental intersections, weak silhouettes, incoherent proportions, missing requested relationships, generic primitive assembly, visible faceting when smooth finish was requested, unwanted smoothing when low-poly was requested, blockout residue, razor edges, poor texture or material separation, inconsistent detail, broken lighting, broken views, and presentation tricks that hide defects. Reward clear task fidelity, plausible construction, readable primary through tertiary forms, intentional surface refinement, coherent materials and textures, balanced presentation, and consistency across every view. A technically valid model that still looks like a graybox should score poorly on finalStageCompleteness. A tie is valid.
 
@@ -547,6 +583,15 @@ Return the required JSON only. Keep rationale concise and specific.`;
         model,
         reasoning,
       });
+      if (task.wholeScene) {
+        validateCriterionResults(overviewCriteria, judged.result.criterionResults);
+        const assetResults = await judgeSceneAssets({
+          criteria: task.visualCriteria.filter(criterion => criterion.id.startsWith("asset_")),
+          sourceA: reverse ? candidateResult : baselineResult, sourceB: reverse ? baselineResult : candidateResult,
+          directory: judgeDir, schemaPath, model, reasoning,
+        });
+        judged.result.criterionResults.push(...assetResults);
+      }
       validateCriterionResults(task.visualCriteria, judged.result.criterionResults);
       await writeFile(
         join(judgeDir, "judge-process.json"),

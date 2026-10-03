@@ -1,3 +1,6 @@
+import { evaluateGameScene } from "./scene-evidence.ts";
+import { buildClaudeArgs, summarizeClaudeEvents } from "./claude-agent.ts";
+import { sha256 } from "./provenance.ts";
 import { existsSync } from "node:fs";
 import { copyFile, mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { basename, dirname, join, resolve } from "node:path";
@@ -7,7 +10,7 @@ import {
   resolveBlenderExecutable,
   runBlender,
 } from "../../../scripts/blender-process.ts";
-import { scoreSubmission, type VideoEvidence } from "./score.ts";
+import { scoreSubmission, SCORER_VERSION, type VideoEvidence } from "./score.ts";
 import { BENCHMARK_TASKS, type BenchmarkTask } from "./tasks.ts";
 import { summarizeAgentEvents } from "./trace.ts";
 import { resolveModelOptions } from "./model-options.ts";
@@ -18,6 +21,8 @@ type Mode = "baseline" | "skills" | "skills_mcp";
 type Suite = BenchmarkTask["suites"][number];
 
 type Options = {
+  agentCli: "codex" | "claude-code";
+  guidanceFile?: string;
   suite: Suite;
   mode: Mode;
   output: string;
@@ -44,7 +49,7 @@ function parseOptions(): Options {
   const modeInput = argument("--mode") ?? "baseline";
   const mode = (modeInput === "plugin" ? "skills" : modeInput) as Mode;
   const output = argument("--output");
-  if (!["smoke", "quick", "full", "challenge", "gauntlet", "quality", "reference"].includes(suite)) {
+  if (!["smoke", "quick", "full", "challenge", "gauntlet", "quality", "reference", "spatial", "whole_scene"].includes(suite)) {
     throw new Error(`Unsupported suite: ${suite}`);
   }
   if (!["baseline", "skills", "skills_mcp"].includes(mode)) {
@@ -58,6 +63,9 @@ function parseOptions(): Options {
     model: argument("--model"),
     reasoning: argument("--reasoning"),
   });
+  const agentCli = argument("--agent") ?? "codex";
+  if (!["codex", "claude-code"].includes(agentCli)) throw new Error("Unsupported --agent");
+  if (agentCli === "claude-code") buildClaudeArgs({ ...modelOptions, mode, bypassApprovals: process.argv.includes("--bypass-approvals") });
   const skillRootArg = argument("--skill-root");
   // Pin even the default plugin condition, rather than loading arbitrary user plugins.
   const skillRoot = mode === "baseline" ? undefined : resolve(skillRootArg ?? join(import.meta.dir, "../../.."));
@@ -65,6 +73,8 @@ function parseOptions(): Options {
     throw new Error(`Skill root has no skills directory: ${skillRoot}`);
   }
   return {
+    agentCli: agentCli as Options["agentCli"],
+    guidanceFile: argument("--guidance-file") ? resolve(argument("--guidance-file")!) : undefined,
     suite,
     mode,
     output: resolve(output),
@@ -138,6 +148,7 @@ export function pluginPrefix(
 }
 
 type CodexRunOptions = {
+  agentCli?: "codex" | "claude-code";
   cwd: string;
   prompt: string;
   mode: Mode;
@@ -187,12 +198,13 @@ async function runCodex(options: CodexRunOptions): Promise<{
   stdout: string;
   stderr: string;
 }> {
-  const args = buildCodexArgs(options);
+  const executable = options.agentCli === "claude-code" ? "claude" : "codex";
+  const args = executable === "claude" ? buildClaudeArgs(options) : buildCodexArgs(options);
   const started = performance.now();
   const eventsPath = join(options.cwd, "agent-events.jsonl");
   const stderrPath = join(options.cwd, "agent-stderr.log");
   await Promise.all([writeFile(eventsPath,"",{flag:"wx"}),writeFile(stderrPath,"",{flag:"wx"})]);
-  const proc = Bun.spawn(["codex", ...args], {
+  const proc = Bun.spawn([executable, ...args], {
     cwd: options.cwd,
     stdin: "pipe",
     stdout: Bun.file(eventsPath),
@@ -203,19 +215,21 @@ async function runCodex(options: CodexRunOptions): Promise<{
   proc.stdin.end();
   await writeFile(join(options.cwd, "agent-running.json"), JSON.stringify({
     pid: proc.pid, startedAt: new Date().toISOString(), timeoutMs: options.timeoutMs,
-    command: ["codex", ...args.slice(0, -1), "<prompt-via-stdin>"],
+    command: [executable, ...(executable === "codex" ? args.slice(0, -1) : args), "<prompt-via-stdin>"],
   }, null, 2));
 
   let timedOut = false;
   const timer = setTimeout(() => {
     timedOut = true;
-    proc.kill();
+    if (process.platform === "win32") {
+      Bun.spawn(["taskkill", "/PID", String(proc.pid), "/T", "/F"], { stdout: "ignore", stderr: "ignore", windowsHide: true });
+    } else proc.kill();
   }, options.timeoutMs);
   const exitCode = await proc.exited;
   clearTimeout(timer);
   const [stdout, stderr] = await Promise.all([readFile(eventsPath, "utf8"), readFile(stderrPath, "utf8")]);
   return {
-    command: ["codex", ...args.slice(0, -1), "<prompt-via-stdin>"],
+    command: [executable, ...(executable === "codex" ? args.slice(0, -1) : args), "<prompt-via-stdin>"],
     exitCode,
     timedOut,
     durationMs: Math.round(performance.now() - started),
@@ -259,6 +273,7 @@ async function renderEvidence(options: {
   assetPath: string;
   outputDir: string;
   frames: number[];
+  spatial?: boolean;
   blenderPath: string;
 }): Promise<void> {
   if (!existsSync(options.assetPath)) {
@@ -275,6 +290,7 @@ async function renderEvidence(options: {
     "--presentation",
     "neutral",
   ];
+  if (options.spatial) scriptArgs.push("--views", "perspective,front,back,left,right,top,bottom");
   if (options.frames.length) {
     scriptArgs.push("--frames", options.frames.join(","));
   }
@@ -500,7 +516,8 @@ async function main(): Promise<void> {
   clearTimeout(versionTimer);
   if(blenderVersionExit !== 0 || !blenderBuild.trim()) throw new Error(`Cannot fingerprint Blender: ${blenderVersionError}`);
 
-  const versionProc = Bun.spawn(["codex", "--version"], {
+  const guidance = options.guidanceFile ? await readFile(options.guidanceFile, "utf8") : "";
+  const versionProc = Bun.spawn([options.agentCli === "claude-code" ? "claude" : "codex", "--version"], {
     stdout: "pipe",
     stderr: "pipe",
     windowsHide: true,
@@ -512,7 +529,11 @@ async function main(): Promise<void> {
   ]);
   const runManifest = {
     schemaVersion: 3,
-    scorerVersion: 5,
+    agentCli: options.agentCli,
+    guidanceFile: options.guidanceFile ?? null,
+    guidanceHash: guidance ? sha256(guidance) : null,
+    guidance,
+    scorerVersion: SCORER_VERSION,
     motionEvidenceVersion: 1,
     inspectorSchemaVersion: 3,
     evidenceSettingsVersion: 2,
@@ -531,7 +552,8 @@ async function main(): Promise<void> {
     evaluatorFingerprint: await evaluatorFingerprint(),
     taskFingerprints: Object.fromEntries(selected.map(task=>[task.id,taskFingerprint(task)])),
     referenceHashes,
-    codexVersion: codexVersion.trim(),
+    agentVersion: codexVersion.trim(),
+    codexVersion: options.agentCli === "codex" ? codexVersion.trim() : null,
     codexVersionError: codexVersionError.trim(),
     taskIds: selected.map((task) => task.id),
     taskCategories: [...new Set(selected.map((task) => task.category))].sort(),
@@ -543,7 +565,7 @@ async function main(): Promise<void> {
     ].sort(),
     bypassApprovals: options.bypassApprovals,
     skillRoot: options.skillRoot ?? null,
-    isolationArgs: isolatedAgentArgs(),
+    isolationArgs: options.agentCli === "codex" ? isolatedAgentArgs() : buildClaudeArgs(options),
     skillFingerprint: options.skillRoot ? sourceFingerprint(options.skillRoot) : null,
     mcpPreflight: options.mode === "skills_mcp" ? await preflightPinnedMcp(options.skillRoot!) : null,
   };
@@ -571,10 +593,13 @@ async function main(): Promise<void> {
       await writeFile(join(workdir, "TASK.md"), taskPrompt, "utf8");
       const prompt =
         pluginPrefix(options.mode, task, options.skillRoot) +
+        (guidance ? `Additional experimental workflow guidance:\n${guidance}\n\n` : "") +
+        `Generation wall-clock budget: ${options.timeoutMinutes} minutes. Reserve time to save and export the finished asset.\n` +
         "Open TASK.md in the current directory and complete the Blender asset request it contains.";
       await writeFile(join(workdir, "agent-prompt.txt"), prompt, "utf8");
 
       const agent = await runCodex({
+        agentCli: options.agentCli,
         cwd: workdir,
         prompt,
         mode: options.mode,
@@ -601,7 +626,7 @@ async function main(): Promise<void> {
         "utf8",
       );
       await writeFile(join(workdir, "agent-events.jsonl"), agent.stdout, "utf8");
-      const agentTrace = summarizeAgentEvents(agent.stdout);
+      const agentTrace = options.agentCli === "claude-code" ? summarizeClaudeEvents(agent.stdout) : summarizeAgentEvents(agent.stdout);
 
       const sourcePath = join(workdir, "create_asset.py");
       const blendPath = join(workdir, "asset.blend");
@@ -633,6 +658,7 @@ async function main(): Promise<void> {
         assetPath: blendPath,
         outputDir: join(workdir, "evidence"),
         frames: task.animationFrames,
+        spatial: task.suites.includes("spatial"),
         blenderPath: options.blenderPath,
       });
       const reproduction = await verifyReproduction({
@@ -646,21 +672,26 @@ async function main(): Promise<void> {
       const exportedMotionEvidence = task.motionRequirement?.inspectExport
         ? await inspectMotion(glbPath, join(workdir, "motion-glb.json"), task, options.blenderPath) : null;
 
+      const gameSceneEvidence = task.wholeScene ? await evaluateGameScene(workdir, options.blenderPath, { reproductionDirectory: reproduction.directory }) : null;
+      const sceneManifestReproduced = !task.wholeScene || Boolean(reproduction.directory && existsSync(join(reproduction.directory, "scene_manifest.json")));
       const score = scoreSubmission({
         task,
         agentExitCode: agent.exitCode,
         sourceExists: existsSync(sourcePath),
-        reproductionPass: reproduction.passed,
+        reproductionPass: reproduction.passed && sceneManifestReproduced,
         blendExists: existsSync(blendPath),
         glbExists: existsSync(glbPath),
         iterationReviewExists: existsSync(join(workdir, "iteration_review.json")),
         videoEvidence,
         motionEvidence,
         exportedMotionEvidence,
+        gameSceneEvidence,
         blendMetrics: blendMetrics as never,
         glbMetrics: glbMetrics as never,
       });
       const result = {
+        gameSceneEvidence,
+        artifactHashes: Object.fromEntries(await Promise.all([sourcePath, blendPath, glbPath, ...(task.wholeScene ? [join(workdir, "scene_manifest.json")] : [])].filter(existsSync).map(async path => [basename(path), sha256(await readFile(path))]))),
         taskId: task.id,
         taskTitle: task.title,
         referenceImages: referenceImages[task.id] ?? [],

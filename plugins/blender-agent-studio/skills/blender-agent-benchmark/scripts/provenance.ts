@@ -9,7 +9,7 @@ export const taskFingerprint = (task: BenchmarkTask) => sha256(JSON.stringify(ta
 export async function evaluatorFingerprint() {
   const root=resolve(import.meta.dir,"../../..");
   const files=["scripts/blender-process.ts",
-    ...["run_benchmark.ts","score.ts","motion-evidence.ts"].map(f=>`skills/blender-agent-benchmark/scripts/${f}`),
+    ...["run_benchmark.ts","claude-agent.ts","scene-evidence.ts","inspect_game_scene.py","score.ts","motion-evidence.ts"].map(f=>`skills/blender-agent-benchmark/scripts/${f}`),
     ...["inspect_asset.py","inspect_motion.py","render_evidence.py","evidence_settings.py"].map(f=>`skills/blender-asset-validation/scripts/${f}`)];
   const hash=createHash("sha256");
   for(const file of files) {hash.update(file);hash.update(await readFile(join(root,file)));}

@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { scoreSubmission } from "./score.ts";
+import { scoreSubmission, SCORER_VERSION } from "./score.ts";
 import { BENCHMARK_TASKS } from "./tasks.ts";
 
 function argument(name: string): string | undefined {
@@ -59,13 +59,15 @@ async function main(): Promise<void> {
       reproductionPass:
         reproductionProcess?.exitCode === 0 &&
         Boolean(reproductionBlend?.hard_gate_pass) &&
-        Boolean(reproductionGlb?.hard_gate_pass),
+        Boolean(reproductionGlb?.hard_gate_pass) &&
+        (!task.wholeScene || existsSync(join(reproductionDir, "scene_manifest.json"))),
       blendExists: existsSync(join(workdir, "asset.blend")),
       glbExists: existsSync(join(workdir, "asset.glb")),
       iterationReviewExists: existsSync(join(workdir, "iteration_review.json")),
       videoEvidence: (await optionalJson(join(workdir, "video-probe.json"))) as never,
       motionEvidence: await optionalJson(join(workdir, "motion-blend.json")),
       exportedMotionEvidence: await optionalJson(join(workdir, "motion-glb.json")),
+      gameSceneEvidence: await optionalJson(join(workdir, "game-scene-evaluation", "result.json")) as { technicalPass: boolean; errors: string[] } | null,
       blendMetrics: (await optionalJson(join(workdir, "metrics-blend.json"))) as never,
       glbMetrics: (await optionalJson(join(workdir, "metrics-glb.json"))) as never,
     });
@@ -75,7 +77,7 @@ async function main(): Promise<void> {
   const rescored = {
     ...summary,
     rescoredAt: new Date().toISOString(),
-    scorerVersion: 5,
+    scorerVersion: SCORER_VERSION,
     hardGatePasses: results.filter((item) => item.score.hardGatePass).length,
     meanAutomatedScore: Number(
       (

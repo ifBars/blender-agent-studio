@@ -31,9 +31,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--resolution", type=int, default=384)
     parser.add_argument("--views", default="perspective,front,back,left,right,top",
                         help="Comma-separated fixed views; use perspective,front for a quick repair preview.")
+    parser.add_argument("--focus-objects", default="[]", help="JSON array of exact mesh names used only for framing; all geometry remains visible.")
     parser.add_argument("--frames", default="")
     parser.add_argument("--material-mode", choices=("source", "vrchat-fit"), default="source")
     parser.add_argument("--hide-objects", default="")
+    parser.add_argument("--hide-objects-json", default="[]", help="JSON array of names for explicitly isolated asset evidence.")
     parser.add_argument("--head-texture", default="")
     parser.add_argument("--presentation", choices=("auto", "neutral", "dark", "light"), default="auto")
     return parser.parse_args(script_args())
@@ -61,10 +63,10 @@ def load_asset(path: Path) -> None:
         raise ValueError(f"Unsupported asset extension: {suffix}")
 
 
-def scene_bounds() -> tuple[Vector, Vector]:
+def scene_bounds(names: set[str] | None = None) -> tuple[Vector, Vector]:
     points: list[Vector] = []
     for obj in bpy.context.scene.objects:
-        if obj.type != "MESH" or obj.hide_render:
+        if obj.type != "MESH" or obj.hide_render or (names and obj.name not in names):
             continue
         points.extend(obj.matrix_world @ Vector(corner) for corner in obj.bound_box)
     if not points:
@@ -286,7 +288,15 @@ def render_view(
     scene.render.resolution_x = resolution
     scene.render.resolution_y = resolution
     scene.render.filepath = str(output_dir / f"{name}.png")
-    bpy.ops.render.render(write_still=True)
+    floor = bpy.data.objects.get("BAS_EvidenceFloor")
+    previous_hidden = floor.hide_render if floor else False
+    if floor and name == "bottom":
+        floor.hide_render = True
+    try:
+        bpy.ops.render.render(write_still=True)
+    finally:
+        if floor:
+            floor.hide_render = previous_hidden
     return Path(scene.render.filepath)
 
 
@@ -331,14 +341,18 @@ def main() -> None:
     resolution = max(128, min(int(args.resolution), 1024))
     frames = [int(value) for value in args.frames.split(",") if value.strip()]
     requested_views = [value.strip() for value in args.views.split(",") if value.strip()]
-    allowed_views = {"perspective", "front", "back", "left", "right", "top"}
+    legacy_views = {"perspective", "front", "back", "left", "right", "top"}
+    allowed_views = legacy_views | {"bottom"}
     if not requested_views or len(set(requested_views)) != len(requested_views) or not set(requested_views) <= allowed_views:
-        raise ValueError("Views must be unique fixed names: perspective,front,back,left,right,top")
+        raise ValueError("Views must be unique fixed names: perspective,front,back,left,right,top,bottom")
 
     if not input_path.is_file():
         raise FileNotFoundError(input_path)
     load_asset(input_path)
-    hidden_names = {name.strip().casefold() for name in args.hide_objects.split(",") if name.strip()}
+    hidden_list = json.loads(args.hide_objects_json)
+    if not isinstance(hidden_list, list) or not all(isinstance(name, str) and name for name in hidden_list):
+        raise ValueError("hide-objects-json must be a JSON array of mesh names")
+    hidden_names = {name.strip().casefold() for name in args.hide_objects.split(",") if name.strip()} | {name.casefold() for name in hidden_list}
     for obj in bpy.context.scene.objects:
         if obj.name.casefold() in hidden_names:
             obj.hide_render = True
@@ -349,12 +363,26 @@ def main() -> None:
 
     luminance = subject_luminance()
     presentation = resolve_presentation(args.presentation, luminance)
+    focus_list = json.loads(args.focus_objects)
+    if not isinstance(focus_list, list) or not all(isinstance(name, str) and name for name in focus_list):
+        raise ValueError("focus-objects must be a JSON array of exact mesh names")
+    focus_names = set(focus_list)
+    visible_meshes = {obj.name for obj in bpy.context.scene.objects if obj.type == "MESH" and not obj.hide_render}
+    if focus_names - visible_meshes:
+        raise ValueError(f"Unknown or hidden focus meshes: {sorted(focus_names - visible_meshes)}")
     mins, maxs = scene_bounds()
     center = (mins + maxs) * 0.5
     size = maxs - mins
     extent = max(float(size.x), float(size.y), float(size.z), 1e-4)
     target = center + Vector((0.0, 0.0, float(size.z) * 0.04))
+    studio_extent = extent
     configure_scene(center, extent, float(mins.z), diagnostic, presentation)
+    if "bottom" in requested_views:
+        add_area_light("BAS_UndersideFill", center + Vector((0, 0, -extent * 2)), center, extent * extent * 80, extent)
+    if focus_names:
+        focus_min, focus_max = scene_bounds(focus_names)
+        target = (focus_min + focus_max) * 0.5
+        extent = max(max(focus_max - focus_min), 1e-4)
     camera = create_camera()
 
     views = [
@@ -364,6 +392,7 @@ def main() -> None:
         ("left", Vector((-1.0, 0.0, 0.05)), True),
         ("right", Vector((1.0, 0.0, 0.05)), True),
         ("top", Vector((0.0, 0.0, 1.0)), True),
+        ("bottom", Vector((0.0, 0.0, -1.0)), True),
     ]
     view_by_name = {view[0]: view for view in views}
     views = [view_by_name[name] for name in requested_views]
@@ -407,7 +436,7 @@ def main() -> None:
     manifest: dict[str, Any] = {
         "schema_version": 2,
         "evidence_settings_version": EVIDENCE_SETTINGS_VERSION,
-        "studio": studio_settings(extent, diagnostic, presentation),
+        "studio": studio_settings(studio_extent, diagnostic, presentation),
         "requested_presentation": args.presentation,
         "subject_luminance_hint": luminance,
         "render_engine": bpy.context.scene.render.engine,
@@ -417,7 +446,10 @@ def main() -> None:
         "blender_version": bpy.app.version_string,
         "resolution": resolution,
         "requested_views": requested_views,
-        "evidence_scope": "full_multiview" if set(requested_views) == allowed_views else "partial_preview",
+        "evidence_scope": "detail_preview" if focus_names else ("full_multiview" if legacy_views <= set(requested_views) else "partial_preview"),
+        "focus_objects": sorted(focus_names),
+        "geometry_hidden_for_focus": False,
+        "underside_floor_hidden": "bottom" in requested_views,
         "material_mode": args.material_mode,
         "hidden_objects": sorted(hidden_names),
         "head_texture": str(Path(args.head_texture).resolve()) if args.head_texture else None,

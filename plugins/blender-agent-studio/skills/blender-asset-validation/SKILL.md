@@ -145,6 +145,14 @@ it does not satisfy the final six-view gate. Preserve the same view selection,
 resolution and explicit presentation for before/after inspection. Render the
 full set once the repair is retained, rather than at every small edit.
 
+For underside joints, add `bottom` to `views` (CLI `--views bottom`). This
+removes only the generated studio floor for that view and adds underside fill;
+it does not remove authored geometry. To frame a small joint without hiding
+its surroundings, set `focusObjects` to exact object names (CLI
+`--focus-objects '["Leg_FL","Seat"]'`). Focused evidence is labeled
+`detail_preview` and supplements the full-asset views. Occluding geometry stays
+visible; a close crop or overlapping bounds alone does not prove contact.
+
 The default `presentation: "auto"` selects a studio background using a
 constant-material luminance hint: dark for bright assets, light for very dark
 assets, neutral slate otherwise. The CLI equivalent is `--presentation auto`.

@@ -259,10 +259,12 @@ server.registerTool(
       assetPath: z.string(),
       outputDir: z.string(),
       resolution: z.number().int().min(128).max(1024).default(384),
-      views: z.array(z.enum(["perspective", "front", "back", "left", "right", "top"]))
-        .min(1).max(6).refine(values => new Set(values).size === values.length, "Views must be unique")
+      views: z.array(z.enum(["perspective", "front", "back", "left", "right", "top", "bottom"]))
+        .min(1).max(7).refine(values => new Set(values).size === values.length, "Views must be unique")
         .default(["perspective", "front", "back", "left", "right", "top"])
         .describe("Use two relevant views at resolution 256 for fast repair previews. Partial views do not replace final multiview validation."),
+      focusObjects: z.array(z.string().min(1)).max(100).default([])
+        .describe("Exact mesh names to frame closely. Surrounding geometry remains visible; detail views do not establish full-asset quality."),
       presentation: z.enum(["auto", "neutral", "dark", "light"]).default("auto")
         .describe("Adaptive contrast by default; pin a studio preset for repeatable comparisons."),
       animationFrames: z.array(z.number().int().min(0)).max(12).default([]),
@@ -275,6 +277,7 @@ server.registerTool(
     outputDir,
     resolution,
     views,
+    focusObjects,
     presentation,
     animationFrames,
     blenderPath,
@@ -292,6 +295,8 @@ server.registerTool(
         String(resolution),
         "--views",
         views.join(","),
+        "--focus-objects",
+        JSON.stringify(focusObjects),
         "--presentation",
         presentation,
       ];
