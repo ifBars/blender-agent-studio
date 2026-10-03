@@ -33,10 +33,12 @@ export async function fetchBenchmarkPreviews(root = resolve(import.meta.dir, "..
     const staging = join(temporary, "extracted");
     await mkdir(staging);
     await run(["tar", "-xzf", archive, "-C", staging]);
-    const dataset = JSON.parse(await readFile(join(staging, "benchmarks/spatial-pilot.json"), "utf8"));
+    const datasetPath = manifest.dataset ?? "benchmarks/spatial-pilot.json";
+    validatePreviewPaths([datasetPath]);
+    const dataset = JSON.parse(await readFile(join(staging, datasetPath), "utf8"));
     if (dataset.pairs.length !== manifest.pairs || entries.filter(path => path.endsWith(".png")).length !== manifest.images)
       throw new Error("Gallery contents do not match the pinned manifest");
-    for (const pair of dataset.pairs) for (const condition of [pair.current, pair.guided]) {
+    for (const pair of dataset.pairs) for (const condition of dataset.schemaVersion === 2 ? [pair.vanilla, pair.plugin] : [pair.current, pair.guided]) {
       for (const [view, path] of Object.entries(condition.images) as Array<[string, string]>) {
         validatePreviewPaths([path]);
         const image = await readFile(join(staging, path));

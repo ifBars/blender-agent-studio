@@ -43,13 +43,19 @@ guidance into default skills solely on a pilot's score.
 
 ## Build the comparison gallery
 
-After paired runs and `compare_runs.ts` judgments are complete, prepare the
+The gallery compares `baseline` execution without plugin access against
+`skills` execution with a pinned plugin and no experimental guidance. Its
+builder rejects plugin-versus-plugin pairs even when their labels say vanilla.
+The earlier current-versus-guided study remains a separate experiment.
+
+After all eight paired runs and `compare_runs.ts` judgments are complete, prepare the
 local gallery from their preserved evidence:
 
 ```powershell
 bun tools/build-benchmark-previews.ts `
-  --campaign ../benchmarks/spatial-2026-10-02/runs `
-  --judging ../benchmarks/spatial-2026-10-02/judging
+  --vanilla-runs ../benchmarks/plugin-vs-vanilla-2026-10-02/runs `
+  --plugin-runs ../benchmarks/spatial-2026-10-02/runs `
+  --judging ../benchmarks/plugin-vs-vanilla-2026-10-02/judging
 bun run docs:build
 bun run docs:dev
 ```
@@ -57,8 +63,10 @@ bun run docs:dev
 Open `/comparisons/`. The slider supports pointer dragging, keyboard arrows,
 model/task/view selection and shareable query parameters. The downloaded JSON
 retains raw and corrected scores, artifact/image hashes, provenance and both
-blinded reviews. Each generation is framed to fit under the same camera-view
-and lighting preset; this is not a registered geometric difference image.
+blinded reviews. Each submitted scene is framed to fit under the same camera-view
+and lighting preset, including saved staging geometry. Oversized staging can
+make the asset appear small and limit visual judgments. This is not a registered
+geometric difference image.
 
 Generated previews remain under the ignored `site/public/benchmarks/` folder,
 following the repository's rule against committing benchmark renders. Build or
