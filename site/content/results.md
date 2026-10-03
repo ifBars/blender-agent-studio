@@ -82,3 +82,24 @@ Plugin revisions have also shown [both gains and regressions](https://github.com
 ## Details
 
 The [full evidence](https://github.com/ifBars/blender-agent-studio/blob/main/docs/plugin-quality-evidence.md) lists every defect, the controls, and how the oversized floors were handled for visual judging. The [benchmark methodology](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-agent-benchmark/references/methodology.md) defines the conditions and the visual rubric.
+
+
+## Whole-scene benchmark
+
+The courier depot benchmark asks for 21 asset families and 45 instances.
+It checks each asset's construction and placement, then the assembled scene.
+The suite is implemented and calibrated; model runs are still pending.
+Read the [whole-scene protocol](https://github.com/ifBars/blender-agent-studio/blob/main/docs/whole-scene-benchmark.md).
+
+## Gallery previews
+
+The gallery includes the five earlier lantern, press and drawbridge pairs
+alongside the eight spatial pairs. Their original models, dates and scores stay
+separate. Use **Run** to see each lantern attempt, including the repeat where
+all three reviewers preferred the no-plugin result.
+
+HD previews are new 1536-pixel Cycles renders with 64 samples and
+OpenImageDenoise. Saved studio floors and backdrops are hidden where needed to
+frame the asset; their names appear under **Scores & review**. The saved models
+and technical results are unchanged. Choose **Original review** for the images
+used by the judges. Their votes describe those images, not the new previews.

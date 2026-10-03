@@ -90,7 +90,7 @@ figures are the Claude Code API-equivalent estimates.
 Read these as two single generations. One sample per model cannot rank Sonnet
 against Opus or against the GPT generators. The Codex pairs used an older
 plugin snapshot, and the Claude runs came from a separate driver script that is
-not part of this repository (the bundled runner launches Codex only). It
+not part of this repository (that runner version launched Codex only). It
 mirrored the runner's isolation: pinned skill files read by path, no MCP, and no
 user plugins or settings. The runs were reproducible only as far as those
 controls go; Claude Code 2.1.284 and plugin fingerprint
