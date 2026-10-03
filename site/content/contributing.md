@@ -33,6 +33,7 @@ The site lives in `site/`. Pages are Markdown files in `site/content`, and a sma
 
 ```bash
 bun install --cwd site
+bun run docs:assets  # restores the checksum-pinned benchmark gallery
 bun run docs:dev     # http://localhost:4321, reloads on save
 bun run docs:build   # writes site/dist
 ```
