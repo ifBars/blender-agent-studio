@@ -3,7 +3,7 @@ title: MCP tools
 description: Sixteen bounded tools for inspecting, rendering, comparing, and sourcing assets. None of them runs arbitrary Python.
 ---
 
-The plugin runs a local MCP server with Bun. Each tool starts Blender in the background for one bounded job and returns structured results. For live control of an open Blender session, pair it with Blender's official Lab MCP; the [MCP integration skill](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-mcp-integration/SKILL.md) explains when to use which.
+The plugin runs the same local MCP server with Bun in Codex and Claude Code. Tools that inspect or render files start Blender in the background for one bounded job and return structured results. Asset searches, downloads, and browser handoffs do not need to launch Blender. For live control of an open Blender session, pair it with Blender's official Lab MCP; the [MCP integration skill](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-mcp-integration/SKILL.md) explains when to use which.
 
 ## Inspect and validate
 

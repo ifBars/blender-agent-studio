@@ -13,12 +13,24 @@ export const site = {
   title: "Blender Agent Studio",
   tagline: "Describe what you want to make. Keep the Blender file and the Python that built it.",
   description:
-    "A Codex plugin that plans, builds, and checks Blender models, animations, and scenes in your local Blender installation.",
+    "A plugin for Codex and Claude Code that plans, builds, and checks Blender models, animations, and scenes in your local Blender installation.",
   repo: "https://github.com/ifBars/blender-agent-studio",
   branch: "main",
   install: [
-    "codex plugin marketplace add ifBars/blender-agent-studio",
-    "codex plugin add blender-agent-studio@blender-agent-studio",
+    {
+      host: "Codex",
+      commands: [
+        "codex plugin marketplace add ifBars/blender-agent-studio",
+        "codex plugin add blender-agent-studio@blender-agent-studio",
+      ],
+    },
+    {
+      host: "Claude Code",
+      commands: [
+        "claude plugin marketplace add ifBars/blender-agent-studio",
+        "claude plugin install blender-agent-studio@blender-agent-studio",
+      ],
+    },
   ],
   nav: [
     { title: "Get started", pages: ["index", "install", "quickstart"] },

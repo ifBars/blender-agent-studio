@@ -100,7 +100,12 @@ function pager(ctx: LayoutContext, slug: string): string {
 
 function hero(ctx: LayoutContext): string {
   const [first, ...rest] = site.tagline.split(/(?<=\.)\s+/);
-  const install = site.install.join("\n");
+  const installs = site.install.map(({ host, commands }) => {
+    const install = commands.join("\n");
+    return `<figure class="code install"><figcaption>Install in ${escapeHtml(host)}</figcaption><pre class="shiki plain"><code>${commands
+      .map((line) => `<span class="line"><span class="prompt">$ </span>${escapeHtml(line)}</span>`)
+      .join("\n")}</code></pre><button class="copy" type="button" data-copy data-copy-text="${escapeHtml(install)}" aria-label="Copy ${escapeHtml(host)} install commands">${icons.copy}${icons.check}</button></figure>`;
+  }).join("\n");
   const features = site.features
     .map((feature) => {
       const [slug, hash] = feature.href.split("#");
@@ -109,17 +114,14 @@ function hero(ctx: LayoutContext): string {
     })
     .join("");
   return `<section class="hero">
-  <p class="eyebrow">Codex plugin for Blender 5.2</p>
+  <p class="eyebrow">Codex &amp; Claude Code · Blender 5.2</p>
   <h1>${escapeHtml(first)} <span>${escapeHtml(rest.join(" "))}</span></h1>
   <p class="lead">${escapeHtml(site.description)}</p>
   <div class="hero-actions">
     <a class="btn btn-primary" href="${pageUrl(ctx.base, "install")}">Get started ${icons.arrow}</a>
     <a class="btn btn-secondary" href="${site.repo}">${icons.github} View on GitHub</a>
   </div>
-  <figure class="code install"><figcaption>Install</figcaption><pre class="shiki plain"><code>${install
-    .split("\n")
-    .map((line) => `<span class="line"><span class="prompt">$ </span>${escapeHtml(line)}</span>`)
-    .join("\n")}</code></pre><button class="copy" type="button" data-copy data-copy-text="${escapeHtml(install)}" aria-label="Copy install commands">${icons.copy}${icons.check}</button></figure>
+  ${installs}
 </section>
 <section class="features" aria-label="Features">${features}</section>`;
 }
@@ -132,7 +134,7 @@ const searchDialog = `<dialog class="search" aria-label="Search documentation">
 
 export function renderPage(ctx: LayoutContext, page: PageData): string {
   const home = page.slug === "index";
-  const title = home ? `${site.title} · Codex plugin for Blender` : `${page.title} · ${site.title}`;
+  const title = home ? `${site.title} · Blender plugin for Codex and Claude Code` : `${page.title} · ${site.title}`;
   const header = home
     ? hero(ctx)
     : `<header class="doc-header">

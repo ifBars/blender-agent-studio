@@ -1,6 +1,6 @@
 ---
 title: Introduction
-description: A Codex plugin that plans, builds, and checks Blender models, animations, and scenes in your local Blender installation.
+description: A plugin for Codex and Claude Code that plans, builds, and checks Blender models, animations, and scenes in your local Blender installation.
 ---
 
 ## What you get back

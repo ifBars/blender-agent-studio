@@ -23,11 +23,19 @@ The router skill, `blender-agent-studio`, reads the request and picks the smalle
 
 ## Call one directly
 
-Prefix a request with `$blender-agent-studio:<skill>` to load specialists without routing. Combine them when a request spans several areas:
+In Codex, prefix a request with `$blender-agent-studio:<skill>` to load specialists without routing. Combine them when a request spans several areas:
 
 ```text
 $blender-agent-studio:blender-modeling-workflow $blender-agent-studio:blender-animation-workflow Build a drawbridge whose deck raises on a winch.
 ```
+
+In Claude Code, invoke a specialist with `/blender-agent-studio:<skill>`:
+
+```text
+/blender-agent-studio:blender-animation-workflow Animate the drawbridge deck raising on a winch.
+```
+
+Both hosts can also select skills from a plain request. They load the same specialist guidance and MCP tools.
 
 For review-only work, use `blender-asset-validation` on its own.
 

@@ -5,7 +5,7 @@ description: Report bugs, run the checks, and keep generated output out of commi
 
 ## Report a bug
 
-[Open an issue](https://github.com/ifBars/blender-agent-studio/issues) with your Blender version, what you asked for, and what happened. A render or an error log helps. Leave out credentials, private assets, and sensitive agent traces.
+[Open an issue](https://github.com/ifBars/blender-agent-studio/issues) with your host (Codex or Claude Code), plugin and Blender versions, what you asked for, and what happened. A render or an error log helps. Leave out credentials, private assets, and sensitive agent traces.
 
 ## Run the checks
 
@@ -27,6 +27,17 @@ bun --cwd plugins/blender-agent-studio run test:runtime
 
 After editing `references/astra-workflow.md`, run `bun tools/sync-guidance.ts` to update the copy bundled with each skill.
 
+## Keep both hosts supported
+
+The plugin has separate Codex and Claude Code marketplace and plugin manifests. Keep their names, versions, descriptions, and MCP entry points aligned; `bun run check` verifies them. With the Claude Code CLI installed, also run:
+
+```bash
+claude plugin validate .
+claude plugin validate plugins/blender-agent-studio
+```
+
+To try a local checkout in Claude Code, run `claude --plugin-dir plugins/blender-agent-studio` from the repository root.
+
 ## Work on these docs
 
 The site lives in `site/`. Pages are Markdown files in `site/content`, and a small Bun and TypeScript builder in `site/src` turns them into static HTML.
@@ -35,6 +46,7 @@ The site lives in `site/`. Pages are Markdown files in `site/content`, and a sma
 bun install --cwd site
 bun run docs:assets  # restores the checksum-pinned benchmark gallery
 bun run docs:dev     # http://localhost:4321, reloads on save
+bun run docs:test    # checks generated pages, search, and interactions
 bun run docs:build   # writes site/dist
 ```
 

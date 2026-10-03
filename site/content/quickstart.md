@@ -5,7 +5,7 @@ description: Ask for an asset, say what matters, and review what comes back.
 
 ## Ask for something
 
-Open a new Codex task and describe what you want:
+Open a new Codex task or Claude Code session and describe what you want:
 
 > Use Blender Agent Studio to build a walnut desk lamp. Give it warm lighting, render it from two angles, and save the .blend and Python source.
 
@@ -37,8 +37,12 @@ Names vary with the request. Open the renders before accepting the result; they 
 
 ## Call a skill directly
 
-Prefix a request with a [skill](skills.md) name to skip routing:
+Both hosts choose relevant [skills](skills.md) from a plain request. To call a specialist directly, use the syntax for your host:
 
-```text
+```text title="Codex"
 $blender-agent-studio:blender-modeling-workflow Build a stylized game-ready coffee grinder as create_asset.py, asset.blend, and asset.glb.
+```
+
+```text title="Claude Code"
+/blender-agent-studio:blender-modeling-workflow Build a stylized game-ready coffee grinder as create_asset.py, asset.blend, and asset.glb.
 ```
