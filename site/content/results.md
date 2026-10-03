@@ -7,9 +7,25 @@ Paired experiments hold prompts, Blender builds, model settings and evaluators
 fixed. Each pair is one generation per condition, so read these as directional
 evidence rather than a success rate.
 
-## Spatial pilot: October 2, 2026
+## No plugin vs with plugin: October 2, 2026
 
-The [interactive comparisons](comparisons.md) cover **16 generations** across
+The [interactive comparisons](comparisons.md) cover eight matched pairs: two
+tasks across GPT 6 Astra, GPT 6.1 Sol, Opus 5.5 and Sonnet 5.5. Eight fresh
+no-plugin baselines are paired with eight existing frozen plugin-skill runs,
+using the same task briefs, models, effort, budget, Blender build and evaluator.
+
+Both reviews preferred the plugin in all eight pairs. Technical gates passed in 4/8 no-plugin submissions and 7/8 plugin submissions after the naming correction. These are observed pilot outcomes, not general success rates. Sonnet's lamp is a technical regression: its no-plugin run passed, while its plugin run failed geometry checks.
+
+The no-plugin runs were collected later, so generation order is not
+counterbalanced. Oversized staging obscures some baseline assets; preference
+includes presentation and delivery quality as well as modeling. This tests the
+plugin's skills and scripts, not MCP's additional effect. See the
+[full comparison report](https://github.com/ifBars/blender-agent-studio/blob/main/docs/plugin-comparison-2026-10-02.md)
+for per-pair outcomes and failed checks.
+
+## Added-guidance pilot: October 2, 2026
+
+The separate added-guidance experiment covers **16 generations** across
 GPT 6 Astra, GPT 6.1 Sol, Opus 5.5 and Sonnet 5.5: a joinery stool and an
 articulated lamp, each with the current skills and with added spatial checks.
 Both conditions have the same tools and 12-minute generation budget.

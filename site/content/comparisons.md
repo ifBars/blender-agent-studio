@@ -1,25 +1,29 @@
 ---
-title: Compare modeling workflows
-description: Same task. Same model. Two workflows. Inspect the difference.
+title: No plugin vs with plugin
+description: Same model and task. Compare vanilla results with Blender Agent Studio.
 ---
 
 ## What you are comparing
 
-The **current workflow** uses the plugin's existing modeling and validation
-skills. **Added spatial checks** uses those same skills plus an explicit
-contact map, SceneIR checks, close-up inspection and a recorded repair loop.
-Both have the same tools and a 12-minute generation budget at medium effort.
+**No plugin** receives the modeling brief with plugin discovery, skills and MCP
+disabled. **With plugin** receives the same brief plus Blender Agent Studio's
+pinned modeling and validation skills and bundled scripts. This tests the
+plugin's skill workflow; it does not measure the additional effect of MCP.
+Both conditions use the same model, medium effort, Blender build, evaluator and
+12-minute generation budget.
 
 This October 2, 2026 pilot covers GPT 6 Astra, GPT 6.1 Sol, Opus 5.5 and Sonnet
-5.5. Each task has one generation per condition. Two fresh Astra judging
-sessions review each pair with reversed A/B order. Those are two judgments of
-the same assets, not two independent generation trials or a general model
-ranking. `Unclear` remains missing evidence.
+5.5. Each task has one generation per condition. The no-plugin baselines were
+collected after the existing frozen plugin runs, so generation order was not
+counterbalanced. Two fresh Astra judging sessions review each pair with
+reversed A/B order. These are two judgments of the same assets, not independent
+generation trials or a general model ranking. `Unclear` remains missing evidence.
 
-The added guidance is experimental. It has not earned a place in the default
-workflow. Review the construction, finish and evidence yourself; more checking
-does not automatically produce a better model. The [results page](results.md)
-keeps earlier experiments separate from this pilot.
+The slider now compares actual no-plugin and plugin runs. The earlier
+experiment comparing existing skills with added spatial guidance is a separate
+study on the [results page](results.md). It is not used as the no-plugin baseline.
+Review shape, finish and contacts alongside the technical checks; structural
+scores alone do not establish visual quality.
 
 ## A whole-scene benchmark
 

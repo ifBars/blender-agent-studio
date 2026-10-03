@@ -1,5 +1,10 @@
 # Spatial modeling pilot — October 2, 2026
 
+> This archived study compares existing plugin skills with added guidance.
+> The live gallery now compares genuine no-plugin baselines against plugin
+> runs; see [the no-plugin comparison report](plugin-comparison-2026-10-02.md).
+
+
 The campaign ran **16 generations: two tasks × four models × two workflows**.
 The added spatial-check guidance did not produce a general improvement in this
 sample. Six pairs unanimously favored the current workflow, Sonnet's lamp
