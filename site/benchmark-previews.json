@@ -1,5 +1,5 @@
 {
-  "url": "https://github.com/ifBars/blender-agent-studio/releases/download/vanilla-plugin-pilot-2026-10-02/plugin-comparison-gallery.tar.gz",
+  "url": "https://github.com/ifBars/blender-agent-studio/releases/download/vanilla-plugin-pilot-2026-10-02/plugin-comparison-gallery.tar.gz?sha256=fa4529f7f48e621115863550a88389067a0c75238838ce5d9fbf3b508781e45c",
   "sha256": "fa4529f7f48e621115863550a88389067a0c75238838ce5d9fbf3b508781e45c",
   "dataset": "benchmarks/plugin-vs-vanilla/comparison.json",
   "pairs": 8,
