@@ -76,6 +76,12 @@ on NVIDIA. GPU selection must be verified in renderer output. The CPU cap also
 covers modeling, export and any CPU fallback. Other applications remain outside
 this budget. Record any scheduling/resource amendments; earlier concurrent
 results cannot support timing rankings against this policy.
+Resource guidance also explicitly prefers GPU denoising: supported GPU OIDN,
+then OptiX, with a bounded CPU fallback. This is separate from the Cycles render
+device. To update guidance in a saved queue, first finish the current pair with
+`--request-pause`, then resume with a fresh `--guidance-file` and explicit
+`--amend-resource-guidance`. The runner rejects changes inside a partial pair,
+retains each completed pair's original policy, and records the amendment.
 Use `--request-pause --output <campaign>` to finish current pairs and stop
 dispatching new ones, then `--resume` with the original inputs to continue.
 Resume verifies the snapshot and controls, preserves completed attempts and

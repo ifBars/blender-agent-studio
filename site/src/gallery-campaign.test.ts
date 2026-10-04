@@ -36,10 +36,15 @@ test('campaign pauses between complete pairs and resumes without regenerating pr
     const invalid=spawn([...changed,'--resume'],{stdout:'ignore',stderr:'pipe'});
     expect(await invalid.exited).not.toBe(0);
     expect(await new Response(invalid.stderr).text()).toContain('controls differ');
-    const resumed=spawn([...args,'--resume'],{stdout:'pipe',stderr:'pipe'});
+    const revisedGuidance=join(root,'resource-v2.md');await writeFile(revisedGuidance,'Shared GPU denoising preference; both conditions.');
+    const unapproved=spawn([...args,'--resume','--guidance-file',revisedGuidance],{stdout:'ignore',stderr:'pipe'});
+    expect(await unapproved.exited).not.toBe(0);expect(await new Response(unapproved.stderr).text()).toContain('Resume resource guidance changed');
+    const resumed=spawn([...args,'--resume','--guidance-file',revisedGuidance,'--amend-resource-guidance'],{stdout:'pipe',stderr:'pipe'});
     const resumedLogs=Promise.all([new Response(resumed.stdout).text(),new Response(resumed.stderr).text()]);
     expect(await resumed.exited).toBe(0);await resumedLogs;
     expect(JSON.parse(await readFile(join(output,'campaign-results.json'),'utf8')).results).toHaveLength(4);
+    const campaign=JSON.parse(await readFile(join(output,'campaign.json'),'utf8'));expect(campaign.resourceAmendments).toHaveLength(1);
+    expect(campaign.pairResourcePolicies['signal_lantern--gpt-6-astra'].guidanceHash).not.toBe(campaign.resourcePolicy.guidanceHash);
     expect(await readFile(join(output,'signal_lantern--gpt-6-astra--vanilla/generation.json'),'utf8')).toBe(generated);
   } finally {for(const child of children)if(child.exitCode===null)child.kill();await Promise.allSettled(children.map(child=>child.exited));await rm(root,{recursive:true,force:true});}
 },60000);

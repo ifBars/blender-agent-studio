@@ -110,10 +110,22 @@ open(""" + repr(str(result_path)) + """, 'w', encoding='utf-8').write(json.dumps
         # The test runs on CPU-only machines too. On the validated RTX fixture,
         # this exercises the preference API and asserts the GPU path directly.
         if policy['gpu']:
-            self.assertEqual(policy['denoiser'], 'OPENIMAGEDENOISE')
-            self.assertEqual(policy['quality'], 'FAST')
-            self.assertEqual(policy['prefilter'], 'FAST')
-            self.assertIn('OIDN GPU', policy['decisionReason'])
+            self.assertIn(policy['denoiser'], ['OPENIMAGEDENOISE', 'OPTIX'])
+            if policy['denoiser'] == 'OPENIMAGEDENOISE':
+                self.assertEqual(policy['quality'], 'FAST')
+                self.assertEqual(policy['prefilter'], 'FAST')
+            self.assertIn('GPU', policy['decisionReason'])
+        else:
+            self.assertIn('CPU OIDN', policy['decisionReason'])
+
+    def test_final_prefers_supported_gpu_denoising(self):
+        policy = self.invoke(self.create_fixture(), 'final-auto', 'final', device='auto')
+        if policy['gpu']:
+            self.assertIn(policy['denoiser'], ['OPENIMAGEDENOISE', 'OPTIX'])
+            self.assertIn('GPU', policy['decisionReason'])
+            if policy['denoiser'] == 'OPENIMAGEDENOISE':
+                self.assertEqual(policy['quality'], 'HIGH')
+                self.assertEqual(policy['prefilter'], 'ACCURATE')
         else:
             self.assertIn('CPU OIDN', policy['decisionReason'])
 

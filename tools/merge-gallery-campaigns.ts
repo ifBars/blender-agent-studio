@@ -18,7 +18,7 @@ await mkdir(output,{recursive:true});
 const results=[],policies:any={},sources:any={};
 for(const pair of old.pairs){
  const id=key(pair),source=kept.has(id)?prior:continuation;
- policies[id]=kept.has(id)?{concurrency:old.concurrency,cpuHardCapPercent:null}:next.resourcePolicy;sources[id]=source;
+ policies[id]=kept.has(id)?{concurrency:old.concurrency,cpuHardCapPercent:null}:next.pairResourcePolicies?.[id]??next.resourcePolicy;sources[id]=source;
  for(const condition of ['vanilla','plugin']){
   const cell=`${id}--${condition}`,dir=join(output,cell);await mkdir(dir);
   const summary=join(source,cell,'summary.json');

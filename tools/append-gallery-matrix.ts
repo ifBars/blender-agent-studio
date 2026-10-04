@@ -19,7 +19,7 @@ const recoveryJudging = recoveryJudgeIndex >= 0 ? resolve(process.argv[recoveryJ
 const edgeIndex = process.argv.indexOf("--preview-edge"), previewEdge = Number(edgeIndex < 0 ? 1024 : process.argv[edgeIndex + 1]);
 if (!Number.isSafeInteger(previewEdge) || previewEdge < 384 || previewEdge > 1536) throw new Error("Preview edge must be 384..1536 pixels");
 const existing = await read(arg("--existing-data")), manifest = await read(join(runs, "campaign.json"));
-const resourceGuidanceHash=sha256(await readFile(join(import.meta.dir,'benchmark-resource-guidance.md')));
+const resourceGuidanceHashes=new Set(await Promise.all(['benchmark-resource-guidance.md','benchmark-resource-guidance-v1.md'].map(async file=>sha256(await readFile(join(import.meta.dir,file))))));
 if (!existsSync(join(runs, "campaign-results.json"))) throw new Error("Wait for the complete campaign, including failed attempts");
 const recovery = recoveryRuns ? await read(join(recoveryRuns,"campaign-results.json")) : null;
 const interrupted = recovery ? await read(join(runs,"supervisor-transition.json")) : null;
@@ -59,6 +59,7 @@ for (const cell of manifest.pairs) {
   }
   if (calibrated[0] && calibrated[0].rescoreEvaluatorFingerprint !== calibrated[1].rescoreEvaluatorFingerprint) throw new Error(`Calibration evaluators differ ${key}`);
   const resourcePolicy=manifest.pairResourcePolicies?.[key]??manifest.resourcePolicy;
+  const resourceGuidanceHash=resourceGuidanceHashes.has(summaries[0].guidanceHash)&&summaries[0].guidanceHash===summaries[1].guidanceHash?summaries[0].guidanceHash:undefined;
   assertVanillaPluginConditions(summaries[0], summaries[1],resourcePolicy?.concurrency===1&&resourcePolicy?.cpuHardCapPercent===20?resourceGuidanceHash:undefined);
   const mismatches = provenanceMismatches(summaries[0], summaries[1], [cell.task]);
   for (const field of ["agentVersion", "agentCli", "scorerVersion", "evidenceSettingsVersion", "evidencePresentation"])
@@ -124,7 +125,7 @@ for (const cell of manifest.pairs) {
           await execute([blender,"--background","--factory-startup","--disable-autoexec","--python-exit-code","1","--python",resolve(import.meta.dir,"render-gallery-preview.py"),"--","--input",native,"--output",renderDir,"--views",views.join(","),"--resolution",String(previewEdge)],join(output,`${key}--${name}.render.log`));
         }
         renderReport = await maybeRead(reportPath);
-        if (renderReport?.sourceSha256 === sourceHash && renderReport.preset === "gallery-cycles-v1") {
+        if (renderReport?.sourceSha256 === sourceHash && renderReport.preset === "gallery-cycles-v2") {
           if (renderReport.resolution !== previewEdge) throw new Error("Cached character preview uses a different resolution");
           for (const view of renderReport.views) previews[view] = join(renderDir,`${view}.png`);
           preview = {...renderReport, description:`Still previews use a neutral Cycles studio at ${previewEdge} px with denoising. Pose frames retain the original review evidence.`};

@@ -46,6 +46,10 @@ and export still use CPU; thread settings alone do not impose an aggregate
 CPU limit. The repository's comparison queue supplies that additional Windows
 process-tree cap. Record a GPU initialization failure and retain the small CPU
 thread budget if a fallback is necessary.
+GPU rendering does not enable GPU denoising automatically. Prefer supported
+OpenImageDenoise GPU acceleration and explicitly enable `denoising_use_gpu`;
+otherwise use supported OptiX GPU denoising. Record the effective denoiser and
+GPU flag, preserve authored quality settings, and avoid double denoising.
 MCP Apps-compatible hosts show a compact image viewer with view selection,
 fit/100% zoom, and expandable details. Other hosts retain the inline image and
 structured result. The viewer shows completed renders, not live progress.

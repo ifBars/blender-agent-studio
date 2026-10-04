@@ -209,8 +209,8 @@ def configure_denoising(scene, requested, device):
     oidn_gpu = supports('has_oidn_gpu_devices')
     optix_gpu = supports('has_optixdenoiser_gpu_devices')
     # Repeated local still-life timings favor OIDN GPU FAST over OptiX for the
-    # bounded preview path. OptiX remains the next supported preview fallback.
-    use_optix = requested == 'preview' and not oidn_gpu and optix_gpu
+    # bounded preview path. OptiX is the supported GPU fallback for either policy.
+    use_optix = not oidn_gpu and optix_gpu
     desired_denoiser = 'OPENIMAGEDENOISE' if oidn_gpu or not use_optix else 'OPTIX'
     if not _set_cycles_value(cycles, 'denoiser', desired_denoiser):
         return {'requestedPolicy': requested, 'effectivePolicy': 'preserve',
@@ -234,7 +234,7 @@ def configure_denoising(scene, requested, device):
             'renderDenoisingEnabled': cycles.use_denoising,
             'decisionReason': ('Preview uses supported OIDN GPU denoising.' if oidn_gpu and requested == 'preview'
                                else ('Final uses supported OIDN GPU denoising.' if oidn_gpu
-                                     else ('Preview falls back to supported OptiX denoising.' if use_optix
+                                     else (f'{requested.title()} falls back to supported OptiX GPU denoising.' if use_optix
                                            else 'No supported OIDN GPU was discovered; using CPU OIDN.'))),
             'compositorDenoiseNodes': nodes}
 

@@ -39,7 +39,15 @@ if (!resume && existsSync(output)) throw new Error("Choose a fresh campaign dire
 const pairs = prior?.pairs ?? tasks.flatMap((task:string) => GALLERY_MODELS.filter(model => !existing.pairs.some((p: any) => p.task === task && p.model === model)).map(model => ({ task, model })));
 const cells = prior?.cells ?? pairs.flatMap((pair:any, index:number) => (index % 2 ? ["plugin", "vanilla"] : ["vanilla", "plugin"]).map(condition => ({ ...pair, condition })));
 const manifest = prior ?? { experiment: "vanilla_vs_plugin", startedAt: new Date().toISOString(), snapshot, fingerprint, models:GALLERY_MODELS, tasks, pairs, cells, reasoning: "medium", timeoutMinutes, codexTransport, concurrency, repetitions: 1 };
-if(prior?.resourcePolicy?.guidanceHash && prior.resourcePolicy.guidanceHash!==guidanceHash)throw new Error('Resume resource guidance changed');
+const previousGuidanceHash=prior?.resourcePolicy?.guidanceHash ?? (prior?.resourcePolicy?.guidanceFile ? sha256(await readFile(prior.resourcePolicy.guidanceFile)) : null);
+if(prior && previousGuidanceHash!==guidanceHash){
+  if(!process.argv.includes('--amend-resource-guidance')||!existsSync(join(output,'paused.json')))throw new Error('Resume resource guidance changed; finish the current pair and explicitly amend resource guidance');
+  const progress=await read(join(output,'progress.json'));
+  if(pairs.some((pair:any)=>{const count=progress.filter((r:any)=>r.task===pair.task&&r.model===pair.model).length;return count!==0&&count!==2;}))throw new Error('Resource guidance may change only between complete pairs');
+  manifest.pairResourcePolicies ??= {};
+  for(const pair of pairs)if(progress.some((r:any)=>r.task===pair.task&&r.model===pair.model))manifest.pairResourcePolicies[`${pair.task}--${pair.model}`]??={...prior.resourcePolicy,guidanceHash:previousGuidanceHash};
+  manifest.resourceAmendments=[...(manifest.resourceAmendments??[]),{at:new Date().toISOString(),previousGuidanceHash,guidanceHash,reason:'Explicit shared resource guidance amendment between complete pairs; retained original pair policies.'}];
+}
 manifest.resourcePolicy = {cpuHardCapPercent:process.platform === "win32" ? 20 : null,priority:process.platform === "win32" ? "BelowNormal" : null,concurrency,requestedBlenderThreads:2,guidanceFile,guidanceHash};
 if (prior && (resolve(prior.snapshot) !== snapshot || prior.fingerprint !== fingerprint || JSON.stringify(prior.tasks) !== JSON.stringify(tasks) || JSON.stringify(prior.models) !== JSON.stringify(GALLERY_MODELS) || prior.timeoutMinutes !== timeoutMinutes || (prior.codexTransport ?? "auto") !== codexTransport || prior.reasoning !== "medium" || prior.repetitions !== 1))
   throw new Error("Resume controls differ from the original campaign");

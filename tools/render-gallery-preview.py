@@ -10,6 +10,8 @@ from mathutils import Vector
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'plugins/blender-agent-studio/skills/blender-asset-validation/scripts'))
 import render_evidence as evidence
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'plugins/blender-agent-studio/skills/blender-rendering-workflow/scripts'))
+from render_scene import configure_denoising
 
 
 def main():
@@ -57,8 +59,7 @@ def main():
     scene.cycles.device = 'GPU'
     scene.cycles.samples = 64
     scene.cycles.use_adaptive_sampling = False
-    scene.cycles.use_denoising = True
-    scene.cycles.denoiser = 'OPENIMAGEDENOISE'
+    denoise = configure_denoising(scene, 'final', {'effective':'OPTIX'})
     scene.cycles.seed = 0
     scene.cycles.use_animated_seed = False
     scene.cycles.max_bounces = 12
@@ -78,8 +79,8 @@ def main():
         evidence.render_view(camera, view, Vector(directions[view]), center+Vector((0,0,size.z*.04)), extent, output, args.resolution, view!='perspective')
     if hashlib.sha256(source.read_bytes()).hexdigest() != source_hash:
         raise RuntimeError('Source changed while rendering')
-    manifest = {'preset':'gallery-cycles-v1','sourceSha256':source_hash,'resolution':args.resolution,'engine':'CYCLES',
-                'samples':64,'denoiser':'OPENIMAGEDENOISE','device':'OPTIX','views':views,'hiddenStagingObjects':hidden,
+    manifest = {'preset':'gallery-cycles-v2','sourceSha256':source_hash,'resolution':args.resolution,'engine':'CYCLES',
+                'samples':64,'denoiser':scene.cycles.denoiser,'denoise':denoise,'device':'OPTIX','views':views,'hiddenStagingObjects':hidden,
                 'sourceModified':False,'blenderVersion':bpy.app.version_string,
                 'purpose':'Display preview only. Historical scores and reviews refer to original evidence.'}
     (output/'preview.json').write_text(json.dumps(manifest,indent=2))
