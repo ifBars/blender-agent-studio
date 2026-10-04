@@ -3,6 +3,18 @@ export const GALLERY_TASKS = ["signal_lantern", "joinery_stool", "task_lamp_clea
 export const SCENE_CHARACTER_GALLERY_TASKS = ["decorated_reading_room", "night_market_courtyard", "coastal_cafe_holdout", "game_ranger_character", "game_scout_deformation", "game_badger_merchant_holdout"];
 type Row = { task: string; model: string; repetition?: number };
 
+/** Retain the complete historical matrix while admitting completed expansion pairs. */
+export function assertPublishedGallery(rows: Row[]): void {
+  assertCompleteGallery(rows.filter(row => GALLERY_TASKS.includes(row.task)));
+  const seen = new Set<string>();
+  for (const row of rows.filter(row => !GALLERY_TASKS.includes(row.task))) {
+    const key = `${row.task}/${row.model}`;
+    if (!SCENE_CHARACTER_GALLERY_TASKS.includes(row.task) || !GALLERY_MODELS.includes(row.model) || row.repetition !== 1 || seen.has(key))
+      throw new Error(`Invalid or duplicated expansion pair: ${key}`);
+    seen.add(key);
+  }
+}
+
 export function evidenceFrameNumbers(entries: unknown[]): number[] {
   const frames = entries.map(entry => typeof entry === "number" ? entry : (entry as { frame?: unknown } | null)?.frame);
   if (frames.some(frame => !Number.isSafeInteger(frame))) throw new Error("Invalid evidence frame number");

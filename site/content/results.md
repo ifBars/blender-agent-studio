@@ -91,7 +91,13 @@ reading room, an exportable low-poly night market and a coastal-cafe holdout;
 `game_characters` contains a static ranger, a rigged scout with deformation
 poses and a nonhuman badger-merchant holdout. Scene evidence keeps authored
 cameras and lighting, and render-only interiors do not require a GLB. These are
-runnable fixtures; new comparison results have not been generated for them.
+available fixtures. The gallery now adds ten completed scene pairs: reading
+rooms and night markets across all four current models, and coastal cafés from
+Astra and Sol. Eight pairs have valid counterbalanced reviews; two market pairs
+are unreviewed. The Claude cafés and game-character runs did not produce complete
+paired evaluator results and are excluded from the completed comparison count.
+The [October 4 publication report](https://github.com/ifBars/blender-agent-studio/blob/main/docs/scene-comparison-2026-10-04.md)
+records every added row, resource limits, scoring corrections and missing evidence.
 See the [scene and character protocol](https://github.com/ifBars/blender-agent-studio/blob/main/docs/scene-character-benchmarks.md).
 
 The courier depot benchmark asks for 21 asset families and 45 instances.

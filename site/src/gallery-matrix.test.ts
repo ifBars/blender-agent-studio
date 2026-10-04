@@ -1,5 +1,15 @@
 import { expect, test } from "bun:test";
-import { assertCompleteGallery, evidenceFrameNumbers, GALLERY_MODELS, GALLERY_TASKS, SCENE_CHARACTER_GALLERY_TASKS, selectHistoricalRows } from "../../tools/gallery-matrix";
+import { assertCompleteGallery, assertPublishedGallery, evidenceFrameNumbers, GALLERY_MODELS, GALLERY_TASKS, SCENE_CHARACTER_GALLERY_TASKS, selectHistoricalRows } from "../../tools/gallery-matrix";
+
+test('published expansion accepts completed pairs without claiming a complete new cohort', () => {
+  const rows = GALLERY_TASKS.flatMap(task => GALLERY_MODELS.map(model => ({task,model,repetition:1})));
+  rows.push({task:'signal_lantern',model:'gpt-6-sol',repetition:3});
+  const added = {task:'coastal_cafe_holdout',model:'gpt-6-astra',repetition:1};
+  expect(() => assertPublishedGallery([...rows,added])).not.toThrow();
+  expect(() => assertPublishedGallery([...rows,added,added])).toThrow('duplicated');
+  expect(() => assertPublishedGallery([...rows.slice(1),added])).toThrow('Incomplete');
+  expect(() => assertPublishedGallery([...rows,{...added,model:'unknown'}])).toThrow('Invalid');
+});
 
 test("review framing preserves sampled animation frame numbers from evidence records", () => {
   expect(evidenceFrameNumbers([{ frame: 1, path: "frame_0001.png" }, { frame: 24, path: "frame_0024.png" }, { frame: 48, path: "frame_0048.png" }])).toEqual([1, 24, 48]);

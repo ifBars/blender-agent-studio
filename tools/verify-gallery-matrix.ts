@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { createHash } from "node:crypto";
-import { assertCompleteGallery, GALLERY_TASKS } from "./gallery-matrix";
+import { assertPublishedGallery } from "./gallery-matrix";
 import { validatePreviewPaths } from "./fetch-benchmark-previews";
 
 const prefix = "benchmarks/gallery-matrix", root = resolve(import.meta.dir, "../site/public");
@@ -15,12 +15,13 @@ const get = async (path: string): Promise<Uint8Array> => {
   return new Uint8Array(await response.arrayBuffer());
 };
 const bytes = await get(`${prefix}/comparison.json`), data = JSON.parse(new TextDecoder().decode(bytes));
-assertCompleteGallery(data.pairs, [...new Set<string>(data.pairs.map((pair: any) => pair.task))].filter(task => !GALLERY_TASKS.includes(task)));
+assertPublishedGallery(data.pairs);
 if (data.schemaVersion !== 2 || data.experiment !== "vanilla_vs_plugin") throw new Error("Wrong experiment");
 if (published && hash(bytes) !== hash(await readFile(join(root, prefix, "comparison.json")))) throw new Error("Published dataset differs");
 const jobs = new Map<string,{ path: string; expected: string; dimensions: number[] }>();
 for (const pair of data.pairs) {
-  if (pair.vanilla.executionMode !== "baseline" || pair.plugin.executionMode !== "skills" || pair.vanilla.skillFingerprint || !pair.plugin.skillFingerprint || pair.vanilla.guidanceHash || pair.plugin.guidanceHash)
+  const shared = pair.resourcePolicy?.concurrency === 1 && pair.resourcePolicy?.cpuHardCapPercent === 20 ? pair.sharedResourceGuidanceHash : undefined;
+  if (pair.vanilla.executionMode !== "baseline" || pair.plugin.executionMode !== "skills" || pair.vanilla.skillFingerprint || !pair.plugin.skillFingerprint || (pair.vanilla.guidanceHash && pair.vanilla.guidanceHash !== shared) || (pair.plugin.guidanceHash && pair.plugin.guidanceHash !== shared))
     throw new Error(`Invalid conditions: ${pair.id}`);
   if (pair.votes.baseline + pair.votes.candidate + pair.votes.tie !== pair.judgeCount) throw new Error(`Incomplete votes: ${pair.id}`);
   for (const condition of [pair.vanilla, pair.plugin]) for (const [images, hashes, dimensions, fallback] of [[condition.images, condition.imageHashes, condition.imageDimensions ?? {}, 1536], [condition.originalImages, condition.originalImageHashes, condition.originalImageDimensions ?? {}, 384], [condition.rawImages ?? {}, condition.rawImageHashes ?? {}, condition.rawImageDimensions ?? {}, 384]] as const)

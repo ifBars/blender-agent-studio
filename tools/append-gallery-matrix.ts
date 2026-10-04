@@ -4,7 +4,7 @@ import { basename, dirname, join, resolve } from "node:path";
 import { sha256, provenanceMismatches } from "../plugins/blender-agent-studio/skills/blender-agent-benchmark/scripts/provenance";
 import { BENCHMARK_TASKS } from "../plugins/blender-agent-studio/skills/blender-agent-benchmark/scripts/tasks";
 import { assertVanillaPluginConditions } from "./comparison-contract";
-import { assertCompleteGallery, GALLERY_MODELS, GALLERY_TASKS } from "./gallery-matrix";
+import { assertCompleteGallery, assertPublishedGallery, GALLERY_MODELS, GALLERY_TASKS } from "./gallery-matrix";
 import { validateGalleryReview } from "./gallery-review";
 import {SCORER_VERSION} from '../plugins/blender-agent-studio/skills/blender-agent-benchmark/scripts/score';
 
@@ -19,6 +19,8 @@ const recoveryJudging = recoveryJudgeIndex >= 0 ? resolve(process.argv[recoveryJ
 const edgeIndex = process.argv.indexOf("--preview-edge"), previewEdge = Number(edgeIndex < 0 ? 1024 : process.argv[edgeIndex + 1]);
 if (!Number.isSafeInteger(previewEdge) || previewEdge < 384 || previewEdge > 1536) throw new Error("Preview edge must be 384..1536 pixels");
 const existing = await read(arg("--existing-data")), manifest = await read(join(runs, "campaign.json"));
+const completedOnly = process.argv.includes('--completed-only');
+const originalPreviews = process.argv.includes('--original-previews');
 const resourceGuidanceHashes=new Set(await Promise.all(['benchmark-resource-guidance.md','benchmark-resource-guidance-v1.md'].map(async file=>sha256(await readFile(join(import.meta.dir,file))))));
 if (!existsSync(join(runs, "campaign-results.json"))) throw new Error("Wait for the complete campaign, including failed attempts");
 const recovery = recoveryRuns ? await read(join(recoveryRuns,"campaign-results.json")) : null;
@@ -46,6 +48,9 @@ const cameraName = (name: string) => ({SceneHero:"hero", SceneReverse:"reverse",
 const png = async (path: string) => { const bytes = await readFile(path); if (!bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10]))) throw new Error(`Invalid PNG ${path}`); return bytes; };
 for (const cell of manifest.pairs) {
   const key = `${cell.task}--${cell.model}`, id = `${key}--r01`;
+  if (completedOnly && ['vanilla','plugin'].some(name => !existsSync(join(runs, `${key}--${name}/summary.json`)))) {
+    console.log(`UNAVAILABLE ${key}: no completed evaluator pair`); continue;
+  }
   if (pairs.some((pair: any) => pair.task === cell.task && pair.model === cell.model)) throw new Error(`Duplicate pair ${key}`);
   const recovered = recovery?.pairs.some((pair:any) => pair.task === cell.task && pair.model === cell.model);
   if (recovered && ["vanilla","plugin"].some(name => existsSync(join(runs,`${key}--${name}/summary.json`)) || !interrupted.interrupted.includes(join(runs,`${key}--${name}`)))) throw new Error("Only explicitly interrupted, unscored attempts may receive a fresh replacement");
@@ -102,7 +107,8 @@ for (const cell of manifest.pairs) {
     const native = join(workdir,"asset.blend"), sourceHash = existsSync(native) ? sha256(await readFile(native)) : null;
     const previews: Record<string,string> = {}, renderDir = join(output,"renders",id,name);
     let preview: any = {description:"Original evidence is shown because this attempt has no complete preview.", hiddenStagingObjects:[]};
-    if (sourceHash && evidence) {
+    if (originalPreviews) preview = {description:'Original camera evidence is shown at its recorded resolution; no additional preview render was performed.', hiddenStagingObjects:[]};
+    if (sourceHash && evidence && !originalPreviews) {
       await mkdir(dirname(renderDir), {recursive:true});
       let renderReport: any;
       if (task.authoredCameras) {
@@ -174,7 +180,8 @@ for (const cell of manifest.pairs) {
   pair.note = judges.length ? judges.map((judge:any,index:number) => `Review ${index+1}: ` + judge.result.rationale.replace(/(?<![\w-])[AB](?![\w-])/g,(side:"A"|"B")=>judge.mapping[side]==="vanilla"?"the no-plugin result":"the plugin result")).join(" ") : "Complete paired visual evidence or valid blinded reviews were unavailable. This attempt remains in the matrix; no winner is assigned.";
   pairs.push(pair); console.log(`READY ${key}`);
 }
-assertCompleteGallery(pairs, [...new Set<string>(pairs.map((pair: any) => pair.task))].filter(task => !GALLERY_TASKS.includes(task)));
+if (completedOnly) assertPublishedGallery(pairs);
+else assertCompleteGallery(pairs, [...new Set<string>(pairs.map((pair: any) => pair.task))].filter(task => !GALLERY_TASKS.includes(task)));
 const data = {...existing, generatedAt:new Date().toISOString(), pairs, framing:"Preview resolution and evidence presentation vary by task; exact dimensions are shown in the viewer.", limitation:"Separate historical cohorts; one paired generation per task/model except the explicitly curated historical lantern. No aggregate capability claim."};
 await writeFile(join(publicRoot,prefix,"comparison.json"),JSON.stringify(data,null,2));
 console.log(`COMPLETE ${pairs.length} pairs across ${GALLERY_MODELS.length} current models`);
