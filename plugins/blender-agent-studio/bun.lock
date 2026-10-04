@@ -7,7 +7,7 @@
       "dependencies": {
         "@modelcontextprotocol/client": "2.1.0",
         "@modelcontextprotocol/ext-apps": "2.0.0",
-        "@modelcontextprotocol/server": "2.1.0",
+        "@modelcontextprotocol/server": "2.2.0",
         "zod": "4.6.5",
       },
     },
@@ -19,7 +19,7 @@
 
     "@modelcontextprotocol/ext-apps": ["@modelcontextprotocol/ext-apps@2.0.0", "", { "dependencies": { "@standard-schema/spec": "^1.1.0" }, "peerDependencies": { "@modelcontextprotocol/client": "^2.0.0", "@modelcontextprotocol/core": "^2.0.0", "@modelcontextprotocol/server": "^2.0.0", "react": "^17.0.0 || ^18.0.0 || ^19.0.0", "react-dom": "^17.0.0 || ^18.0.0 || ^19.0.0", "zod": "^4.2.0" }, "optionalPeers": ["@modelcontextprotocol/server", "react", "react-dom"] }, "sha512-a6tXzFcIbIIdnqumQ7W8Oxd8W/KAPkAKYpoxpD9nDgxZ24ywgxG5pK/8G9W5pOFUygS7gWHQhPv8cwRB44/8yg=="],
 
-    "@modelcontextprotocol/server": ["@modelcontextprotocol/server@2.1.0", "", { "dependencies": { "@modelcontextprotocol/core": "2.1.0", "zod": "^4.2.0" } }, "sha512-FdvwZU5N03O77Suh35JqjAqq5R1ZTEPFtwu6N4BgBq28qrQtrCnpbLL5U2pwYCuE194jAw0xnlOVmIqhfoYuUQ=="],
+    "@modelcontextprotocol/server": ["@modelcontextprotocol/server@2.2.0", "", { "dependencies": { "@modelcontextprotocol/core": "2.2.0", "zod": "^4.2.0" } }, "sha512-qFnltjus6Gk8Lx6J1w2RXmr3YPN22MNT6qD6zjAkaiWIlFIFxWClz0rXHNuJF/KSUyn5YGhkSvXkWDbQHVLFEQ=="],
 
     "@standard-schema/spec": ["@standard-schema/spec@1.1.0", "", {}, "sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w=="],
 
@@ -44,5 +44,7 @@
     "which": ["which@2.0.2", "", { "dependencies": { "isexe": "^2.0.0" }, "bin": { "node-which": "./bin/node-which" } }, "sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA=="],
 
     "zod": ["zod@4.6.5", "", {}, "sha512-v5l/aFXZQeai4awLbOpSoHecE9UiMrnfx75tEXLjNonXVARxQ5mOeipTjROUchszUNCqnE+hqAMujRsRHsut2Q=="],
+
+    "@modelcontextprotocol/server/@modelcontextprotocol/core": ["@modelcontextprotocol/core@2.2.0", "", { "dependencies": { "zod": "^4.2.0" } }, "sha512-iLhmprRmWI8EcosOA3wVvww22z02NkgqhV4fBH6f/odQBsi7xnJc0HGmi21yWO+/iKw2yzqVE127Zhna5/+JXw=="],
   }
 }
