@@ -13,7 +13,7 @@
     "benchmark:vrchat-hair": "bun skills/blender-agent-benchmark/scripts/run_vrchat_hair_benchmark.ts"
   },
   "dependencies": {
-    "@modelcontextprotocol/ext-apps": "2.0.0",
+    "@modelcontextprotocol/ext-apps": "2.0.3",
     "@modelcontextprotocol/client": "2.1.0",
     "@modelcontextprotocol/server": "2.1.0",
     "zod": "4.6.5"
