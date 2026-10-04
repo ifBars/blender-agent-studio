@@ -49,7 +49,7 @@ function parseOptions(): Options {
   const modeInput = argument("--mode") ?? "baseline";
   const mode = (modeInput === "plugin" ? "skills" : modeInput) as Mode;
   const output = argument("--output");
-  if (!["smoke", "quick", "full", "challenge", "gauntlet", "quality", "reference", "spatial", "whole_scene"].includes(suite)) {
+  if (!["smoke", "quick", "full", "challenge", "gauntlet", "quality", "reference", "spatial", "whole_scene", "scenes", "game_characters"].includes(suite)) {
     throw new Error(`Unsupported suite: ${suite}`);
   }
   if (!["baseline", "skills", "skills_mcp"].includes(mode)) {
@@ -313,6 +313,24 @@ async function renderEvidence(options: {
   );
 }
 
+export async function renderAuthoredEvidence(options: {
+  assetPath: string; outputDir: string; cameras: string[]; blenderPath: string; preview?: boolean;
+}): Promise<{passed: boolean; missingDependencies: unknown[]}> {
+  if (!existsSync(options.assetPath)) return {passed: false, missingDependencies: []};
+  const process = await runBlender({blenderPath: options.blenderPath,
+    scriptPath: resolve(import.meta.dir, "../../blender-rendering-workflow/scripts/render_authored_evidence.py"),
+    scriptArgs: ["--input", options.assetPath, "--output-dir", options.outputDir,
+      "--max-edge", options.preview ? "128" : "512", "--samples", options.preview ? "1" : "16", "--time-limit", "30",
+      ...options.cameras.flatMap(camera => [`--camera=${camera}`])], timeoutMs: 300000});
+  await mkdir(options.outputDir, {recursive:true});
+  await writeFile(join(options.outputDir, "render-process.json"), JSON.stringify(process, null, 2));
+  if (process.exitCode !== 0 || process.timedOut) return {passed:false, missingDependencies:[]};
+  const report = await readJsonFile(join(options.outputDir, "render-manifest.json")) as any;
+  const missingDependencies = report.preflight?.missingDependencies ?? [];
+  return {passed: report.status === 'complete' && report.renders?.length === options.cameras.length &&
+    report.renders.every((render:any) => existsSync(render.path)) && missingDependencies.length === 0, missingDependencies};
+}
+
 export async function inspectMotion(assetPath: string, output: string, task: BenchmarkTask, blenderPath: string) {
   if (!task.motionRequirement || !existsSync(assetPath)) return null;
   const requirement = task.motionRequirement;
@@ -420,6 +438,7 @@ async function verifyReproduction(options: {
   workdir: string;
   blenderPath: string;
   referencePaths?: string[];
+  task?: BenchmarkTask;
 }): Promise<{
   passed: boolean;
   directory: string | null;
@@ -458,16 +477,20 @@ async function verifyReproduction(options: {
     join(reproductionDir, "metrics-blend.json"),
     options.blenderPath,
   );
-  const glbMetrics = await inspectAsset(
+  const glbMetrics = options.task?.renderOnly ? null : await inspectAsset(
     glbPath,
     join(reproductionDir, "metrics-glb.json"),
     options.blenderPath,
   );
+  const sceneEvidence = options.task?.authoredCameras
+    ? await renderAuthoredEvidence({assetPath:blendPath, outputDir:join(reproductionDir,'authored-evidence'),
+      cameras:options.task.authoredCameras, blenderPath:options.blenderPath, preview:true}) : null;
   return {
     passed:
       process.exitCode === 0 &&
       Boolean((blendMetrics as { hard_gate_pass?: boolean } | null)?.hard_gate_pass) &&
-      Boolean((glbMetrics as { hard_gate_pass?: boolean } | null)?.hard_gate_pass),
+      (options.task?.renderOnly || Boolean((glbMetrics as { hard_gate_pass?: boolean } | null)?.hard_gate_pass)) &&
+      (!options.task?.authoredCameras || Boolean(sceneEvidence?.passed)),
     directory: reproductionDir,
     process,
     blendMetrics,
@@ -537,7 +560,7 @@ async function main(): Promise<void> {
     motionEvidenceVersion: 1,
     inspectorSchemaVersion: 3,
     evidenceSettingsVersion: 2,
-    evidencePresentation: "neutral",
+    evidencePresentation: selected.some(task=>task.authoredCameras) ? "authored_per_task" : "neutral",
     startedAt: new Date().toISOString(),
     mode: options.conditionLabel,
     executionMode: options.mode,
@@ -649,12 +672,16 @@ async function main(): Promise<void> {
         blendMetricsPath,
         options.blenderPath,
       );
-      const glbMetrics = await inspectAsset(
+      const glbMetrics = task.renderOnly ? null : await inspectAsset(
         glbPath,
         glbMetricsPath,
         options.blenderPath,
       );
-      await renderEvidence({
+      const authoredRenderEvidence = task.authoredCameras ? await renderAuthoredEvidence({
+        assetPath: blendPath, outputDir: join(workdir,"evidence"), cameras:task.authoredCameras,
+        blenderPath:options.blenderPath,
+      }) : null;
+      if (!task.authoredCameras) await renderEvidence({
         assetPath: blendPath,
         outputDir: join(workdir, "evidence"),
         frames: task.animationFrames,
@@ -666,6 +693,7 @@ async function main(): Promise<void> {
         workdir,
         blenderPath: options.blenderPath,
         referencePaths: referenceImages[task.id],
+        task,
       });
 
       const motionEvidence = await inspectMotion(blendPath, join(workdir, "motion-blend.json"), task, options.blenderPath);
@@ -686,10 +714,12 @@ async function main(): Promise<void> {
         motionEvidence,
         exportedMotionEvidence,
         gameSceneEvidence,
+        authoredRenderEvidence,
         blendMetrics: blendMetrics as never,
         glbMetrics: glbMetrics as never,
       });
       const result = {
+        authoredRenderEvidence,
         gameSceneEvidence,
         artifactHashes: Object.fromEntries(await Promise.all([sourcePath, blendPath, glbPath, ...(task.wholeScene ? [join(workdir, "scene_manifest.json")] : [])].filter(existsSync).map(async path => [basename(path), sha256(await readFile(path))]))),
         taskId: task.id,

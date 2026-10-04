@@ -43,6 +43,7 @@ describe("Blender Agent Studio MCP", () => {
         "blender_prepare_pixabay_sound_search",
         "blender_quality_report",
         "blender_render_evidence",
+        "blender_render_modeling_timelapse",
         "blender_render_scene",
         "blender_search_polyhaven_assets",
         "blender_version",

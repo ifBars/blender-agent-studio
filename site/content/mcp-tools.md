@@ -27,6 +27,15 @@ whole-asset review. The six default views remain unchanged.
 | Tool | What it does |
 | --- | --- |
 | `blender_render_scene` | Checks or renders a scene through its own cameras and lighting. |
+| `blender_render_modeling_timelapse` | Renders real recorded build stages into a fixed-camera MP4 and labeled PNGs. Requires opt-in capture before modeling and FFmpeg. |
+
+For a timelapse, ask the agent before it starts: “Build this scene and include
+a modeling timelapse from the empty/default scene to the completed render.”
+The recorder saves actual build checkpoints. After completion, the tool uses
+the final camera throughout, borrowing final lights/world for early previews.
+It delivers a local MP4, labeled stills and a manifest with hashes. This shows
+milestones, not every UI operation. Ordinary jobs keep recording disabled.
+See the [capture guide](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-rendering-workflow/references/modeling-timelapse.md).
 
 ## Compare with a reference
 

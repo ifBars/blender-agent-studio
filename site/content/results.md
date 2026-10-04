@@ -86,6 +86,14 @@ The [full evidence](https://github.com/ifBars/blender-agent-studio/blob/main/doc
 
 ## Whole-scene benchmark
 
+Two additional opt-in suites expand coverage: `scenes` contains a decorated
+reading room, an exportable low-poly night market and a coastal-cafe holdout;
+`game_characters` contains a static ranger, a rigged scout with deformation
+poses and a nonhuman badger-merchant holdout. Scene evidence keeps authored
+cameras and lighting, and render-only interiors do not require a GLB. These are
+runnable fixtures; new comparison results have not been generated for them.
+See the [scene and character protocol](https://github.com/ifBars/blender-agent-studio/blob/main/docs/scene-character-benchmarks.md).
+
 The courier depot benchmark asks for 21 asset families and 45 instances.
 It checks each asset's construction and placement, then the assembled scene.
 The suite is implemented and calibrated; model runs are still pending.

@@ -11,6 +11,17 @@ for autonomous decisions, evidence cadence, and long-task continuity.
 Treat a render as a reproducible deliverable, not a screenshot that happened to
 look acceptable once.
 
+For a requested modeling/build timelapse, follow
+[checkpoint capture and video delivery](references/modeling-timelapse.md).
+Start recording the actual empty/default scene before modeling, capture real
+milestones, then render/encode after completion. This is optional and disabled
+unless requested. A final scene alone cannot recover its modeling history.
+
+For full-scene decoration, also read the modeling workflow's
+[complete scene workflow](../blender-modeling-workflow/references/whole-scene-workflow.md).
+Keep authored-camera composition and material review separate from standardized
+geometry evidence. Fix weak forms and secondary areas before presentation polish.
+
 For architecture, daylight shafts or fabric-heavy scenes, read
 [interiors and atmosphere](references/interiors-and-atmosphere.md).
 For photorealistic materials or environment lighting, use

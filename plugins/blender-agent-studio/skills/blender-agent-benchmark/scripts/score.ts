@@ -1,13 +1,14 @@
 import type { BenchmarkTask } from "./tasks.ts";
 import { assessMotionEvidence } from "./motion-evidence.ts";
 
-export const SCORER_VERSION = 6;
+export const SCORER_VERSION = 7;
 
 type AssetMetrics = {
   hard_gate_pass?: boolean;
   materials?: string[];
   meshes?: Array<{
     name?: string;
+    material_slots?: Array<string | null>;
     uv_layers?: number;
     smooth_polygons?: number;
     flat_polygons?: number;
@@ -90,6 +91,7 @@ export function scoreSubmission(options: {
   motionEvidence?: unknown;
   exportedMotionEvidence?: unknown;
   gameSceneEvidence?: { technicalPass: boolean; errors: string[] } | null;
+  authoredRenderEvidence?: {passed: boolean; missingDependencies: unknown[]} | null;
   blendMetrics: AssetMetrics | null;
   glbMetrics: AssetMetrics | null;
 }): AutomatedScore {
@@ -119,19 +121,18 @@ export function scoreSubmission(options: {
   );
   add("source_exists", options.sourceExists, 3, "create_asset.py");
   add("blend_exists", options.blendExists, 4, "asset.blend");
-  add("glb_exists", options.glbExists, 4, "asset.glb");
+  if (task.renderOnly) add("authored_render_complete", options.authoredRenderEvidence?.passed === true, 4,
+    "All required authored-camera images rendered with dependencies present");
+  else add("glb_exists", options.glbExists, 4, "asset.glb");
   add(
     "blend_inspects",
     Boolean(blendMetrics?.hard_gate_pass),
     2.5,
     "Native .blend inspection",
   );
-  add(
-    "glb_reimports",
-    Boolean(glbMetrics?.hard_gate_pass),
-    2.5,
-    "Fresh GLB import inspection",
-  );
+  if (task.renderOnly) add("authored_render_dependencies", options.authoredRenderEvidence?.passed === true &&
+    options.authoredRenderEvidence.missingDependencies.length === 0, 2.5, "Authored render has no missing image/library dependencies");
+  else add("glb_reimports", Boolean(glbMetrics?.hard_gate_pass), 2.5, "Fresh GLB import inspection");
 
   const semanticNames = (blendMetrics?.objects ?? [])
     .map((object) => object.name ?? "")
@@ -215,6 +216,16 @@ export function scoreSubmission(options: {
   );
 
   const materials = blendMetrics?.totals?.materials ?? 0;
+  if (task.rubric.maximumMaterials !== undefined) {
+    const assignedMaterialCount = (metrics: AssetMetrics | null) =>
+      metrics?.meshes?.length && metrics.meshes.every(mesh=>Array.isArray(mesh.material_slots))
+        ? new Set(metrics.meshes.flatMap(mesh=>mesh.material_slots!).filter(Boolean)).size
+        : metrics?.totals?.materials ?? Infinity;
+    const nativeCount = assignedMaterialCount(blendMetrics);
+    const exportCount = task.renderOnly ? 0 : assignedMaterialCount(glbMetrics);
+    add('material_budget', Math.max(nativeCount,exportCount) <= task.rubric.maximumMaterials, 0,
+      `${nativeCount} native and ${exportCount} exported assigned materials; limit ${task.rubric.maximumMaterials}`);
+  }
   const materialRatio = Math.min(1, materials / task.rubric.minimumMaterials);
   add(
     "material_count",
@@ -224,12 +235,13 @@ export function scoreSubmission(options: {
     materialRatio * 5,
   );
   const glbMaterials = glbMetrics?.totals?.materials ?? 0;
-  add(
+  if (!task.renderOnly) add(
     "glb_materials",
     glbMaterials >= Math.min(materials, task.rubric.minimumMaterials),
     3,
     `${glbMaterials} materials survived GLB import`,
   );
+  else add("render_materials", materials >= task.rubric.minimumMaterials, 3, "Native scene material coverage; visual appearance remains unreviewed");
 
   const uvMappedMeshes = blendMetrics?.totals?.uv_mapped_meshes ?? 0;
   const uvRatio = meshObjects ? uvMappedMeshes / meshObjects : 0;
@@ -400,8 +412,8 @@ export function scoreSubmission(options: {
     options.reproductionPass,
     task.requireIterationReview ? 9 : 11,
     options.reproductionPass
-      ? "Source reproduced inspectable .blend and .glb outputs in a clean directory"
-      : "Clean-directory source reproduction did not produce both inspectable outputs",
+      ? (task.renderOnly ? "Source reproduced an inspectable .blend and usable authored renders in a clean directory" : "Source reproduced inspectable .blend and .glb outputs in a clean directory")
+      : "Clean-directory source reproduction did not produce the required usable outputs",
   );
 
   const executionAndExport = checks
@@ -413,6 +425,8 @@ export function scoreSubmission(options: {
         "glb_exists",
         "blend_inspects",
         "glb_reimports",
+        "authored_render_complete",
+        "authored_render_dependencies",
       ].includes(check.id),
     )
     .reduce((sum, check) => sum + check.earned, 0);
@@ -432,7 +446,7 @@ export function scoreSubmission(options: {
     )
     .reduce((sum, check) => sum + check.earned, 0);
   const materialsAndPresentation = checks
-    .filter((check) => ["material_count", "glb_materials"].includes(check.id))
+    .filter((check) => ["material_count", "glb_materials", "render_materials"].includes(check.id))
     .reduce((sum, check) => sum + check.earned, 0);
   const finishQuality = checks
     .filter((check) =>
@@ -463,14 +477,16 @@ export function scoreSubmission(options: {
   if (task.wholeScene) add("whole_scene_technical_contract", options.gameSceneEvidence?.technicalPass === true, 0,
     options.gameSceneEvidence?.technicalPass ? "Per-instance and scene checks passed; visual quality remains unreviewed"
       : options.gameSceneEvidence?.errors.join("; ") || "Whole-scene evaluation evidence missing");
+  if (task.authoredCameras) add("authored_camera_evidence", options.authoredRenderEvidence?.passed === true, 0,
+    "All contracted scene cameras must render with available dependencies; this does not certify composition or finish");
 
   const hardGatePass =
     options.agentExitCode === 0 &&
     options.sourceExists &&
     options.blendExists &&
-    options.glbExists &&
+    (task.renderOnly || options.glbExists) &&
     Boolean(blendMetrics?.hard_gate_pass) &&
-    Boolean(glbMetrics?.hard_gate_pass) &&
+    (task.renderOnly || Boolean(glbMetrics?.hard_gate_pass)) &&
     checks
       .filter((check) =>
         [
@@ -487,6 +503,10 @@ export function scoreSubmission(options: {
           "observed_motion",
           "exported_motion",
           "whole_scene_technical_contract",
+          "authored_render_complete",
+          "authored_render_dependencies",
+          "authored_camera_evidence",
+          "material_budget",
         ].includes(check.id),
       )
       .every((check) => check.passed);

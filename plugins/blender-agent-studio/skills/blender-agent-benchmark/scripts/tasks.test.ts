@@ -2,6 +2,19 @@ import { describe, expect, test } from "bun:test";
 import { BENCHMARK_TASKS } from "./tasks.ts";
 
 describe("benchmark task coverage", () => {
+  test("adds complete scenes and static/rigged game characters with independent holdouts", () => {
+    const scenes = BENCHMARK_TASKS.filter(t=>t.suites.includes('scenes'));
+    const characters = BENCHMARK_TASKS.filter(t=>t.suites.includes('game_characters'));
+    expect(scenes).toHaveLength(3);
+    expect(characters).toHaveLength(3);
+    expect(scenes.filter(t=>t.renderOnly)).toHaveLength(2);
+    expect(scenes.every(t=>t.authoredCameras?.length === 3 && t.visualCriteria.length >= 6)).toBe(true);
+    expect(characters.filter(t=>t.motionRequirement?.inspectExport)).toHaveLength(1);
+    expect(characters.filter(t=>!t.rubric.requireAnimation)).toHaveLength(2);
+    expect([...scenes,...characters].every(t=>t.suites.length===1 && !t.suites.includes('full'))).toBe(true);
+    expect(scenes.some(t=>t.id.endsWith('holdout'))).toBe(true);
+    expect(characters.some(t=>t.id.endsWith('holdout'))).toBe(true);
+  });
   test("separates quality and reference suites from historical tasks", () => {
     const quality=BENCHMARK_TASKS.filter(task=>task.suites.includes("quality"));
     expect(quality).toHaveLength(5);

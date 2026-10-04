@@ -25,6 +25,9 @@ them as Claude Code evidence.
 7. Evaluate outputs after generation. Do not leak hidden rubric details to the agent.
 
 Read [references/methodology.md](references/methodology.md) before changing fixtures, scoring, or comparison claims.
+The opt-in `scenes` and `game_characters` suites add three tasks each, including
+independent holdouts. Read [scene and character protocol](references/scene-character-suites.md)
+for authored-camera evidence, render-only delivery and deformation checks.
 Read [references/open-source-benchmark-landscape.md](references/open-source-benchmark-landscape.md)
 when designing new suites or borrowing evaluation ideas from other Blender
 benchmarks.

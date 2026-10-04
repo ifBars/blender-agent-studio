@@ -16,6 +16,16 @@ Require GLB and fresh-import gates when a downstream asset/export is part of the
 contract. Do not imply that procedural shaders, atmospheric volumes or Cycles
 lighting survive a GLB export unchanged.
 
+For full environments, interiors or decoration, read
+[complete scene composition and decoration](references/whole-scene-workflow.md).
+Resolve composition, functional zones and representative asset quality before
+replication. Review scene finish in authored lighting, including reverse and
+secondary areas, and use the intended export/render contract.
+
+When the user requests a modeling timelapse, enable the rendering workflow's
+[actual build checkpoint capture](../blender-rendering-workflow/references/modeling-timelapse.md)
+before the first modeling operation. Keep capture disabled for ordinary jobs.
+
 ## Establish the contract
 
 1. Resolve the exact Blender executable and record `blender --version`.

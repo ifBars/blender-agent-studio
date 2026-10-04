@@ -1,6 +1,7 @@
 import { WHOLE_SCENE_TASK } from "./scene-tasks.ts";
 import { SPATIAL_TASKS } from "./spatial-tasks.ts";
 import { QUALITY_TASKS } from "./quality-tasks.ts";
+import { SCENE_AND_CHARACTER_TASKS } from "./scene-character-tasks.ts";
 import type { MotionRequirement } from "./motion-evidence.ts";
 
 export type VisualCriterion = {
@@ -60,7 +61,9 @@ export type BenchmarkTask = {
     | "deformation"
     | "simulation"
   >;
-  suites: Array<"smoke" | "quick" | "full" | "challenge" | "gauntlet" | "quality" | "reference" | "spatial" | "whole_scene">;
+  suites: Array<"smoke" | "quick" | "full" | "challenge" | "gauntlet" | "quality" | "reference" | "spatial" | "whole_scene" | "scenes" | "game_characters">;
+  renderOnly?: boolean;
+  authoredCameras?: string[];
   wholeScene?: boolean;
   referenceFiles?: string[];
   motionRequirement?: MotionRequirement;
@@ -80,6 +83,7 @@ export type BenchmarkTask = {
     requiredNameGroups: string[][];
     minimumMeshObjects: number;
     minimumMaterials: number;
+    maximumMaterials?: number;
     triangleRange: [number, number];
     maximumExtent: number;
     requireAnimation: boolean;
@@ -914,4 +918,5 @@ Do not ask follow-up questions. Produce a complete first candidate, run a separa
   ...QUALITY_TASKS,
   ...SPATIAL_TASKS,
   WHOLE_SCENE_TASK,
+  ...SCENE_AND_CHARACTER_TASKS,
 ];

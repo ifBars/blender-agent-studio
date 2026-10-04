@@ -46,6 +46,23 @@ function completeMetrics() {
 }
 
 describe("scoreSubmission", () => {
+  test("render-only scenes require actual authored renders while historical exports remain required", () => {
+    const task = {...lantern, renderOnly:true, authoredCameras:['Hero']};
+    const options = {task,agentExitCode:0,sourceExists:true,reproductionPass:true,blendExists:true,glbExists:false,
+      blendMetrics:completeMetrics(),glbMetrics:null};
+    expect(scoreSubmission(options).hardGatePass).toBe(false);
+    const valid = {...options,authoredRenderEvidence:{passed:true,missingDependencies:[]}};
+    expect(scoreSubmission(valid).hardGatePass).toBe(true);
+    expect(scoreSubmission(valid).score).toBe(100);
+    expect(scoreSubmission({...valid,authoredRenderEvidence:{passed:false,missingDependencies:['missing texture']}}).hardGatePass).toBe(false);
+    expect(scoreSubmission({...valid,task:lantern}).hardGatePass).toBe(false);
+    expect(scoreSubmission({...valid,task:{...task,rubric:{...task.rubric,maximumMaterials:3}}}).hardGatePass).toBe(false);
+    const withUnused = completeMetrics();
+    withUnused.totals.materials = 100;
+    withUnused.meshes = [{name:'body',material_slots:['Wood','Metal','Linen','Glass']}];
+    const budgeted = scoreSubmission({...valid,blendMetrics:withUnused,task:{...task,rubric:{...task.rubric,maximumMaterials:4}}});
+    expect(budgeted.checks.find(check=>check.id==='material_budget')?.passed).toBe(true);
+  });
   test("awards a complete structurally valid submission", () => {
     const score = scoreSubmission({
       task: lantern,

@@ -31,6 +31,14 @@ Inspect continuous garment/joint surfaces, fitted accessories and skin-texture
 consistency in neutral and moving poses. These are visual acceptance criteria;
 passing rig/export metrics alone does not satisfy them.
 
+For game characters, resolve silhouette, face identity and fitted garment
+surfaces before accessory detail. Inspect hands, boots, back and profile at
+the intended gameplay distance; adding seams to box-like anatomy does not
+finish it. For a rigged brief, test bend, reach and twist while forms are still
+editable, then repeat affected poses after clothing/accessory changes. Reserve
+time for this review and fresh-export deformation rather than spending the
+whole budget on a neutral hero pose. Static briefs need no invented rig.
+
 ## Build and rig deliberately
 
 For static character requests, build and review the form without inventing a

@@ -12,6 +12,7 @@ installation, and inspect the result before delivery.
 ## What you can do
 
 - Build props, environments, characters, and Geometry Nodes setups.
+- Optionally record real modeling milestones and deliver a timelapse from the empty/default scene to the completed render. Ask before modeling starts; [capture guide](plugins/blender-agent-studio/skills/blender-rendering-workflow/references/modeling-timelapse.md).
 - Gather references from several angles and compare the model's proportions before adding detail.
 - Overlay projected geometry on a reference image, with optional silhouette-mask measurements for missing and excess coverage. See [reference modeling](docs/reference-modeling.md).
 - Rig and animate models, or work with cloth, smoke, and other simulations.

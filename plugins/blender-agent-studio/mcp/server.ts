@@ -10,6 +10,7 @@ import { compareAssets, describeAsset } from "../scripts/scene-analysis.ts";
 import { createPolyHavenClient } from "../skills/blender-rendering-workflow/scripts/poly-haven.ts";
 import { prepareMixamoSearch } from "../scripts/mixamo.ts";
 import { preparePixabaySoundSearch } from "../scripts/pixabay.ts";
+import { renderModelingTimelapse } from "../scripts/modeling-timelapse.ts";
 import {
   readJsonFile,
   resolveBlenderExecutable,
@@ -32,6 +33,29 @@ const server = new McpServer({
 });
 
 registerViewer(server);
+
+server.registerTool("blender_render_modeling_timelapse", {
+  _meta: viewerToolMeta,
+  title: "Render modeling progress timelapse",
+  description: "Render 3..64 real build checkpoints from ModelingTimelapse capture.json into a locked-camera MP4 and labeled still manifest. Opt-in capture must begin before modeling. Earlier scenes borrow final camera/light/world data; final geometry is never reconstructed backwards. Requires FFmpeg. Source checkpoints are unchanged; output directory must be new.",
+  inputSchema: z.object({
+    manifestPath: z.string(), outputDir: z.string(), blenderPath: z.string().optional(),
+    maxEdge: z.number().int().min(128).max(1920).default(720),
+    samples: z.number().int().min(1).max(128).default(16),
+    secondsPerStep: z.number().min(0.25).max(5).default(1),
+    fps: z.union([z.literal(24), z.literal(30), z.literal(60)]).default(24),
+    timeoutMs: z.number().int().min(1000).max(1800000).default(600000),
+  }),
+}, async (options) => {
+  try {
+    const report = await renderModelingTimelapse(options);
+    const gallery = await makeGallery("Modeling progress", options.outputDir,
+      report.checkpoints.map((step:any)=>({path:step.path,label:step.label})),
+      [["Video",report.videoPath], ["Duration",`${report.durationSeconds}s`], ["Capture","Actual build checkpoints"]]);
+    return {...result(report), _meta:galleryMeta(gallery)};
+  }
+  catch (error) { return errorResult(error); }
+});
 
 server.registerTool("blender_prepare_mixamo_search", {
   title: "Prepare Mixamo browser search",

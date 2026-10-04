@@ -52,6 +52,8 @@ async function main(): Promise<void> {
     const reproductionGlb = (await optionalJson(
       join(reproductionDir, "metrics-glb.json"),
     )) as { hard_gate_pass?: boolean } | null;
+    const authoredRenderEvidence = await optionalJson(join(workdir, 'result.json')) as {authoredRenderEvidence?: {passed:boolean; missingDependencies:unknown[]}} | null;
+    const reproductionRender = await optionalJson(join(reproductionDir, 'authored-evidence/render-manifest.json')) as {status?:string; preflight?:{missingDependencies?:unknown[]}; renders?:unknown[]} | null;
     const score = scoreSubmission({
       task,
       agentExitCode: result.agent.exitCode,
@@ -59,10 +61,13 @@ async function main(): Promise<void> {
       reproductionPass:
         reproductionProcess?.exitCode === 0 &&
         Boolean(reproductionBlend?.hard_gate_pass) &&
-        Boolean(reproductionGlb?.hard_gate_pass) &&
+        (task.renderOnly || Boolean(reproductionGlb?.hard_gate_pass)) &&
+        (!task.authoredCameras || (reproductionRender?.status === 'complete' && reproductionRender.renders?.length === task.authoredCameras.length &&
+          reproductionRender.preflight?.missingDependencies?.length === 0)) &&
         (!task.wholeScene || existsSync(join(reproductionDir, "scene_manifest.json"))),
       blendExists: existsSync(join(workdir, "asset.blend")),
       glbExists: existsSync(join(workdir, "asset.glb")),
+      authoredRenderEvidence: authoredRenderEvidence?.authoredRenderEvidence,
       iterationReviewExists: existsSync(join(workdir, "iteration_review.json")),
       videoEvidence: (await optionalJson(join(workdir, "video-probe.json"))) as never,
       motionEvidence: await optionalJson(join(workdir, "motion-blend.json")),
