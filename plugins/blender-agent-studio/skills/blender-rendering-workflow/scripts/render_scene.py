@@ -25,6 +25,7 @@ def arguments():
     p.add_argument('--camera', dest='cameras', action='append', default=[])
     p.add_argument('--frames', nargs='*', type=int, default=[])
     p.add_argument('--max-edge', type=int, default=1280)
+    p.add_argument('--render-edge', type=int, help='Explicit delivery resolution; may render above the authored resolution')
     p.add_argument('--samples', type=int, default=64)
     p.add_argument('--device', choices=['auto', 'cpu', 'OPTIX', 'CUDA', 'HIP', 'METAL', 'ONEAPI'], default='auto')
     p.add_argument('--denoise', choices=['preserve', 'preview', 'final', 'off'], default='preserve')
@@ -32,6 +33,8 @@ def arguments():
     a = p.parse_args(sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else [])
     if not 128 <= a.max_edge <= 4096 or not 1 <= a.samples <= 4096 or not 1 <= a.time_limit <= 1800:
         p.error('max-edge must be 128..4096, samples 1..4096 and time-limit 1..1800 seconds')
+    if a.render_edge is not None and not 128 <= a.render_edge <= 4096:
+        p.error('render-edge must be 128..4096 pixels')
     if len(a.cameras) > 6 or len(a.frames) > 12 or max(1, len(a.cameras)) * max(1, len(a.frames)) > 12:
         p.error('At most 6 cameras and 12 total camera/frame renders are permitted')
     if any(not -1_048_574 <= f <= 1_048_574 for f in a.frames):
@@ -286,7 +289,7 @@ def main():
         frames = a.frames or [scene.frame_current]
         width = scene.render.resolution_x * scene.render.resolution_percentage / 100
         height = scene.render.resolution_y * scene.render.resolution_percentage / 100
-        scale = min(1.0, a.max_edge / max(width, height))
+        scale = a.render_edge / max(width, height) if a.render_edge else min(1.0, a.max_edge / max(width, height))
         scene.render.resolution_x = max(1, round(width * scale))
         scene.render.resolution_y = max(1, round(height * scale))
         scene.render.resolution_percentage = 100

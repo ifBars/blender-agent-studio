@@ -53,6 +53,9 @@ GPU flag, preserve authored quality settings, and avoid double denoising.
 MCP Apps-compatible hosts show a compact image viewer with view selection,
 fit/100% zoom, and expandable details. Other hosts retain the inline image and
 structured result. The viewer shows completed renders, not live progress.
+For an explicit standalone delivery size, `--render-edge 1536` renders at that
+longest edge while preserving aspect ratio, including above the authored size.
+`--max-edge` alone remains a cap and does not raise the authored resolution.
 Use a fresh output directory for each run. Inspect the inline PNG and
 `render-manifest.json`; errors are not successful evidence.
 

@@ -1,4 +1,4 @@
-type Condition = { score: number | null; rawScore: number | null; hardGate: boolean; rawHardGate: boolean; seconds: number | null; triangles: number | null; images: Record<string, string>; originalImages?: Record<string, string>; rawImages?: Record<string, string>; preview?: { hiddenStagingObjects?: string[]; description?: string }; evidenceUnavailable?: boolean; failedChecks?: Array<{name?: string; label?: string; id?: string; detail?: string}>; failure?: string | null; executionMode: string; guidanceHash: string | null; skillFingerprint: string | null };
+type Condition = { score: number | null; rawScore: number | null; hardGate: boolean; rawHardGate: boolean; seconds: number | null; triangles: number | null; images: Record<string, string>; imageHashes?: Record<string,string>; originalImages?: Record<string, string>; rawImages?: Record<string, string>; preview?: { hiddenStagingObjects?: string[]; description?: string }; evidenceUnavailable?: boolean; failedChecks?: Array<{name?: string; label?: string; id?: string; detail?: string}>; failure?: string | null; executionMode: string; guidanceHash: string | null; skillFingerprint: string | null };
 type Pair = { id?: string; repetition?: number; cohort?: string; limitation?: string; task: string; taskTitle: string; model: string; modelTitle: string; vanilla: Condition & {scoreCorrection?:string}; plugin: Condition & {scoreCorrection?:string};
   votes: { baseline: number; candidate: number; tie: number }; note: string;
   criteria: Array<{ id: string; label: string; vanilla: Record<string, number>; plugin: Record<string, number> }> };
@@ -37,9 +37,14 @@ export function viewLabel(name: string): string {
   return frame ? `Frame ${Number(frame[1])}` : name === "bottom" ? "Underside" : name[0].toUpperCase() + name.slice(1);
 }
 
+export function imageAvailability(a: {width:number;height:number}, b: {width:number;height:number}): 'both' | 'vanilla' | 'plugin' | 'none' {
+  const before = a.width > 1 && a.height > 1, after = b.width > 1 && b.height > 1;
+  return before && after ? 'both' : before ? 'vanilla' : after ? 'plugin' : 'none';
+}
+
 export function initComparison(element: HTMLElement, base: string) {
   const select = (name: string) => element.querySelector<HTMLSelectElement>(`[data-compare-${name}]`)!;
-  const task = select("task"), model = select("model"), view = select("view"), quality = select("quality");
+  const task = select("task"), model = select("model"), view = select("view");
   const stage = element.querySelector<HTMLElement>("[data-compare-stage]")!;
   const range = element.querySelector<HTMLInputElement>("[data-compare-range]")!;
   const status = element.querySelector<HTMLElement>("[data-compare-status]")!;
@@ -69,7 +74,7 @@ export function initComparison(element: HTMLElement, base: string) {
     target.value = options.some(([value]) => value === preferred) ? preferred : options[0]?.[0] ?? "";
   };
   const selected = () => findPair(data.pairs, task.value, model.value)!;
-  const images = (condition: Condition) => quality.value === "original" ? condition.originalImages ?? condition.images : condition.images;
+  const images = (condition: Condition) => condition.images;
   const duration = (seconds: number) => `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
   const renderDetails = (pair: Pair) => {
     const table = document.createElement("table");
@@ -107,7 +112,7 @@ export function initComparison(element: HTMLElement, base: string) {
     const limitation = document.createElement("p"); limitation.textContent = pair.limitation ?? data.limitation; detail.append(limitation);
     const staging = [...new Set([...(pair.vanilla.preview?.hiddenStagingObjects ?? []), ...(pair.plugin.preview?.hiddenStagingObjects ?? [])])];
     const preview = document.createElement("p");
-    preview.textContent = (pair.vanilla.preview?.description ?? "Previews use Cycles with denoising.") + " Choose Review images to see the views used by the judges. " +
+    preview.textContent = (pair.vanilla.preview?.description ?? "Previews use Cycles with denoising.") + " Historical reviews refer to the archived original evidence. " +
       (staging.length ? `Studio meshes hidden in HD: ${staging.join(", ")}. Saved models and technical scores are unchanged.` : "Saved models are unchanged.");
     detail.append(preview);
   };
@@ -117,24 +122,38 @@ export function initComparison(element: HTMLElement, base: string) {
     stage.setAttribute("aria-busy", "true"); status.hidden = false; status.textContent = "Loading matched views…";
     vanilla.hidden = true; plugin.hidden = true;
     const a = new Image(), b = new Image();
-    a.src = base + images(pair.vanilla)[view.value]; b.src = base + images(pair.plugin)[view.value];
+    const source = (condition: Condition) => base + images(condition)[view.value] + (condition.imageHashes?.[view.value] ? `?sha256=${encodeURIComponent(condition.imageHashes[view.value])}` : '');
+    a.src = source(pair.vanilla); b.src = source(pair.plugin);
     try {
       await Promise.all([a.decode(), b.decode()]);
       if (token !== revision) return;
       vanilla.src = a.src; plugin.src = b.src;
       vanilla.alt = `${pair.modelTitle}: ${pair.taskTitle}, ${view.value}, no-plugin result`;
       plugin.alt = `${pair.modelTitle}: ${pair.taskTitle}, ${view.value}, with plugin`;
-      vanilla.hidden = false; plugin.hidden = false; status.hidden = true;
+      const availability = imageAvailability({width:a.naturalWidth,height:a.naturalHeight},{width:b.naturalWidth,height:b.naturalHeight});
+      stage.dataset.available = availability;
+      vanilla.hidden = availability === 'plugin' || availability === 'none';
+      plugin.hidden = availability === 'vanilla' || availability === 'none';
+      range.disabled = availability !== 'both';
+      element.querySelector<HTMLButtonElement>('[data-compare-reset]')!.disabled = availability !== 'both';
+      element.querySelector<HTMLElement>('.comparison-caption span')!.textContent = availability === 'both' ? 'Drag to compare · Arrow keys work too' : 'Comparison slider unavailable for this view';
+      status.hidden = availability === 'both';
+      if (availability === 'vanilla') status.textContent = 'With-plugin image unavailable for this view. Showing the no-plugin image.';
+      if (availability === 'plugin') status.textContent = 'No-plugin image unavailable for this view. Showing the with-plugin image.';
       text("verdict", pair.votes.baseline + pair.votes.candidate + pair.votes.tie === 0 ? "Visual review unavailable" : `${pair.votes.baseline} preferred no plugin · ${pair.votes.candidate} preferred plugin${pair.votes.tie ? ` · ${pair.votes.tie} tied` : ""}`);
       text("note", pair.note);
-      const incomplete = pair.vanilla.evidenceUnavailable || pair.plugin.evidenceUnavailable;
-      text("framing", imageFraming(quality.value === "original", {width: a.naturalWidth, height: a.naturalHeight}, {width: b.naturalWidth, height: b.naturalHeight}) + (incomplete ? " · Incomplete evidence; see Scores & review" : ""));
+      const incomplete = availability !== 'both';
+      text("framing", imageFraming(false, {width: a.naturalWidth, height: a.naturalHeight}, {width: b.naturalWidth, height: b.naturalHeight}) + (incomplete ? " · Incomplete evidence; see Scores & review" : ""));
       if (a.naturalWidth === 1 && b.naturalWidth === 1) { status.hidden = false; status.textContent = "Neither attempt produced visual evidence. See Scores & review for the failure."; }
       text("cohort", pair.cohort ?? "");
       for (const [key, src] of [["vanilla", a.src], ["plugin", b.src]])
-        element.querySelector<HTMLAnchorElement>(`[data-compare-open-${key}]`)!.href = src;
+      {
+        const link = element.querySelector<HTMLAnchorElement>(`[data-compare-open-${key}]`)!;
+        link.href = src;
+        link.hidden = availability === 'none' || availability === (key === 'vanilla' ? 'plugin' : 'vanilla');
+      }
       renderDetails(pair);
-      const url = new URL(location.href); url.searchParams.set("task", pair.task); url.searchParams.set("model", pair.model); url.searchParams.set("view", view.value); url.searchParams.delete("run"); url.searchParams.set("quality", quality.value);
+      const url = new URL(location.href); url.searchParams.set("task", pair.task); url.searchParams.set("model", pair.model); url.searchParams.set("view", view.value); url.searchParams.delete("run"); url.searchParams.delete("quality");
       history.replaceState(null, "", url);
     } catch {
       if (token === revision) { status.hidden = false; status.textContent = "This image pair could not load. Choose another view or reload the page."; }
@@ -151,10 +170,8 @@ export function initComparison(element: HTMLElement, base: string) {
     updateViews();
   };
   task.addEventListener("change", updateModels); model.addEventListener("change", updateViews);
-  quality.addEventListener("change", updateViews);
   view.addEventListener("change", () => void update());
-  quality.value = new URLSearchParams(location.search).get("quality") === "original" ? "original" : "hd";
-  void fetch(element.dataset.source!).then(async response => {
+  void fetch(element.dataset.source!, {cache:'no-cache'}).then(async response => {
     if (!response.ok) throw new Error("Comparison dataset unavailable");
     data = await response.json();
     if (!isVanillaPluginDataset(data)) throw new Error("Expected verified no-plugin versus plugin comparisons");

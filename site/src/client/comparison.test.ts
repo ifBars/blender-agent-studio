@@ -1,5 +1,21 @@
 import { expect, test } from "bun:test";
-import { splitPosition, isVanillaPluginDataset, modelOptions, findPair, imageFraming, viewLabel } from "./comparison";
+import { imageAvailability, splitPosition, isVanillaPluginDataset, modelOptions, findPair, imageFraming, viewLabel } from "./comparison";
+import { comparisonViewer } from '../comparison-template';
+
+test('viewer offers task, model and view controls with no review-image selector', () => {
+  const html=comparisonViewer('/');
+  expect(html).not.toContain('data-compare-quality');
+  expect(html).not.toContain('Review images');
+  expect(html.match(/<select /g)?.length).toBe(3);
+});
+
+test('missing camera placeholders never participate in the comparison slider', () => {
+  const real={width:1536,height:1152},missing={width:1,height:1};
+  expect(imageAvailability(real,real)).toBe('both');
+  expect(imageAvailability(real,missing)).toBe('vanilla');
+  expect(imageAvailability(missing,real)).toBe('plugin');
+  expect(imageAvailability(missing,missing)).toBe('none');
+});
 
 test("image labels reflect authored aspect ratios and differing source resolutions", () => {
   expect(imageFraming(true, {width: 512, height: 288}, {width: 384, height: 384})).toBe("Review images · 512 / 384 px longest edge");

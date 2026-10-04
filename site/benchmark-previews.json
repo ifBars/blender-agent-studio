@@ -1,7 +1,7 @@
 {
-  "url": "https://github.com/ifBars/blender-agent-studio/releases/download/gallery-scenes-2026-10-04/gallery-matrix.tar.gz?sha256=f0c04cbfab8978ae4bb1e5d249099dca41b8ed9114425233edf83d53d1c07686",
-  "sha256": "f0c04cbfab8978ae4bb1e5d249099dca41b8ed9114425233edf83d53d1c07686",
+  "url": "https://github.com/ifBars/blender-agent-studio/releases/download/gallery-scenes-hd-2026-10-04/gallery-matrix.tar.gz?sha256=fa76294a6741b718e3ca960ee703868b431a311d1e2a05766a03a4e784413956",
+  "sha256": "fa76294a6741b718e3ca960ee703868b431a311d1e2a05766a03a4e784413956",
   "dataset": "benchmarks/gallery-matrix/comparison.json",
   "pairs": 31,
-  "images": 787
+  "images": 779
 }

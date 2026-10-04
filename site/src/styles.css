@@ -1272,6 +1272,18 @@ mark {
 .comparison-stage img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; user-select: none; pointer-events: none; }
 .comparison-stage img[hidden], .comparison-status[hidden] { display: none; }
 .comparison-after { clip-path: inset(0 0 0 var(--split)); }
+.comparison-stage[data-available="plugin"] .comparison-after { clip-path: none; }
+.comparison-stage[data-available="vanilla"] .comparison-label-after,
+.comparison-stage[data-available="plugin"] .comparison-label-before,
+.comparison-links a[hidden] { display: none; }
+.comparison-stage[data-available="vanilla"] .comparison-divider,
+.comparison-stage[data-available="plugin"] .comparison-divider,
+.comparison-stage[data-available="none"] .comparison-divider,
+.comparison-stage[data-available="vanilla"] .comparison-range,
+.comparison-stage[data-available="plugin"] .comparison-range,
+.comparison-stage[data-available="none"] .comparison-range { display: none; }
+.comparison-stage[data-available="vanilla"] .comparison-status,
+.comparison-stage[data-available="plugin"] .comparison-status { inset: auto 12px 12px; padding: 8px 12px; border-radius: 4px; background: rgb(10 13 17 / .82); font-size: 12px; }
 .comparison-label { position: absolute; z-index: 2; top: 16px; max-width: 45%; padding: 5px 10px; background: rgb(10 13 17 / .82); color: #fff; border: 1px solid rgb(255 255 255 / .16); border-radius: 3px; font-size: 11px; font-weight: 550; pointer-events: none; }
 .comparison-label-before { left: 16px; }.comparison-label-after { right: 16px; }
 .comparison-divider { position: absolute; top: 0; bottom: 0; left: var(--split); width: 2px; background: #fff; box-shadow: 0 0 0 1px rgb(0 0 0 / .15); pointer-events: none; }

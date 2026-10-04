@@ -21,6 +21,7 @@ if (!Number.isSafeInteger(previewEdge) || previewEdge < 384 || previewEdge > 153
 const existing = await read(arg("--existing-data")), manifest = await read(join(runs, "campaign.json"));
 const completedOnly = process.argv.includes('--completed-only');
 const originalPreviews = process.argv.includes('--original-previews');
+const requireHdPreviews = process.argv.includes('--require-hd-previews');
 const resourceGuidanceHashes=new Set(await Promise.all(['benchmark-resource-guidance.md','benchmark-resource-guidance-v1.md'].map(async file=>sha256(await readFile(join(import.meta.dir,file))))));
 if (!existsSync(join(runs, "campaign-results.json"))) throw new Error("Wait for the complete campaign, including failed attempts");
 const recovery = recoveryRuns ? await read(join(recoveryRuns,"campaign-results.json")) : null;
@@ -108,13 +109,13 @@ for (const cell of manifest.pairs) {
     const previews: Record<string,string> = {}, renderDir = join(output,"renders",id,name);
     let preview: any = {description:"Original evidence is shown because this attempt has no complete preview.", hiddenStagingObjects:[]};
     if (originalPreviews) preview = {description:'Original camera evidence is shown at its recorded resolution; no additional preview render was performed.', hiddenStagingObjects:[]};
-    if (sourceHash && evidence && !originalPreviews) {
+    if (sourceHash && (evidence || task.authoredCameras) && !originalPreviews) {
       await mkdir(dirname(renderDir), {recursive:true});
       let renderReport: any;
       if (task.authoredCameras) {
         const reportPath = join(renderDir,"render-manifest.json");
         if (!existsSync(renderDir)) {
-          const command = [blender,"--background","--factory-startup","--disable-autoexec","--python-exit-code","1","--python",join(manifest.snapshot,"skills/blender-rendering-workflow/scripts/render_scene.py"),"--","--input",native,"--output-dir",renderDir,"--max-edge",String(previewEdge),"--samples","64","--time-limit","90","--denoise","final",...task.authoredCameras.flatMap((camera: string) => ["--camera",camera])];
+          const command = [blender,"--background","--threads","2","--factory-startup","--disable-autoexec","--python-exit-code","1","--python",resolve(import.meta.dir,"../plugins/blender-agent-studio/skills/blender-rendering-workflow/scripts/render_scene.py"),"--","--input",native,"--output-dir",renderDir,"--max-edge",String(previewEdge),"--render-edge",String(previewEdge),"--samples","64","--time-limit","120","--device","OPTIX","--denoise","final",...task.authoredCameras.flatMap((camera: string) => ["--camera",camera])];
           console.log(`PREVIEW ${key}/${name}`); await execute(command,join(output,`${key}--${name}.render.log`));
         }
         renderReport = await maybeRead(reportPath);
@@ -139,6 +140,8 @@ for (const cell of manifest.pairs) {
       }
       if (sha256(await readFile(native)) !== sourceHash) throw new Error(`Preview modified source ${key}/${name}`);
     }
+    if (requireHdPreviews && task.authoredCameras && (preview.status !== 'complete' || Object.keys(previews).length !== task.authoredCameras.length || Math.max(...preview.effective.resolution) !== previewEdge))
+      throw new Error(`Complete ${previewEdge}px authored previews are required: ${key}/${name}`);
     const condition: any = {score:score?.score ?? null, rawScore:result?.score.score ?? null, hardGate:score?.hardGatePass ?? false, rawHardGate:result?.score.hardGatePass ?? false,
       seconds:result ? Math.round(result.agent.durationMs/1000) : null, triangles:metrics?.totals?.triangles ?? null,
       images:{}, imageHashes:{}, imageDimensions:{}, originalImages:{}, originalImageHashes:{}, originalImageDimensions:{}, preview, evidenceUnavailable:!evidence,
@@ -148,8 +151,11 @@ for (const cell of manifest.pairs) {
       evidenceDirectory,evaluatorEvidenceRepaired:Boolean(evidenceResult?.rawEvidenceDirectory),
       artifactHashes:result?.artifactHashes ?? {}, executionMode:summary.executionMode, guidanceHash:summary.guidanceHash, skillFingerprint:summary.skillFingerprint, evaluatorFingerprint:summary.evaluatorFingerprint,
       generationTaskFingerprint:summary.taskFingerprints[cell.task], agentVersion:summary.agentVersion, codexTransport:summary.codexTransport ?? null, modelRequested:summary.model, modelsObserved:result?.agent.trace.observedModels ?? null, rawScorerVersion:summary.scorerVersion};
-    for (const [view, source] of Object.entries(originals)) for (const quality of ["original","preview"]) {
+    for (const view of new Set([...Object.keys(originals),...Object.keys(previews)])) for (const quality of ["original","preview"]) {
+      const source = originals[view];
+      if (quality === 'preview' && task.authoredCameras && Object.keys(previews).length && !previews[view]) continue;
       const path = quality === "preview" ? previews[view] ?? source : source;
+      if (!path) continue;
       const bytes = await png(path), destination = `${prefix}/scene-character/${id}/${name}/${quality}/${view}.png`;
       await mkdir(dirname(join(publicRoot,destination)), {recursive:true}); await copyFile(path,join(publicRoot,destination));
       condition[quality === "preview" ? "images" : "originalImages"][view] = destination;

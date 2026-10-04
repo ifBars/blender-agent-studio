@@ -4,7 +4,6 @@ export function comparisonViewer(base: string): string {
     <label>Task<select data-compare-task aria-label="Benchmark task"></select></label>
     <label>Model<select data-compare-model aria-label="Generator model"></select></label>
     <label>View<select data-compare-view aria-label="Camera view"></select></label>
-    <label>Images<select data-compare-quality aria-label="Image quality"><option value="hd">Preview</option><option value="original">Review images</option></select></label>
   </div>
   <div class="comparison-stage" data-compare-stage style="--split:50%" aria-busy="true">
     <img data-compare-vanilla alt="No plugin result" width="1536" height="1536" hidden>
