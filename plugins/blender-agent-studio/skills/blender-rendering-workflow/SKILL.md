@@ -39,6 +39,13 @@ settings are unknown. Then select existing `cameras` by exact name and optional
 active camera/frame, caps the longest edge at 1280 and Cycles samples at 64, and
 automatically selects an available GPU with an explicit recorded CPU fallback.
 Choose `device: "cpu"` or a specific backend when reproducibility requires it.
+On a shared desktop, run one Blender command at a time and prefer a verified
+GPU backend. Use `--threads 2`, `scene.render.threads_mode = 'FIXED'` and
+`scene.render.threads = 2` to leave CPU headroom. Modeling, dependency updates
+and export still use CPU; thread settings alone do not impose an aggregate
+CPU limit. The repository's comparison queue supplies that additional Windows
+process-tree cap. Record a GPU initialization failure and retain the small CPU
+thread budget if a fallback is necessary.
 MCP Apps-compatible hosts show a compact image viewer with view selection,
 fit/100% zoom, and expandable details. Other hosts retain the inline image and
 structured result. The viewer shows completed renders, not live progress.
@@ -56,6 +63,12 @@ The standalone equivalent is bundled in this skill:
 This preserves authored lights, world, volumes, cameras, materials and color
 management. `blender_render_evidence` deliberately replaces cameras and lighting;
 use it for standardized geometry checks, not as an interior's final image.
+
+Read the emitted manifest for exact image paths before opening evidence.
+`render_evidence.py` writes `evidence.json` with `contact_sheet` (normally
+`contact_sheet.png`); `render_scene.py` writes `render-manifest.json` with
+camera/frame paths under `renders`. Do not guess a hyphenated contact-sheet
+filename or treat a missing image as a successful visual review.
 Neither tool substitutes for authoring the scene in durable source.
 
 ## Choose denoising for the task

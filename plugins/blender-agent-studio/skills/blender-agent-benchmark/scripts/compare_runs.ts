@@ -6,7 +6,7 @@ import {
   type VisualCriterion,
 } from "./tasks.ts";
 import { computeVerifiedCompositeScore } from "./verified_score.ts";
-import { isolatedAgentArgs } from "./pinned-mcp.ts";
+import { cliCodexTransport, isolatedAgentArgs } from "./pinned-mcp.ts";
 import { provenanceMismatches, readReferenceInput, type RunProvenance } from "./provenance.ts";
 
 type RunResult = {
@@ -788,6 +788,7 @@ Return the required JSON only. Keep rationale concise and specific.`;
     generationReasoning: baseline.reasoning,
     judgeModel: model,
     judgeReasoning: reasoning,
+    judgeTransport: cliCodexTransport(),
     judgeCountPerPair: judges,
     positionOrderPolicy:
       "Randomize the first judge's A/B mapping, then alternate the mapping for each later judge.",

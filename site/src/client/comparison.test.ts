@@ -1,5 +1,13 @@
 import { expect, test } from "bun:test";
-import { splitPosition, isVanillaPluginDataset, modelOptions, findPair } from "./comparison";
+import { splitPosition, isVanillaPluginDataset, modelOptions, findPair, imageFraming, viewLabel } from "./comparison";
+
+test("image labels reflect authored aspect ratios and differing source resolutions", () => {
+  expect(imageFraming(true, {width: 512, height: 288}, {width: 384, height: 384})).toBe("Review images · 512 / 384 px longest edge");
+  expect(imageFraming(false, {width: 1280, height: 720}, {width: 1280, height: 960})).toBe("Preview · 1280 px longest edge · Reviews use the original evidence");
+  expect(imageFraming(true, {width:1,height:1}, {width:1,height:1})).toBe("Visual evidence unavailable");
+  expect(viewLabel("frame_0013")).toBe("Frame 13");
+  expect(viewLabel("reverse")).toBe("Reverse");
+});
 
 test("pointer split uses the image bounds and clamps drag beyond either edge", () => {
   expect(splitPosition(350, 100, 500)).toBe(50);
@@ -15,6 +23,14 @@ test("viewer refuses the previous plugin-versus-guidance dataset", () => {
   const data = { schemaVersion: 2, experiment: "vanilla_vs_plugin", pairs: [{ vanilla, plugin }] };
   expect(isVanillaPluginDataset(data)).toBe(true);
   expect(isVanillaPluginDataset({ ...data, pairs: [{ vanilla: plugin, plugin }] })).toBe(false);
+});
+test('viewer accepts verified shared resource controls but rejects unequal guidance',()=>{
+  const pair={vanilla:{executionMode:'baseline',skillFingerprint:null,guidanceHash:'resource'},plugin:{executionMode:'skills',skillFingerprint:'pinned',guidanceHash:'resource'},
+    sharedResourceGuidanceHash:'resource',resourcePolicy:{cpuHardCapPercent:20,concurrency:1}};
+  const data={schemaVersion:2,experiment:'vanilla_vs_plugin',pairs:[pair]};
+  expect(isVanillaPluginDataset(data)).toBe(true);
+  expect(isVanillaPluginDataset({...data,pairs:[{...pair,plugin:{...pair.plugin,guidanceHash:'other'}}]})).toBe(false);
+  expect(isVanillaPluginDataset({...data,pairs:[{...pair,sharedResourceGuidanceHash:null}]})).toBe(false);
 });
 
 

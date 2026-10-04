@@ -46,6 +46,27 @@ function completeMetrics() {
 }
 
 describe("scoreSubmission", () => {
+  test('food naming accepts ordinary ingredient names without crediting an empty kitchen',()=>{
+    const task={...lantern,rubric:{...lantern.rubric,requiredNameGroups:[['food']]}};
+    const score=(name:string)=>scoreSubmission({task,agentExitCode:0,sourceExists:true,reproductionPass:true,blendExists:true,glbExists:true,
+      blendMetrics:{...completeMetrics(),objects:[{name}]},glbMetrics:completeMetrics()}).checks.find(c=>c.id==='semantic_part_coverage')!;
+    expect(score('EMBER | noodle kitchen serving bowl').passed).toBe(true);
+    expect(score('Pastry_display_bread').passed).toBe(true);
+    expect(score('Empty kitchen counter').passed).toBe(false);
+    expect(score('Fruitful facade').passed).toBe(false);
+  });
+  test("render-only backgrounds do not inherit portable-asset bounds; exports still do", () => {
+    const metrics = completeMetrics(); metrics.scene.bounds.dimensions = [30,16,8];
+    const options = {task:{...lantern,renderOnly:true,authoredCameras:['Hero']},agentExitCode:0,sourceExists:true,reproductionPass:true,blendExists:true,glbExists:false,
+      blendMetrics:metrics,glbMetrics:null,authoredRenderEvidence:{passed:true,missingDependencies:[]}};
+    const scene = scoreSubmission(options);
+    expect(scene.hardGatePass).toBe(true);
+    expect(scene.score).toBe(100);
+    expect(scene.checks.find(check=>check.id==='render_scene_bounds')?.detail).toContain("including backgrounds");
+    expect(scoreSubmission({...options,task:lantern,glbExists:true,glbMetrics:metrics}).hardGatePass).toBe(false);
+    expect(scoreSubmission({...options,blendMetrics:{...metrics,scene:{bounds:{dimensions:[Infinity,16,8]}}}}).hardGatePass).toBe(false);
+    expect(scoreSubmission({...options,authoredRenderEvidence:{passed:false,missingDependencies:['missing texture']}}).hardGatePass).toBe(false);
+  });
   test("render-only scenes require actual authored renders while historical exports remain required", () => {
     const task = {...lantern, renderOnly:true, authoredCameras:['Hero']};
     const options = {task,agentExitCode:0,sourceExists:true,reproductionPass:true,blendExists:true,glbExists:false,

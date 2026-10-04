@@ -32,11 +32,24 @@ export function hostSkillConfig(roots: string[]): string {
   return config;
 }
 
-export function isolatedAgentArgs(): string[] {
+export type CodexTransport = "auto" | "http";
+
+export function cliCodexTransport(): CodexTransport {
+  const index = process.argv.indexOf("--codex-transport");
+  const value = index < 0 ? "auto" : process.argv[index + 1];
+  if (value !== "auto" && value !== "http") throw new Error("--codex-transport must be auto or http");
+  return value;
+}
+
+export function isolatedAgentArgs(transport: CodexTransport = cliCodexTransport()): string[] {
   return [
     "--ignore-user-config", "--ignore-rules",
     "--disable", "plugins", "--disable", "memories",
     "-c", "project_doc_max_bytes=0",
+    ...(transport === "http" ? [
+      "-c", 'model_providers.benchmark_http={name="OpenAI",wire_api="responses",requires_openai_auth=true,supports_websockets=false}',
+      "-c", 'model_provider="benchmark_http"',
+    ] : []),
     "-c", hostSkillConfig([
       join(process.env.CODEX_HOME ?? join(homedir(),".codex"),"skills"),
       join(homedir(),".agents","skills"),

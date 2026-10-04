@@ -39,6 +39,18 @@ Both hosts can also select skills from a plain request. They load the same speci
 
 For review-only work, use `blender-asset-validation` on its own.
 
+The modeling workflow includes a [pole-safe lathe helper](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-modeling-workflow/scripts/lathe_mesh.py)
+for bowls, vases and turned hardware. It shares radius-zero pole vertices;
+evaluate modifiers and inspect a representative before repeating it through
+a scene. Full-scene guidance also reviews focal-zone scale, upholstery and
+broad floor reflections alongside architectural trim and material detail.
+
+The repository's comparison queue runs one generation at a time. On Windows it
+caps the modeling process tree at 20% CPU with Below Normal priority and requests
+two Blender threads, preferring a verified GPU backend for rendering. Shared
+resource instructions apply equally to both conditions. Modeling and export
+still use the CPU; resource limits and interruptions are recorded with results.
+
 ## Shared guidance
 
 Every specialist bundles the same [execution guidance](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/references/astra-workflow.md), so behavior stays consistent:

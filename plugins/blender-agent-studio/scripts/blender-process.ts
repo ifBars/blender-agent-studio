@@ -52,6 +52,8 @@ export async function runBlender(options: {
   const scriptPath = resolveExistingPath(options.scriptPath, "Python script");
   const cwd = resolve(options.cwd ?? dirname(scriptPath));
   const args: string[] = ["--background", "--factory-startup", "--disable-autoexec"];
+  // Process-local benchmark resource policy; ordinary callers keep their settings.
+  if (process.env.BAS_RESOURCE_JOB === "windows-cpu-hard-cap-v1") args.push("--threads", "2");
 
   if (options.blendPath) {
     args.push(resolveExistingPath(options.blendPath, "Blend file"));

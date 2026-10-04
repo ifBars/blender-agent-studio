@@ -1,13 +1,17 @@
-type Condition = { score: number; rawScore: number; hardGate: boolean; rawHardGate: boolean; seconds: number; triangles: number; images: Record<string, string>; originalImages?: Record<string, string>; rawImages?: Record<string, string>; preview?: { hiddenStagingObjects: string[] }; executionMode: string; guidanceHash: string | null; skillFingerprint: string | null };
-type Pair = { id?: string; repetition?: number; cohort?: string; limitation?: string; task: string; taskTitle: string; model: string; modelTitle: string; vanilla: Condition; plugin: Condition;
+type Condition = { score: number | null; rawScore: number | null; hardGate: boolean; rawHardGate: boolean; seconds: number | null; triangles: number | null; images: Record<string, string>; originalImages?: Record<string, string>; rawImages?: Record<string, string>; preview?: { hiddenStagingObjects?: string[]; description?: string }; evidenceUnavailable?: boolean; failedChecks?: Array<{name?: string; label?: string; id?: string; detail?: string}>; failure?: string | null; executionMode: string; guidanceHash: string | null; skillFingerprint: string | null };
+type Pair = { id?: string; repetition?: number; cohort?: string; limitation?: string; task: string; taskTitle: string; model: string; modelTitle: string; vanilla: Condition & {scoreCorrection?:string}; plugin: Condition & {scoreCorrection?:string};
   votes: { baseline: number; candidate: number; tie: number }; note: string;
   criteria: Array<{ id: string; label: string; vanilla: Record<string, number>; plugin: Record<string, number> }> };
 type Dataset = { schemaVersion: number; experiment: string; pairs: Pair[]; framing: string; limitation: string };
 
 export function isVanillaPluginDataset(data: any): data is Dataset {
   return data?.schemaVersion === 2 && data?.experiment === "vanilla_vs_plugin" && Array.isArray(data.pairs) && data.pairs.length > 0 &&
-    data.pairs.every((pair: any) => pair.vanilla?.executionMode === "baseline" && !pair.vanilla.skillFingerprint && !pair.vanilla.guidanceHash &&
-      pair.plugin?.executionMode === "skills" && !!pair.plugin.skillFingerprint && !pair.plugin.guidanceHash);
+    data.pairs.every((pair: any) => {
+      const resource=pair.resourcePolicy, shared=Boolean(pair.sharedResourceGuidanceHash&&resource?.cpuHardCapPercent===20&&resource?.concurrency===1&&
+        pair.vanilla?.guidanceHash===pair.sharedResourceGuidanceHash&&pair.plugin?.guidanceHash===pair.sharedResourceGuidanceHash);
+      return pair.vanilla?.executionMode === "baseline" && !pair.vanilla.skillFingerprint && (!pair.vanilla.guidanceHash||shared) &&
+        pair.plugin?.executionMode === "skills" && !!pair.plugin.skillFingerprint && (!pair.plugin.guidanceHash||shared);
+    });
 }
 
 export function modelOptions(pairs: Pair[], task: string): Array<[string, string]> {
@@ -20,6 +24,17 @@ export function findPair(pairs: Pair[], task: string, model: string): Pair | und
 
 export function splitPosition(clientX: number, left: number, width: number): number {
   return width > 0 ? Math.max(0, Math.min(100, Math.round((clientX - left) / width * 100))) : 50;
+}
+
+export function imageFraming(original: boolean, a: {width: number; height: number}, b: {width: number; height: number}): string {
+  const edges = [...new Set([Math.max(a.width, a.height), Math.max(b.width, b.height)])].filter(edge => edge > 1);
+  if (!edges.length) return "Visual evidence unavailable";
+  return `${original ? "Review images" : "Preview"} · ${edges.join(" / ")} px longest edge${original ? "" : " · Reviews use the original evidence"}`;
+}
+
+export function viewLabel(name: string): string {
+  const frame = /^frame_(\d+)$/.exec(name);
+  return frame ? `Frame ${Number(frame[1])}` : name === "bottom" ? "Underside" : name[0].toUpperCase() + name.slice(1);
 }
 
 export function initComparison(element: HTMLElement, base: string) {
@@ -64,14 +79,18 @@ export function initComparison(element: HTMLElement, base: string) {
       table.append(tr);
     };
     row(["Check", "No plugin", "With plugin"], true);
-    row(["Technical gates", pair.vanilla.hardGate ? "Pass" : "Fail", pair.plugin.hardGate ? "Pass" : "Fail"]);
-    row(["Structural proxy / 100", String(pair.vanilla.score), String(pair.plugin.score)]);
-    row(["Generation time", duration(pair.vanilla.seconds), duration(pair.plugin.seconds)]);
-    row(["Evaluated triangles", pair.vanilla.triangles.toLocaleString(), pair.plugin.triangles.toLocaleString()]);
+    row(["Technical gates", ...[pair.vanilla,pair.plugin].map(condition => condition.score === null ? "Unavailable" : condition.hardGate ? "Pass" : "Fail")]);
+    row(["Structural proxy / 100", pair.vanilla.score === null ? "Unavailable" : String(pair.vanilla.score), pair.plugin.score === null ? "Unavailable" : String(pair.plugin.score)]);
+    row(["Generation time", pair.vanilla.seconds === null ? "Unavailable" : duration(pair.vanilla.seconds), pair.plugin.seconds === null ? "Unavailable" : duration(pair.plugin.seconds)]);
+    row(["Evaluated triangles", pair.vanilla.triangles?.toLocaleString() ?? "Unavailable", pair.plugin.triangles?.toLocaleString() ?? "Unavailable"]);
     const counts = (values: Record<string, number>) => Object.entries(values).filter(([, count]) => count > 0).map(([label, count]) => `${count} ${label}`).join(" · ");
     for (const criterion of pair.criteria) row([criterion.label, counts(criterion.vanilla), counts(criterion.plugin)]);
     const detail = element.querySelector<HTMLElement>("[data-compare-details]")!;
     detail.replaceChildren(table);
+    for (const [label, condition] of [["No plugin", pair.vanilla], ["With plugin", pair.plugin]] as const) {
+      const failures = condition.failure ?? condition.failedChecks?.map(check => check.detail ?? check.name ?? check.label ?? check.id).filter(Boolean).join("; ");
+      if (failures) { const note = document.createElement("p"); note.textContent = `${label} failed checks: ${failures}`; detail.append(note); }
+    }
     if (pair.vanilla.rawImages?.[view.value] && pair.plugin.rawImages?.[view.value]) {
       const raw = document.createElement("p"); raw.append("Original submission evidence: ");
       for (const [label, path] of [["No plugin", pair.vanilla.rawImages[view.value]], ["With plugin", pair.plugin.rawImages[view.value]]]) {
@@ -80,15 +99,15 @@ export function initComparison(element: HTMLElement, base: string) {
       }
       detail.append(raw);
     }
-    if (pair.vanilla.rawScore !== pair.vanilla.score || pair.plugin.rawScore !== pair.plugin.score) {
+    if (pair.vanilla.rawScore !== pair.vanilla.score || pair.plugin.rawScore !== pair.plugin.score || pair.vanilla.rawHardGate !== pair.vanilla.hardGate || pair.plugin.rawHardGate !== pair.plugin.hardGate) {
       const note = document.createElement("p");
-      note.textContent = `Naming-check correction applied: raw scores were ${pair.vanilla.rawScore} / ${pair.plugin.rawScore}. Screws count as hardware. Original scores remain in the downloadable data; geometry and visual judgments are unchanged.`;
+      note.textContent = pair.vanilla.scoreCorrection ?? pair.plugin.scoreCorrection ?? `Naming-check correction applied: raw scores were ${pair.vanilla.rawScore} / ${pair.plugin.rawScore}. Screws count as hardware. Original scores remain in the downloadable data; geometry and visual judgments are unchanged.`;
       detail.append(note);
     }
     const limitation = document.createElement("p"); limitation.textContent = pair.limitation ?? data.limitation; detail.append(limitation);
     const staging = [...new Set([...(pair.vanilla.preview?.hiddenStagingObjects ?? []), ...(pair.plugin.preview?.hiddenStagingObjects ?? [])])];
     const preview = document.createElement("p");
-    preview.textContent = "HD previews use Cycles at 1536 px with denoising. Choose Review images to see the views used by the judges. " +
+    preview.textContent = (pair.vanilla.preview?.description ?? "Previews use Cycles with denoising.") + " Choose Review images to see the views used by the judges. " +
       (staging.length ? `Studio meshes hidden in HD: ${staging.join(", ")}. Saved models and technical scores are unchanged.` : "Saved models are unchanged.");
     detail.append(preview);
   };
@@ -106,9 +125,11 @@ export function initComparison(element: HTMLElement, base: string) {
       vanilla.alt = `${pair.modelTitle}: ${pair.taskTitle}, ${view.value}, no-plugin result`;
       plugin.alt = `${pair.modelTitle}: ${pair.taskTitle}, ${view.value}, with plugin`;
       vanilla.hidden = false; plugin.hidden = false; status.hidden = true;
-      text("verdict", `${pair.votes.baseline} preferred no plugin · ${pair.votes.candidate} preferred plugin${pair.votes.tie ? ` · ${pair.votes.tie} tied` : ""}`);
+      text("verdict", pair.votes.baseline + pair.votes.candidate + pair.votes.tie === 0 ? "Visual review unavailable" : `${pair.votes.baseline} preferred no plugin · ${pair.votes.candidate} preferred plugin${pair.votes.tie ? ` · ${pair.votes.tie} tied` : ""}`);
       text("note", pair.note);
-      text("framing", quality.value === "original" ? "Review images · 384 px" : "HD preview · 1536 px · denoised · Reviews use the 384 px views");
+      const incomplete = pair.vanilla.evidenceUnavailable || pair.plugin.evidenceUnavailable;
+      text("framing", imageFraming(quality.value === "original", {width: a.naturalWidth, height: a.naturalHeight}, {width: b.naturalWidth, height: b.naturalHeight}) + (incomplete ? " · Incomplete evidence; see Scores & review" : ""));
+      if (a.naturalWidth === 1 && b.naturalWidth === 1) { status.hidden = false; status.textContent = "Neither attempt produced visual evidence. See Scores & review for the failure."; }
       text("cohort", pair.cohort ?? "");
       for (const [key, src] of [["vanilla", a.src], ["plugin", b.src]])
         element.querySelector<HTMLAnchorElement>(`[data-compare-open-${key}]`)!.href = src;
@@ -122,7 +143,7 @@ export function initComparison(element: HTMLElement, base: string) {
   const updateViews = () => {
     const pair = selected();
     const views = Object.keys(images(pair.vanilla)).filter(name => images(pair.plugin)[name]);
-    fill(view, views.map(name => [name, name === "bottom" ? "Underside" : name[0].toUpperCase() + name.slice(1)]), view.value || new URLSearchParams(location.search).get("view") || "perspective");
+    fill(view, views.map(name => [name, viewLabel(name)]), view.value || new URLSearchParams(location.search).get("view") || "perspective");
     void update();
   };
   const updateModels = () => {
@@ -137,7 +158,7 @@ export function initComparison(element: HTMLElement, base: string) {
     if (!response.ok) throw new Error("Comparison dataset unavailable");
     data = await response.json();
     if (!isVanillaPluginDataset(data)) throw new Error("Expected verified no-plugin versus plugin comparisons");
-    fill(task, [...new Map(data.pairs.map(pair => [pair.task, ({signal_lantern:"Signal lantern",joinery_stool:"Joinery stool",task_lamp_clearance_holdout:"Task lamp",tabletop_press:"Lever press",winch_drawbridge:"Drawbridge"} as Record<string,string>)[pair.task] ?? pair.taskTitle])).entries()], new URLSearchParams(location.search).get("task") ?? "");
+    fill(task, [...new Map(data.pairs.map(pair => [pair.task, ({signal_lantern:"Signal lantern",joinery_stool:"Joinery stool",task_lamp_clearance_holdout:"Task lamp",tabletop_press:"Lever press",winch_drawbridge:"Drawbridge",decorated_reading_room:"Reading room",night_market_courtyard:"Night market",coastal_cafe_holdout:"Coastal cafe",game_ranger_character:"Game ranger",game_scout_deformation:"Rigged scout",game_badger_merchant_holdout:"Badger merchant"} as Record<string,string>)[pair.task] ?? pair.taskTitle])).entries()], new URLSearchParams(location.search).get("task") ?? "");
     updateModels();
   }).catch(() => { status.textContent = "Comparison data could not load. Reload the page or use the results documentation."; stage.setAttribute("aria-busy", "false"); });
 }

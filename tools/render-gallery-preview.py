@@ -18,7 +18,10 @@ def main():
     parser.add_argument('--output', required=True)
     parser.add_argument('--views', default='perspective,front,back,left,right,top,bottom')
     parser.add_argument('--hide-objects-json', default='[]')
+    parser.add_argument('--resolution', type=int, default=1536)
     args = parser.parse_args(sys.argv[sys.argv.index('--') + 1:])
+    if not 384 <= args.resolution <= 1536:
+        raise ValueError('Preview resolution must be 384..1536 pixels')
     source, output = Path(args.input).resolve(), Path(args.output).resolve()
     if output.exists():
         raise ValueError('Use a fresh preview directory')
@@ -72,10 +75,10 @@ def main():
     camera.data.dof.use_dof = False
     output.mkdir(parents=True)
     for view in views:
-        evidence.render_view(camera, view, Vector(directions[view]), center+Vector((0,0,size.z*.04)), extent, output, 1536, view!='perspective')
+        evidence.render_view(camera, view, Vector(directions[view]), center+Vector((0,0,size.z*.04)), extent, output, args.resolution, view!='perspective')
     if hashlib.sha256(source.read_bytes()).hexdigest() != source_hash:
         raise RuntimeError('Source changed while rendering')
-    manifest = {'preset':'gallery-cycles-v1','sourceSha256':source_hash,'resolution':1536,'engine':'CYCLES',
+    manifest = {'preset':'gallery-cycles-v1','sourceSha256':source_hash,'resolution':args.resolution,'engine':'CYCLES',
                 'samples':64,'denoiser':'OPENIMAGEDENOISE','device':'OPTIX','views':views,'hiddenStagingObjects':hidden,
                 'sourceModified':False,'blenderVersion':bpy.app.version_string,
                 'purpose':'Display preview only. Historical scores and reviews refer to original evidence.'}

@@ -137,6 +137,16 @@ self-review at each relevant milestone and continue without asking.
    evaluated result rather than assuming a modifier equals polish.
 8. Read [references/procedural-patterns.md](references/procedural-patterns.md) when implementing reusable Blender helpers.
 
+For revolved bowls, vases and hardware, radius-zero rings must become one
+shared pole vertex with triangle fans. Coincident vertices around a pole create
+zero-length edges even when the render looks smooth. The pure geometry helper
+[lathe_mesh.py](scripts/lathe_mesh.py) handles poles and optional end caps;
+include it in durable generation inputs rather than depending on an installed
+plugin path. Inspect the evaluated prototype after bevel/subdivision before
+replication. Fix the family helper when defects repeat; preserve intended
+seams, form and material boundaries rather than indiscriminately welding a
+whole assembly.
+
 ## Execute and inspect
 
 Run Blender headlessly:

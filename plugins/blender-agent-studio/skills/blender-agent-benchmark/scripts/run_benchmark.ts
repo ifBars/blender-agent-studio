@@ -14,7 +14,7 @@ import { scoreSubmission, SCORER_VERSION, type VideoEvidence } from "./score.ts"
 import { BENCHMARK_TASKS, type BenchmarkTask } from "./tasks.ts";
 import { summarizeAgentEvents } from "./trace.ts";
 import { resolveModelOptions } from "./model-options.ts";
-import { isolatedAgentArgs, pinnedMcpArgs, preflightPinnedMcp, sourceFingerprint } from "./pinned-mcp.ts";
+import { cliCodexTransport, isolatedAgentArgs, pinnedMcpArgs, preflightPinnedMcp, sourceFingerprint } from "./pinned-mcp.ts";
 import { evaluatorFingerprint, readReferenceInput, taskFingerprint } from "./provenance.ts";
 
 type Mode = "baseline" | "skills" | "skills_mcp";
@@ -64,6 +64,7 @@ function parseOptions(): Options {
     reasoning: argument("--reasoning"),
   });
   const agentCli = argument("--agent") ?? "codex";
+  cliCodexTransport();
   if (!["codex", "claude-code"].includes(agentCli)) throw new Error("Unsupported --agent");
   if (agentCli === "claude-code") buildClaudeArgs({ ...modelOptions, mode, bypassApprovals: process.argv.includes("--bypass-approvals") });
   const skillRootArg = argument("--skill-root");
@@ -445,6 +446,7 @@ async function verifyReproduction(options: {
   process: unknown | null;
   blendMetrics: unknown | null;
   glbMetrics: unknown | null;
+  evidenceDirectory?: string;
 }> {
   if (!existsSync(options.sourcePath)) {
     return {
@@ -482,8 +484,9 @@ async function verifyReproduction(options: {
     join(reproductionDir, "metrics-glb.json"),
     options.blenderPath,
   );
+  const evidenceDirectory = options.task?.authoredCameras ? await mkdtemp(join(reproductionDir,'evaluator-evidence-')) : undefined;
   const sceneEvidence = options.task?.authoredCameras
-    ? await renderAuthoredEvidence({assetPath:blendPath, outputDir:join(reproductionDir,'authored-evidence'),
+    ? await renderAuthoredEvidence({assetPath:blendPath, outputDir:evidenceDirectory!,
       cameras:options.task.authoredCameras, blenderPath:options.blenderPath, preview:true}) : null;
   return {
     passed:
@@ -495,6 +498,7 @@ async function verifyReproduction(options: {
     process,
     blendMetrics,
     glbMetrics,
+    evidenceDirectory,
   };
 }
 
@@ -553,6 +557,7 @@ async function main(): Promise<void> {
   const runManifest = {
     schemaVersion: 3,
     agentCli: options.agentCli,
+    codexTransport: options.agentCli === "codex" ? cliCodexTransport() : null,
     guidanceFile: options.guidanceFile ?? null,
     guidanceHash: guidance ? sha256(guidance) : null,
     guidance,
@@ -677,13 +682,14 @@ async function main(): Promise<void> {
         glbMetricsPath,
         options.blenderPath,
       );
+      const evidenceDirectory = await mkdtemp(join(workdir,"evaluator-evidence-"));
       const authoredRenderEvidence = task.authoredCameras ? await renderAuthoredEvidence({
-        assetPath: blendPath, outputDir: join(workdir,"evidence"), cameras:task.authoredCameras,
+        assetPath: blendPath, outputDir: evidenceDirectory, cameras:task.authoredCameras,
         blenderPath:options.blenderPath,
       }) : null;
       if (!task.authoredCameras) await renderEvidence({
         assetPath: blendPath,
-        outputDir: join(workdir, "evidence"),
+        outputDir: evidenceDirectory,
         frames: task.animationFrames,
         spatial: task.suites.includes("spatial"),
         blenderPath: options.blenderPath,
@@ -719,6 +725,8 @@ async function main(): Promise<void> {
         glbMetrics: glbMetrics as never,
       });
       const result = {
+        evidenceDirectory,
+        reproductionEvidenceDirectory: reproduction.evidenceDirectory ?? null,
         authoredRenderEvidence,
         gameSceneEvidence,
         artifactHashes: Object.fromEntries(await Promise.all([sourcePath, blendPath, glbPath, ...(task.wholeScene ? [join(workdir, "scene_manifest.json")] : [])].filter(existsSync).map(async path => [basename(path), sha256(await readFile(path))]))),
@@ -737,14 +745,14 @@ async function main(): Promise<void> {
         score,
         reproductionDirectory: reproduction.directory,
         evidenceContactSheet: existsSync(
-          join(workdir, "evidence", "contact_sheet.png"),
+          join(evidenceDirectory, "contact_sheet.png"),
         )
-          ? join(workdir, "evidence", "contact_sheet.png")
+          ? join(evidenceDirectory, "contact_sheet.png")
           : null,
         animationContactSheet: existsSync(
-          join(workdir, "evidence", "animation_contact_sheet.png"),
+          join(evidenceDirectory, "animation_contact_sheet.png"),
         )
-          ? join(workdir, "evidence", "animation_contact_sheet.png")
+          ? join(evidenceDirectory, "animation_contact_sheet.png")
           : null,
         renderedVideo: videoPath && existsSync(videoPath) ? videoPath : null,
         videoEvidence,

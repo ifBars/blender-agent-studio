@@ -2,7 +2,17 @@ import {expect,test} from "bun:test";
 import {mkdtemp,mkdir,writeFile,rm} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join,resolve} from "node:path";
-import {sourceFingerprint,preflightPinnedMcp,hostSkillConfig} from "./pinned-mcp.ts";
+import {sourceFingerprint,preflightPinnedMcp,hostSkillConfig,isolatedAgentArgs} from "./pinned-mcp.ts";
+
+test("HTTP transport preserves isolation and existing OpenAI auth without changing global config",()=>{
+  const defaults = isolatedAgentArgs("auto"), http = isolatedAgentArgs("http");
+  expect(defaults).not.toContain('model_provider="benchmark_http"');
+  expect(http).toContain('model_provider="benchmark_http"');
+  expect(http).toContain('model_providers.benchmark_http={name="OpenAI",wire_api="responses",requires_openai_auth=true,supports_websockets=false}');
+  expect(http).toContain("--ignore-user-config");
+  expect(http).toContain("--ignore-rules");
+  expect(http).toContain("memories");
+});
 
 test("snapshot fingerprint changes for source edits but not generated build output", async()=>{
   const root=await mkdtemp(join(tmpdir(),"bas-fingerprint-"));

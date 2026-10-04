@@ -18,6 +18,7 @@ while (done.size < manifest.pairs.length) {
     const command = ["bun", join(manifest.snapshot, "skills/blender-agent-benchmark/scripts/compare_runs.ts"),
       "--baseline", baseline, "--candidate", candidate, "--output", join(output, id),
       "--judge-model", "gpt-6-astra", "--judge-reasoning", "medium", "--judges", "2"];
+    command.push("--codex-transport",manifest.codexTransport ?? "auto");
     console.log(`JUDGE ${id}`);
     const child = Bun.spawn(command, { cwd: output, stdout: Bun.file(join(output, `${id}.log`)), stderr: Bun.file(join(output, `${id}.stderr.log`)), windowsHide: true });
     const timer = setTimeout(() => { Bun.spawn(["taskkill", "/PID", String(child.pid), "/T", "/F"], { stdout: "ignore", stderr: "ignore", windowsHide: true }); }, 10 * 60_000);

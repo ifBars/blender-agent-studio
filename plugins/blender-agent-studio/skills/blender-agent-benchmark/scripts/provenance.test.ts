@@ -11,6 +11,7 @@ test("comparison controls reject changed builds, budgets, permissions, evaluator
     expect(provenanceMismatches(p,{...p,...patch},["task"]).length).toBeGreaterThan(0);
   expect(provenanceMismatches({}, {},["task"])).toHaveLength(5);
   expect(provenanceMismatches(p,{...p,taskFingerprints:{task:"t1",unrelated:"new"}},["task"])).toEqual([]);
+  expect(provenanceMismatches({...p,codexTransport:"auto"},{...p,codexTransport:"http"},["task"])).toEqual(["comparison control differs: codexTransport"]);
 });
 
 test("task and evaluator fingerprints bind actual evaluator source and fixture content",async()=>{

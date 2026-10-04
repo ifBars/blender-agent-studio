@@ -10,9 +10,10 @@ for autonomous decisions, evidence cadence, and long-task continuity.
 
 Measure changes with the same tasks, model, effort, limits, Blender build, and evaluator. Preserve natural agent behavior.
 
-The bundled runner drives the Codex CLI as the agent under test, including when
-you start it from Claude Code. Its results describe Codex runs; do not report
-them as Claude Code evidence.
+The bundled runner selects the agent under test with `--agent codex` (default)
+or `--agent claude-code`. Starting the runner from Claude Code does not change
+that selection. Report the recorded agent CLI, requested model and observed
+model identifiers; do not infer them from the host that launched the runner.
 
 ## Protect benchmark integrity
 
@@ -178,6 +179,13 @@ explicitly prompted snapshot skills and MCP. It does not edit user configuration
 `--ignore-user-config` alone does not isolate host skills. Confirm these controls
 on the installed CLI before a campaign; unsupported switches or overly large
 Windows argument lists must be resolved before launching benchmark generations.
+
+For repeated Codex WebSocket idle failures, use `--codex-transport http` on
+both generators and `compare_runs.ts`. This process-local provider keeps the
+existing OpenAI login and selects HTTP Responses streaming; it does not edit
+global configuration. The default is `auto`. Record transport in provenance,
+preserve interrupted traces as infrastructure failures, and restart both sides
+in fresh directories. A transport recovery is not a modeling-quality gain.
 
 Pinned plugin runs ignore user configuration and load the selected skills by
 path. In `skills_mcp` mode, the runner explicitly starts that snapshot's

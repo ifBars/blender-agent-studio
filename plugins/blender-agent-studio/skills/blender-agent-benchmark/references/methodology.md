@@ -2,7 +2,7 @@
 
 ## Conditions
 
-- `baseline`: current Codex agent with user config ignored and no plugin guidance.
+- `baseline`: the selected Codex or Claude Code agent with host customization disabled and no plugin guidance.
 - `skills`: plugin skills and bundled scripts, MCP tools unavailable or explicitly disabled.
 - `skills_mcp`: same skills plus Blender MCP tools.
 
@@ -42,6 +42,7 @@ whether an agent asks the right questions.
 - same prompt and attached references;
 - same wall-clock and tool permissions;
 - same exact Blender executable;
+- same agent CLI version and Codex transport (`auto` or explicit `http`);
 - clean task directories;
 - deterministic evaluator version;
 - exact task/evaluator source fingerprints, reference hashes, time budget and

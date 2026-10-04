@@ -15,6 +15,13 @@ an opposite view and a view of the main secondary area before decorating.
 Check focal hierarchy, foreground/midground/background separation, silhouette,
 access, support heights and important negative spaces in inexpensive renders.
 
+Judge the usable layout and camera together at delivery size. Circulation must
+remain clear without pushing the main activity zone into a small distant
+corner or leaving an oversized empty center. Correct layout, camera position
+or lens when the focal zone reads weakly; adding more clutter is not a layout
+repair. Compare the main furniture's silhouette and upholstery as closely as
+architectural trim and prop count.
+
 The hero camera guides the composition; secondary views reveal whether it
 depends on hiding incomplete construction. Respect the brief's scope: an
 interior render does not need an invented exterior, while an inspectable game
@@ -35,6 +42,14 @@ points, coherent frames and panels for architecture. Decorative microdetail
 does not replace the object's primary shape. Replicate after the family is
 convincing; vary orientation, content and wear deliberately without damaging
 its construction or style.
+
+Inspect the representative's evaluated topology before multiplying it. Read
+per-mesh invalid-element counts, not just whether Blender saved the file.
+Revolved profiles need shared pole vertices; leaf tips and thin panels must
+not collapse after modifiers. Size bevels against the affected feature's
+thickness, including small pieces inside an accumulated mesh. Repair the
+common construction helper before regenerating instances, then confirm the
+intended contours, material boundaries and contacts still read in context.
 
 ## Decorate with relationships
 
@@ -61,6 +76,11 @@ questions. Fix weak shape, fit, texture scale and material response before
 adding noise, grading, bloom or extra clutter. Scanned textures/HDRIs can
 serve realistic briefs when allowed; keep their sources and dependencies
 reproducible. Low-poly intent should remain deliberate and coherent.
+
+Review broad floor reflections and texture repetition in every authored view.
+A physically possible glossy window reflection can still dominate the scene;
+match roughness, grain scale and lighting to the reference and focal hierarchy.
+Judge scanned maps by their fitted appearance rather than their provenance.
 
 At each review, name the most important visible defect, its likely source
 parameter and the smallest useful correction. Check whether a correction

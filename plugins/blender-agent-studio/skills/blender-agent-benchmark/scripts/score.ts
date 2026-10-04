@@ -1,7 +1,7 @@
 import type { BenchmarkTask } from "./tasks.ts";
 import { assessMotionEvidence } from "./motion-evidence.ts";
 
-export const SCORER_VERSION = 7;
+export const SCORER_VERSION = 9;
 
 type AssetMetrics = {
   hard_gate_pass?: boolean;
@@ -74,7 +74,8 @@ export type VideoEvidence = {
 function containsAnyName(names: string[], alternatives: string[]): boolean {
   return names.some((name) =>
     alternatives.some((alternative) =>
-      name.toLowerCase().includes(alternative.toLowerCase()),
+      name.toLowerCase().includes(alternative.toLowerCase()) ||
+      (alternative.toLowerCase() === 'food' && /\b(noodles?|pastries|pastry|bread|fruit|vegetables?)\b/i.test(name.replaceAll('_',' '))),
     ),
   );
 }
@@ -208,12 +209,10 @@ export function scoreSubmission(options: {
     `${invalidCount} invalid vertices, degenerate faces, or zero-length edges`,
   );
   const extent = Math.max(...(blendMetrics?.scene?.bounds?.dimensions ?? [Infinity]));
-  add(
-    "maximum_extent",
-    extent <= task.rubric.maximumExtent,
-    2,
-    `${Number.isFinite(extent) ? extent.toFixed(3) : "missing"}m maximum extent; limit ${task.rubric.maximumExtent}m`,
-  );
+  if (task.renderOnly) add("render_scene_bounds", Number.isFinite(extent), 2,
+    `${Number.isFinite(extent) ? extent.toFixed(3) : "missing"}m full-scene extent, including backgrounds. Finite bounds required; portable-asset extent ceiling does not apply. Interior scale and composition require separate review.`);
+  else add("maximum_extent", extent <= task.rubric.maximumExtent, 2,
+    `${Number.isFinite(extent) ? extent.toFixed(3) : "missing"}m maximum extent; limit ${task.rubric.maximumExtent}m`);
 
   const materials = blendMetrics?.totals?.materials ?? 0;
   if (task.rubric.maximumMaterials !== undefined) {
@@ -442,6 +441,7 @@ export function scoreSubmission(options: {
         "mesh_object_count",
         "invalid_geometry",
         "maximum_extent",
+        "render_scene_bounds",
       ].includes(check.id),
     )
     .reduce((sum, check) => sum + check.earned, 0);
@@ -495,6 +495,7 @@ export function scoreSubmission(options: {
           "triangle_range",
           "invalid_geometry",
           "maximum_extent",
+          "render_scene_bounds",
           "blend_animation",
           "glb_animation",
           "rendered_video",

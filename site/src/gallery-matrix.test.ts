@@ -1,10 +1,19 @@
 import { expect, test } from "bun:test";
-import { assertCompleteGallery, evidenceFrameNumbers, GALLERY_MODELS, GALLERY_TASKS, selectHistoricalRows } from "../../tools/gallery-matrix";
+import { assertCompleteGallery, evidenceFrameNumbers, GALLERY_MODELS, GALLERY_TASKS, SCENE_CHARACTER_GALLERY_TASKS, selectHistoricalRows } from "../../tools/gallery-matrix";
 
 test("review framing preserves sampled animation frame numbers from evidence records", () => {
   expect(evidenceFrameNumbers([{ frame: 1, path: "frame_0001.png" }, { frame: 24, path: "frame_0024.png" }, { frame: 48, path: "frame_0048.png" }])).toEqual([1, 24, 48]);
   expect(evidenceFrameNumbers([1, 24, 48])).toEqual([1, 24, 48]);
   expect(() => evidenceFrameNumbers([{ path: "frame.png" }])).toThrow("Invalid evidence frame");
+});
+
+test("scene and character expansion retains the historical cohort and all four models", () => {
+  const rows = [...GALLERY_TASKS, ...SCENE_CHARACTER_GALLERY_TASKS].flatMap(task => GALLERY_MODELS.map(model => ({task, model, repetition: 1})));
+  rows.push({task: "signal_lantern", model: "gpt-6-sol", repetition: 3});
+  expect(rows.length).toBe(45);
+  expect(() => assertCompleteGallery(rows, SCENE_CHARACTER_GALLERY_TASKS)).not.toThrow();
+  expect(() => assertCompleteGallery(rows.filter(row => row.task !== "game_scout_deformation"), SCENE_CHARACTER_GALLERY_TASKS)).toThrow("Incomplete");
+  expect(() => assertCompleteGallery([...rows, rows[30]], SCENE_CHARACTER_GALLERY_TASKS)).toThrow("duplicated");
 });
 
 test("curation retains the complete third pair without relabeling the older model", () => {
