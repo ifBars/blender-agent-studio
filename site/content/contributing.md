@@ -9,7 +9,7 @@ description: Report bugs, run the checks, and keep generated output out of commi
 
 ## Share what you made
 
-[Share an example](https://github.com/ifBars/blender-agent-studio/issues/new)
+[Share an example](https://github.com/ifBars/blender-agent-studio/issues/new?template=share-an-example.yml)
 with the prompt, agent and model, Blender version, and a render. Include the
 Python build script when you can. If you want the example featured in the docs,
 say so and share only files you have permission to publish.

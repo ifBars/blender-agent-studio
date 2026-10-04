@@ -61,7 +61,7 @@ For the existing integration details, see [installation](install.md) and the
 
 ## Help expand compatibility
 
-If you use another harness, [share a compatibility report](https://github.com/ifBars/blender-agent-studio/issues/new)
+If you use another harness, [share a compatibility report](https://github.com/ifBars/blender-agent-studio/issues/new?template=harness-compatibility.yml)
 with its name and version, your Blender version, how you loaded the skills and
 tools, a short prompt, and the resulting render. Record what worked and any
 missing capabilities. This gives the project evidence for another supported

@@ -1,6 +1,6 @@
 {
   "name": "blender-agent-studio",
-  "description": "Claude Code marketplace for reproducible Blender modeling, validation, animation, and agent benchmarking.",
+  "description": "Marketplace for a free, open-source Blender AI plugin. Build with local Blender from the agent you already use.",
   "owner": {
     "name": "Bars"
   },
@@ -8,7 +8,7 @@
     {
       "name": "blender-agent-studio",
       "source": "./plugins/blender-agent-studio",
-      "description": "Iterative, evidence-driven Blender 5.2 creation, validation, repair, animation, and regression-safe benchmark workflows.",
+      "description": "Free, open-source Blender AI plugin for modeling, animation, rendering, validation, and repair with local Blender. Codex and Claude Code installers.",
       "category": "development"
     }
   ]

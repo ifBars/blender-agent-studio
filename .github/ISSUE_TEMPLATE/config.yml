@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Installation guide
+    url: https://ifbars.github.io/blender-agent-studio/install/
+    about: Install the plugin and configure your local Blender executable.

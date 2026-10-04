@@ -129,7 +129,8 @@ claude plugin update blender-agent-studio@blender-agent-studio
 
 </details>
 
-Prefer skills only? See the [alternative installation options](docs/development.md#skills-only-installation).
+Prefer skills only? See the [alternative installation options](docs/development.md#skills-only-installation)
+and [browse the workflows on skills.sh](https://skills.sh/ifbars/blender-agent-studio).
 
 ## Try it
 
@@ -192,7 +193,7 @@ Found a bug? [Open an issue](https://github.com/ifBars/blender-agent-studio/issu
 with your Blender version, what you asked for, and what happened. A render or
 error log helps.
 
-Made something with the plugin? [Share an example](https://github.com/ifBars/blender-agent-studio/issues/new)
+Made something with the plugin? [Share an example](https://github.com/ifBars/blender-agent-studio/issues/new?template=share-an-example.yml)
 with your prompt, agent/model, Blender version, and a render. If you want it
 featured in the docs, say so and include the build script when you can. Only
 share files you have permission to publish.
