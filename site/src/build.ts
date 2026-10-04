@@ -3,7 +3,7 @@ import { cp, mkdir, rm, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { createHighlighter } from "shiki";
 import { site } from "../site.config";
-import { createMarkdown, pageUrl, parseFrontmatter, searchSections } from "./markdown";
+import { createMarkdown, escapeHtml, pageUrl, parseFrontmatter, searchSections } from "./markdown";
 import { renderNotFound, renderPage, type LayoutContext, type PageData } from "./template";
 
 const siteRoot = resolve(import.meta.dir, "..");
@@ -141,7 +141,7 @@ export async function build(options: BuildOptions = {}): Promise<{ pages: number
     cp(join(siteRoot, "public"), outDir, { recursive: true }),
   ]);
 
-  const ctx: LayoutContext = { base, version: pluginManifest.version, assets, pages, devScript: options.devScript };
+  const ctx: LayoutContext = { base, siteUrl, version: pluginManifest.version, assets, pages, devScript: options.devScript };
   const rendered = new Map<string, string>();
   for (const page of pages) {
     const html = renderPage(ctx, page);
@@ -153,6 +153,11 @@ export async function build(options: BuildOptions = {}): Promise<{ pages: number
   await writeFile(join(outDir, "404.html"), renderNotFound(ctx));
 
   const absolute = (path: string) => (siteUrl ? new URL(path, siteUrl).href : path);
+  if (siteUrl) {
+    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${pages.map((page) => `  <url><loc>${escapeHtml(absolute(pageUrl(base, page.slug)))}</loc></url>`).join("\n")}\n</urlset>\n`;
+    await writeFile(join(outDir, "sitemap.xml"), sitemap);
+    await writeFile(join(outDir, "robots.txt"), `User-agent: *\nAllow: /\nSitemap: ${absolute(`${base}sitemap.xml`)}\n`);
+  }
   const search = pages.flatMap((page) =>
     searchSections(page.html).map((section) => ({
       page: page.title,

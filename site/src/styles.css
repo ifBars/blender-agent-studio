@@ -856,6 +856,12 @@ kbd {
   margin: 32px 0 36px;
 }
 
+.example-preview { margin: 0 0 28px; }
+.example-preview img { display: block; width: 100%; height: auto; border-radius: var(--radius); }
+.example-preview figcaption { margin-top: 10px; color: var(--fg-2); font-size: 13px; line-height: 1.6; }
+.example-preview figcaption a { color: var(--accent-fg); text-underline-offset: 3px; }
+.example-preview figcaption svg { width: 13px; height: 13px; vertical-align: middle; }
+
 .btn {
   display: inline-flex;
   align-items: center;

@@ -1,7 +1,25 @@
 ---
 title: Introduction
-description: A plugin for Codex and Claude Code that plans, builds, and checks Blender models, animations, and scenes in your local Blender installation.
+description: A free, open-source Blender AI plugin for the tools you already use. Start in Codex or Claude Code and keep your .blend file and Python source.
 ---
+
+## Start with an example
+
+Browse the [interactive gallery](comparisons.md) before installing. It includes
+props, mechanical assemblies, and furnished scenes, with results from both
+Codex and Claude Code. Each pair shows the same task and model with and without
+the plugin; the reports retain failed checks and mixed visual reviews.
+
+The reading room above is one selected Sonnet 5.5 result. Its HD preview uses
+the saved scene's authored camera and lighting. It shows what one run produced,
+not an average-quality claim.
+
+The plugin is [MIT licensed](https://github.com/ifBars/blender-agent-studio/blob/main/LICENSE).
+Use it with your Codex or Claude Code account and local Blender installation.
+
+Its workflows use portable skill files and local tools. Codex and Claude Code
+have bundled installers today; [bring your agent](bring-your-agent.md) explains
+what another host needs and where compatibility still needs testing.
 
 ## What you get back
 

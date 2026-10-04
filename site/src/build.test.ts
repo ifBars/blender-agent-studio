@@ -36,6 +36,22 @@ test("fails when a skill or MCP tool is undocumented", () => {
   );
 });
 
+test("publishes canonical URLs, an image preview, and a sitemap under the deployment base", () => {
+  const home = read("index.html");
+  expect(home).toContain("Free, open-source Blender AI plugin</title>");
+  expect(home).toContain('<link rel="canonical" href="https://example.github.io/blender-agent-studio/">');
+  expect(read("install/index.html")).toContain('<meta property="og:url" content="https://example.github.io/blender-agent-studio/install/">');
+  expect(home).toContain('property="og:image" content="https://example.github.io/blender-agent-studio/benchmarks/');
+  expect(home).toContain('name="twitter:card" content="summary_large_image"');
+  const shareImage = home.match(/property="og:image" content="([^"]+)"/)![1];
+  const imagePath = new URL(shareImage).pathname.replace(/^\/blender-agent-studio\//, "");
+  expect(existsSync(join(outDir, imagePath))).toBe(true);
+  expect(read("404.html")).not.toContain('rel="canonical"');
+  expect(read("sitemap.xml")).toContain('<loc>https://example.github.io/blender-agent-studio/install/</loc>');
+  expect(read("sitemap.xml")).not.toContain("404");
+  expect(read("robots.txt")).toContain("Sitemap: https://example.github.io/blender-agent-studio/sitemap.xml");
+});
+
 test("fails on links to missing pages, headings, or files", () => {
   const pages = new Map([
     ["/b/", '<a href="/b/one/#setup">x</a><a href="#top">y</a><h2 id="top"></h2>'],

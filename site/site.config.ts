@@ -11,9 +11,9 @@ export interface Feature {
 
 export const site = {
   title: "Blender Agent Studio",
-  tagline: "Describe what you want to make. Keep the Blender file and the Python that built it.",
+  tagline: "Your Blender agent. In the tools you already use.",
   description:
-    "A plugin for Codex and Claude Code that plans, builds, and checks Blender models, animations, and scenes in your local Blender installation.",
+    "A free, open-source Blender AI plugin. Use the agent you already work with, build locally, and keep the editable .blend file and Python source. Codex and Claude Code installers available.",
   repo: "https://github.com/ifBars/blender-agent-studio",
   branch: "main",
   install: [
@@ -33,7 +33,7 @@ export const site = {
     },
   ],
   nav: [
-    { title: "Get started", pages: ["index", "install", "quickstart"] },
+    { title: "Get started", pages: ["index", "bring-your-agent", "install", "quickstart"] },
     { title: "Using the plugin", pages: ["how-it-works", "skills", "mcp-tools"] },
     { title: "Guides", pages: ["reference-images", "scene-analysis"] },
     { title: "Project", pages: ["comparisons", "results", "contributing"] },

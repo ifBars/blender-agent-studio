@@ -16,15 +16,27 @@ export interface LayoutContext {
   base: string;
   version: string;
   assets: { css: string; js: string };
+  siteUrl?: string;
   pages: PageData[];
   devScript?: string;
 }
 
 const themeScript = `(()=>{let t;try{t=localStorage.getItem("bas-theme")}catch{}document.documentElement.dataset.theme=t||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")})()`;
 
+const exampleImage = "benchmarks/gallery-matrix/scene-character/decorated_reading_room--claude-sonnet-5-5--r01/plugin/preview/hero.png";
+
 function head(ctx: LayoutContext, title: string, description: string, slug?: string): string {
   const { base, assets } = ctx;
   const markdown = slug ? `\n<link rel="alternate" type="text/markdown" href="${base}${slug}.md">` : "";
+  const canonical = ctx.siteUrl && slug
+    ? new URL(pageUrl(base, slug), `${ctx.siteUrl}/`).href
+    : undefined;
+  const sharing = canonical ? `
+<link rel="canonical" href="${escapeHtml(canonical)}">
+<meta property="og:url" content="${escapeHtml(canonical)}">
+<meta property="og:image" content="${escapeHtml(new URL(`${base}${exampleImage}`, `${ctx.siteUrl}/`).href)}">
+<meta property="og:image:alt" content="A reading room built with Blender Agent Studio and Claude Sonnet 5.5">
+<meta name="twitter:card" content="summary_large_image">` : "";
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -34,7 +46,7 @@ function head(ctx: LayoutContext, title: string, description: string, slug?: str
 <meta name="description" content="${escapeHtml(description)}">
 <meta property="og:type" content="website">
 <meta property="og:title" content="${escapeHtml(title)}">
-<meta property="og:description" content="${escapeHtml(description)}">
+<meta property="og:description" content="${escapeHtml(description)}">${sharing}
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0b0b0c" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="${base}favicon.svg" type="image/svg+xml">
@@ -119,8 +131,13 @@ function hero(ctx: LayoutContext): string {
   <p class="lead">${escapeHtml(site.description)}</p>
   <div class="hero-actions">
     <a class="btn btn-primary" href="${pageUrl(ctx.base, "install")}">Get started ${icons.arrow}</a>
+    <a class="btn btn-secondary" href="${pageUrl(ctx.base, "comparisons")}">See examples ${icons.arrow}</a>
     <a class="btn btn-secondary" href="${site.repo}">${icons.github} View on GitHub</a>
   </div>
+  <figure class="example-preview">
+    <a href="${pageUrl(ctx.base, "comparisons")}"><img src="${ctx.base}${exampleImage}" alt="A furnished reading room built with Blender Agent Studio and Claude Sonnet 5.5" width="1536" height="864" fetchpriority="high"></a>
+    <figcaption>Made with Claude Code and Sonnet 5.5. <a href="${pageUrl(ctx.base, "comparisons")}">Explore the paired examples ${icons.arrow}</a></figcaption>
+  </figure>
   ${installs}
 </section>
 <section class="features" aria-label="Features">${features}</section>`;
@@ -134,7 +151,7 @@ const searchDialog = `<dialog class="search" aria-label="Search documentation">
 
 export function renderPage(ctx: LayoutContext, page: PageData): string {
   const home = page.slug === "index";
-  const title = home ? `${site.title} · Blender plugin for Codex and Claude Code` : `${page.title} · ${site.title}`;
+  const title = home ? `${site.title} · Free, open-source Blender AI plugin` : `${page.title} · ${site.title}`;
   const header = home
     ? hero(ctx)
     : `<header class="doc-header">

@@ -1,13 +1,27 @@
 # Blender Agent Studio
 
-Describe what you want to make. Keep the Blender file and the Python that built it.
+Your Blender agent, in the tools you already use.
 
-A plugin for Codex and Claude Code for creating and refining Blender models,
+A free, open-source Blender AI plugin for Codex and Claude Code for creating and refining models,
 animations, and scenes.
 It gives your agent a way to plan the work, build it in your local Blender
 installation, and inspect the result before delivery.
 
-[Docs](https://ifbars.github.io/blender-agent-studio/) · [Install](#install) · [Try it](#try-it) · [How it works](#how-it-works) · [Workflows](plugins/blender-agent-studio/skills) · [Development](docs/development.md) · [Report a bug](https://github.com/ifBars/blender-agent-studio/issues)
+Describe what you want to make. Keep the editable `.blend` file and the Python
+that built it. The goal is a portable Blender agent: open workflows and local
+tools that you can use from your existing agent harness. Codex and Claude Code
+have bundled plugin installers today. Other hosts need compatible skill
+loading and local execution; see [portability and host requirements](https://ifbars.github.io/blender-agent-studio/bring-your-agent/).
+
+[Docs](https://ifbars.github.io/blender-agent-studio/) · [Install](#install) · [Examples](https://ifbars.github.io/blender-agent-studio/comparisons/) · [Try it](#try-it) · [How it works](#how-it-works) · [Workflows](plugins/blender-agent-studio/skills) · [Development](docs/development.md) · [Report a bug](https://github.com/ifBars/blender-agent-studio/issues)
+
+[![A furnished reading room built with Blender Agent Studio and Claude Sonnet 5.5](https://ifbars.github.io/blender-agent-studio/benchmarks/gallery-matrix/scene-character/decorated_reading_room--claude-sonnet-5-5--r01/plugin/preview/hero.png)](https://ifbars.github.io/blender-agent-studio/comparisons/)
+
+One example from the published gallery: a reading room built with Claude Code
+and Sonnet 5.5. The image is an HD render of the saved scene. [Explore the
+paired examples](https://ifbars.github.io/blender-agent-studio/comparisons/) to
+see results with and without the plugin, including failed checks and mixed
+visual reviews. This selected example is not an average-quality claim.
 
 ## What you can do
 
@@ -177,6 +191,11 @@ model comparison.
 Found a bug? [Open an issue](https://github.com/ifBars/blender-agent-studio/issues)
 with your Blender version, what you asked for, and what happened. A render or
 error log helps.
+
+Made something with the plugin? [Share an example](https://github.com/ifBars/blender-agent-studio/issues/new)
+with your prompt, agent/model, Blender version, and a render. If you want it
+featured in the docs, say so and include the build script when you can. Only
+share files you have permission to publish.
 
 For code changes, see the [development guide](docs/development.md) and
 [repository instructions](AGENTS.md). Keep generated models and benchmark output
