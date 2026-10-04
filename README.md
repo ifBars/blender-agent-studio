@@ -168,14 +168,17 @@ results. Plugin revisions have shown [both gains and
 regressions](docs/quality-development.md). Review the result yourself,
 particularly its shape, materials, animation, and exported files.
 
-The paired measurements ran the agent in Codex. Claude Code loads the same
-skills and MCP tools. It has only two single-run samples so far, one
-generation each for Claude Sonnet 5.5 and Claude Opus 5.5 on the lantern task
-with no baseline: Opus passed the technical gate at 100 and Sonnet failed a
-part-naming check at 95.83 despite a visually complete lantern. See the
-[Claude Code samples](docs/plugin-quality-evidence.md#claude-code-samples). Do
-not read the Codex pairs as evidence for Claude Code, or these two runs as a
-model comparison.
+The five pairs above ran in Codex. The [published gallery](https://ifbars.github.io/blender-agent-studio/comparisons/)
+now retains 31 pairs, including later scene comparisons with Sonnet 5.5 and
+Opus 5.5 in Claude Code, alongside the Codex models. The [scene report](docs/scene-comparison-2026-10-04.md)
+records their controls, scores, visual votes, and missing reviews. Those scene
+results are mixed; the selected reading-room image above does not establish a
+general visual advantage. Each pair has one generation per condition, so the
+gallery is evidence to inspect rather than a general success rate.
+
+The [earlier Claude Code lantern samples](docs/plugin-quality-evidence.md#claude-code-samples)
+had no baseline and remain separate from those paired scene comparisons.
+Keep each result tied to its tested host, model, task, and plugin revision.
 
 ## Star history
 

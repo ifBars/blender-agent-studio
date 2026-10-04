@@ -35,7 +35,7 @@ export const site = {
   nav: [
     { title: "Get started", pages: ["index", "bring-your-agent", "install", "quickstart"] },
     { title: "Using the plugin", pages: ["how-it-works", "skills", "mcp-tools"] },
-    { title: "Guides", pages: ["reference-images", "scene-analysis"] },
+    { title: "Guides", pages: ["reading-room", "reference-images", "scene-analysis"] },
     { title: "Project", pages: ["comparisons", "results", "contributing"] },
   ] satisfies NavGroup[],
   features: [
