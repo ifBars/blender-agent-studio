@@ -1,0 +1,46 @@
+{
+  "$schema": "https://skills.sh/schemas/skills.sh.schema.json",
+  "notGrouped": "bottom",
+  "groupings": [
+    {
+      "title": "Start here",
+      "description": "Choose a Blender workflow, clarify the brief, and connect your agent to local tools.",
+      "skills": [
+        "blender-agent-studio",
+        "blender-art-direction-intake",
+        "blender-mcp-integration"
+      ]
+    },
+    {
+      "title": "Create models",
+      "description": "Build props, scenes, procedural geometry, and characters in local Blender.",
+      "skills": [
+        "blender-modeling-workflow",
+        "blender-procedural-workflow",
+        "blender-character-workflow"
+      ]
+    },
+    {
+      "title": "Add motion",
+      "description": "Animate a scene or set up and inspect a physics simulation.",
+      "skills": [
+        "blender-animation-workflow",
+        "blender-simulation-workflow"
+      ]
+    },
+    {
+      "title": "Review and deliver",
+      "description": "Render views, inspect the asset, and refine the result before delivery.",
+      "skills": [
+        "blender-rendering-workflow",
+        "blender-asset-validation",
+        "blender-iterative-refinement"
+      ]
+    },
+    {
+      "title": "Measure changes",
+      "description": "Compare modeling workflows with matched tasks and retained evidence.",
+      "skills": ["blender-agent-benchmark"]
+    }
+  ]
+}

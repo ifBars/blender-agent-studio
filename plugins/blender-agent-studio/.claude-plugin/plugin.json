@@ -1,7 +1,7 @@
 {
   "name": "blender-agent-studio",
   "version": "0.6.4",
-  "description": "Iterative, evidence-driven Blender 5.2 creation, validation, repair, animation, and regression-safe benchmark workflows.",
+  "description": "Free, open-source Blender AI plugin for modeling, animation, rendering, validation, and repair with local Blender. Codex and Claude Code installers.",
   "author": {
     "name": "Bars",
     "url": "https://github.com/ifBars"
@@ -14,7 +14,10 @@
     "claude-code",
     "agent-skills",
     "mcp",
-    "benchmarking"
+    "benchmarking",
+    "blender-ai",
+    "codex",
+    "open-source"
   ],
   "mcpServers": {
     "blender-agent-studio": {

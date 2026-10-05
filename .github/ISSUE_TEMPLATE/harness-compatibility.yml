@@ -1,0 +1,41 @@
+name: Report harness compatibility
+description: Record a real attempt to use the plugin in another agent host.
+title: "[Compatibility] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Help establish another supported installation route. Report what you tested, including partial results. This issue is public; remove credentials, private paths, and sensitive traces.
+  - type: input
+    id: harness
+    attributes:
+      label: Agent host, version, and model
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Operating system, plugin version, and Blender version
+    validations:
+      required: true
+  - type: textarea
+    id: setup
+    attributes:
+      label: How you installed and loaded the workflow
+      description: Include the skills route, local file and shell access, image review, and optional MCP connection you actually used.
+    validations:
+      required: true
+  - type: textarea
+    id: task
+    attributes:
+      label: Test prompt and result
+      description: Use a small asset. Include the prompt, resulting files, and a render if available.
+    validations:
+      required: true
+  - type: textarea
+    id: limitations
+    attributes:
+      label: What worked, what failed, and what remains untested
+      description: Distinguish tested behavior from assumptions about the host.
+    validations:
+      required: true

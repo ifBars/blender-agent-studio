@@ -1,7 +1,7 @@
 {
   "name": "blender-agent-studio",
   "version": "0.6.4",
-  "description": "Iterative, evidence-driven Blender 5.2 creation, validation, repair, animation, and regression-safe benchmark workflows.",
+  "description": "Free, open-source Blender AI plugin for modeling, animation, rendering, validation, and repair with local Blender. Codex and Claude Code installers.",
   "author": {
     "name": "Bars",
     "url": "https://github.com/ifBars"
@@ -14,13 +14,16 @@
     "codex",
     "agent-skills",
     "mcp",
-    "benchmarking"
+    "benchmarking",
+    "blender-ai",
+    "claude-code",
+    "open-source"
   ],
   "skills": "./skills/",
   "interface": {
     "displayName": "Blender Agent Studio",
-    "shortDescription": "Build, simulate, render, and benchmark Blender work",
-    "longDescription": "Evidence-driven Blender 5.2 workflows for reproducible models, Geometry Nodes, rendering, physics simulations, character rigs, critique-and-repair iteration, and regression-safe paired benchmarks.",
+    "shortDescription": "Free Blender AI workflows in your agent",
+    "longDescription": "Use the agent you already work with to build and refine models, scenes, animation, and simulations in local Blender. Keep the editable .blend file and Python source. Includes rendering, asset validation, MCP tools, and paired benchmark workflows. Codex and Claude Code have bundled installers; other hosts need compatible skills and local execution.",
     "developerName": "Bars",
     "category": "Developer Tools",
     "websiteURL": "https://github.com/ifBars/blender-agent-studio",

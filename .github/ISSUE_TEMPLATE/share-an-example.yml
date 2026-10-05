@@ -1,0 +1,46 @@
+name: Share an example
+description: Show what you made with Blender Agent Studio and help others try it.
+title: "[Example] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share a small project, including imperfect results. Images and files in this issue are public. Leave out credentials, private assets, and agent traces.
+  - type: input
+    id: host-model
+    attributes:
+      label: Agent host and model
+      placeholder: Claude Code / Sonnet 5.5, or Codex / your model
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Plugin and Blender versions
+    validations:
+      required: true
+  - type: textarea
+    id: prompt
+    attributes:
+      label: What you asked for
+      description: Include the prompt and any important revisions. Remove private details.
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Result and files
+      description: Attach a render or link to a public example. You can also share the Python source and .blend in a ZIP.
+    validations:
+      required: true
+  - type: textarea
+    id: experience
+    attributes:
+      label: What worked and what got in the way
+      description: Installation friction, missing steps, or a result you would like to improve.
+  - type: checkboxes
+    id: permission
+    attributes:
+      label: Optional permission to feature your example
+      options:
+        - label: I have permission to share these files and allow the project to feature this example with attribution.

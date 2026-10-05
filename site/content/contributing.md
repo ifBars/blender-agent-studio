@@ -7,6 +7,15 @@ description: Report bugs, run the checks, and keep generated output out of commi
 
 [Open an issue](https://github.com/ifBars/blender-agent-studio/issues) with your host (Codex or Claude Code), plugin and Blender versions, what you asked for, and what happened. A render or an error log helps. Leave out credentials, private assets, and sensitive agent traces.
 
+## Share what you made
+
+[Share an example](https://github.com/ifBars/blender-agent-studio/issues/new?template=share-an-example.yml)
+with the prompt, agent and model, Blender version, and a render. Include the
+Python build script when you can. If you want the example featured in the docs,
+say so and share only files you have permission to publish.
+
+Testing another harness? Follow the [compatibility report guide](bring-your-agent.md#help-expand-compatibility).
+
 ## Run the checks
 
 From the repository root:

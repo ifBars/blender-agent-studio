@@ -29,6 +29,9 @@ The agent records routine assumptions and asks only when different readings of t
 
 Names vary with the request. Open the renders before accepting the result; they show what the numbers can't.
 
+For a larger scene brief and a review across three camera views, see the
+[reading-room walkthrough](reading-room.md).
+
 ## Keep going
 
 - **Change it.** Ask for edits. The agent updates the Python and rebuilds.

@@ -1,13 +1,27 @@
 # Blender Agent Studio
 
-Describe what you want to make. Keep the Blender file and the Python that built it.
+Your Blender agent, in the tools you already use.
 
-A plugin for Codex and Claude Code for creating and refining Blender models,
+A free, open-source Blender AI plugin for Codex and Claude Code for creating and refining models,
 animations, and scenes.
 It gives your agent a way to plan the work, build it in your local Blender
 installation, and inspect the result before delivery.
 
-[Docs](https://ifbars.github.io/blender-agent-studio/) · [Install](#install) · [Try it](#try-it) · [How it works](#how-it-works) · [Workflows](plugins/blender-agent-studio/skills) · [Development](docs/development.md) · [Report a bug](https://github.com/ifBars/blender-agent-studio/issues)
+Describe what you want to make. Keep the editable `.blend` file and the Python
+that built it. The goal is a portable Blender agent: open workflows and local
+tools that you can use from your existing agent harness. Codex and Claude Code
+have bundled plugin installers today. Other hosts need compatible skill
+loading and local execution; see [portability and host requirements](https://ifbars.github.io/blender-agent-studio/bring-your-agent/).
+
+[Docs](https://ifbars.github.io/blender-agent-studio/) · [Install](#install) · [Examples](https://ifbars.github.io/blender-agent-studio/comparisons/) · [Try it](#try-it) · [How it works](#how-it-works) · [Workflows](plugins/blender-agent-studio/skills) · [Development](docs/development.md) · [Report a bug](https://github.com/ifBars/blender-agent-studio/issues)
+
+[![A furnished reading room built with Blender Agent Studio and Claude Sonnet 5.5](https://ifbars.github.io/blender-agent-studio/benchmarks/gallery-matrix/scene-character/decorated_reading_room--claude-sonnet-5-5--r01/plugin/preview/hero.png)](https://ifbars.github.io/blender-agent-studio/comparisons/)
+
+One example from the published gallery: a reading room built with Claude Code
+and Sonnet 5.5. The image is an HD render of the saved scene. [Explore the
+paired examples](https://ifbars.github.io/blender-agent-studio/comparisons/) to
+see results with and without the plugin, including failed checks and mixed
+visual reviews. This selected example is not an average-quality claim.
 
 ## What you can do
 
@@ -115,7 +129,8 @@ claude plugin update blender-agent-studio@blender-agent-studio
 
 </details>
 
-Prefer skills only? See the [alternative installation options](docs/development.md#skills-only-installation).
+Prefer skills only? See the [alternative installation options](docs/development.md#skills-only-installation)
+and [browse the workflows on skills.sh](https://skills.sh/ifbars/blender-agent-studio).
 
 ## Try it
 
@@ -153,14 +168,17 @@ results. Plugin revisions have shown [both gains and
 regressions](docs/quality-development.md). Review the result yourself,
 particularly its shape, materials, animation, and exported files.
 
-The paired measurements ran the agent in Codex. Claude Code loads the same
-skills and MCP tools. It has only two single-run samples so far, one
-generation each for Claude Sonnet 5.5 and Claude Opus 5.5 on the lantern task
-with no baseline: Opus passed the technical gate at 100 and Sonnet failed a
-part-naming check at 95.83 despite a visually complete lantern. See the
-[Claude Code samples](docs/plugin-quality-evidence.md#claude-code-samples). Do
-not read the Codex pairs as evidence for Claude Code, or these two runs as a
-model comparison.
+The five pairs above ran in Codex. The [published gallery](https://ifbars.github.io/blender-agent-studio/comparisons/)
+now retains 31 pairs, including later scene comparisons with Sonnet 5.5 and
+Opus 5.5 in Claude Code, alongside the Codex models. The [scene report](docs/scene-comparison-2026-10-04.md)
+records their controls, scores, visual votes, and missing reviews. Those scene
+results are mixed; the selected reading-room image above does not establish a
+general visual advantage. Each pair has one generation per condition, so the
+gallery is evidence to inspect rather than a general success rate.
+
+The [earlier Claude Code lantern samples](docs/plugin-quality-evidence.md#claude-code-samples)
+had no baseline and remain separate from those paired scene comparisons.
+Keep each result tied to its tested host, model, task, and plugin revision.
 
 ## Star history
 
@@ -177,6 +195,11 @@ model comparison.
 Found a bug? [Open an issue](https://github.com/ifBars/blender-agent-studio/issues)
 with your Blender version, what you asked for, and what happened. A render or
 error log helps.
+
+Made something with the plugin? [Share an example](https://github.com/ifBars/blender-agent-studio/issues/new?template=share-an-example.yml)
+with your prompt, agent/model, Blender version, and a render. If you want it
+featured in the docs, say so and include the build script when you can. Only
+share files you have permission to publish.
 
 For code changes, see the [development guide](docs/development.md) and
 [repository instructions](AGENTS.md). Keep generated models and benchmark output
