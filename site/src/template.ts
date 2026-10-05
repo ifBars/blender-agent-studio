@@ -25,6 +25,7 @@ const themeScript = `(()=>{let t;try{t=localStorage.getItem("bas-theme")}catch{}
 
 const exampleImage = "benchmarks/gallery-matrix/scene-character/decorated_reading_room--claude-sonnet-5-5--r01/plugin/preview/hero.png";
 
+/** Renders the document opening and head, adding canonical and sharing metadata when a site URL and slug exist. */
 function head(ctx: LayoutContext, title: string, description: string, slug?: string): string {
   const { base, assets } = ctx;
   const markdown = slug ? `\n<link rel="alternate" type="text/markdown" href="${base}${slug}.md">` : "";
@@ -110,6 +111,7 @@ function pager(ctx: LayoutContext, slug: string): string {
   return `<nav class="pager" aria-label="Pagination">${link(prev, "prev")}${link(next, "next")}</nav>`;
 }
 
+/** Renders the homepage introduction, example preview, installation commands, and feature links. */
 function hero(ctx: LayoutContext): string {
   const [first, ...rest] = site.tagline.split(/(?<=\.)\s+/);
   const installs = site.install.map(({ host, commands }) => {
@@ -149,6 +151,7 @@ const searchDialog = `<dialog class="search" aria-label="Search documentation">
   <footer class="search-foot"><span><kbd>↑</kbd><kbd>↓</kbd> navigate</span><span><kbd>↵</kbd> open</span><span><kbd>Esc</kbd> close</span></footer>
 </dialog>`;
 
+/** Renders a complete documentation page with navigation and the appropriate homepage or article layout. */
 export function renderPage(ctx: LayoutContext, page: PageData): string {
   const home = page.slug === "index";
   const title = home ? `${site.title} · Free, open-source Blender AI plugin` : `${page.title} · ${site.title}`;

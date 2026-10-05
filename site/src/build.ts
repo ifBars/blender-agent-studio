@@ -101,6 +101,7 @@ function markdownCopy(page: SourcePage): string {
   return `# ${page.title}\n\n> ${page.description}\n\n${page.body.trim()}\n`;
 }
 
+/** Rebuilds the documentation output, validates coverage and links, and returns its page count and directory. */
 export async function build(options: BuildOptions = {}): Promise<{ pages: number; outDir: string }> {
   const siteUrl = (options.siteUrl ?? "").replace(/\/$/, "");
   const base = basePath(siteUrl);
