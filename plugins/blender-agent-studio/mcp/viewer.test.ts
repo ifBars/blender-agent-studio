@@ -2,10 +2,56 @@ import {test,expect} from 'bun:test';
 import {mkdtemp,writeFile,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {makeGallery,viewerHtml,VIEWER_URI} from './viewer';
+import {makeGallery,viewerHtml,VIEWER_URI,withPreview,loadGallery} from './viewer';
 import {Client} from '@modelcontextprotocol/client';
 import {StdioClientTransport} from '@modelcontextprotocol/client/stdio';
-import {galleryFromResult} from './ui/result';
+import {galleryFromResult,restoreGallery,previewDirectory} from './ui/result';
+
+test('reopened results reload all views without metadata or inline images',async()=>{
+ const gallery={title:'Scene render',status:'Ready',images:[{label:'Front',src:'data:image/png;base64,iVBORw0KGgo='},{label:'Rear',src:'data:image/png;base64,iVBORw0KGgo='}],details:[['Engine','CYCLES']] as Array<[string,string]>,notice:''};
+ const response=withPreview({content:[],structuredContent:{manifest:{status:'complete'}}},gallery,'render-output');
+ expect(JSON.stringify(response.structuredContent)).not.toContain('base64');
+ let calls=0;
+ const call=async (outputDir:string)=>{calls++;expect(outputDir).toBe('render-output');return {structuredContent:{gallery}};};
+ expect(await restoreGallery({structuredContent:response.structuredContent},undefined,call)).toEqual(gallery);
+ expect(await restoreGallery({content:response.content},undefined,call)).toEqual(gallery);
+ // Old saved results have no preview field; the original outputDir/input works.
+ expect(await restoreGallery({content:[{type:'text',text:JSON.stringify({outputDir:'render-output'})}]},undefined,call)).toEqual(gallery);
+ expect(await restoreGallery({}, {outputDir:'render-output'},call)).toEqual(gallery);
+ expect(calls).toBe(4);
+ expect(await restoreGallery(response,undefined,call)).toEqual(gallery);
+ expect(calls).toBe(4);
+ expect(previewDirectory({content:[null,{type:'text',text:'not JSON'}]})).toBeUndefined();
+ await expect(restoreGallery({isError:true},{outputDir:'render-output'},call)).rejects.toThrow('Render failed');
+ expect(calls).toBe(4);
+ await expect(restoreGallery({structuredContent:response.structuredContent},undefined,async()=>({isError:true}))).rejects.toThrow('Preview unavailable');
+ const inline={content:[{type:'image',mimeType:'image/png',data:'iVBORw0KGgo='}],structuredContent:response.structuredContent};
+ expect((await restoreGallery(inline,undefined,async()=>{throw Error('Older host');}))?.images).toHaveLength(1);
+});
+
+test('a fresh MCP process reloads saved previews through an app-only tool',async()=>{
+ const root=await mkdtemp(join(tmpdir(),'bas-preview-reopen-'));
+ const client=new Client({name:'preview-reopen',version:'1'});
+ try {
+  await writeFile(join(root,'front.png'),Buffer.from('89504e470d0a1a0a','hex'));
+  await writeFile(join(root,'rear.png'),Buffer.from('89504e470d0a1a0a','hex'));
+  await writeFile(join(root,'render-manifest.json'),JSON.stringify({status:'complete',preflight:{engine:'CYCLES'},renders:[
+   {path:join(root,'front.png'),camera:'Front',frame:1},{path:join(root,'rear.png'),camera:'Rear',frame:1},
+  ]}));
+  await client.connect(new StdioClientTransport({command:'bun',args:[join(import.meta.dir,'server.ts')],stderr:'pipe'}));
+  const tool=(await client.listTools()).tools.find(t=>t.name==='blender_get_preview');
+  expect(tool?._meta).toMatchObject({ui:{resourceUri:VIEWER_URI,visibility:['app']}});
+  const result=await client.callTool({name:'blender_get_preview',arguments:{outputDir:root}});
+  expect(result.isError).not.toBe(true);
+  const gallery=galleryFromResult(result);
+  expect(gallery?.images.map(i=>i.label)).toEqual(['Front · Frame 1','Rear · Frame 1']);
+  expect(gallery?.details).toContainEqual(['Engine','CYCLES']);
+  await writeFile(join(root,'render-manifest.json'),JSON.stringify({status:'failed',renders:[]}));
+  expect((await client.callTool({name:'blender_get_preview',arguments:{outputDir:root}})).isError).toBe(true);
+  await writeFile(join(root,'render-manifest.json'),JSON.stringify({status:'preflight',renders:[],preflight:{engine:'CYCLES'}}));
+  expect(await loadGallery(root)).toMatchObject({status:'Preflight',images:[]});
+ }finally{await client.close();await rm(root,{recursive:true,force:true});}
+},15000);
 
 test('viewer displays standard image content when host omits custom metadata',()=>{
  const content=[{type:'text',text:'render complete'},{type:'image',mimeType:'image/png',data:'iVBORw0KGgo='}];
