@@ -1,4 +1,4 @@
-import {registerViewer, viewerToolMeta, makeGallery, galleryMeta} from "./viewer.ts";
+import {registerViewer, viewerToolMeta, makeGallery, withPreview} from "./viewer.ts";
 import { existsSync } from "node:fs";
 import { mkdir, readFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
@@ -52,7 +52,7 @@ server.registerTool("blender_render_modeling_timelapse", {
     const gallery = await makeGallery("Modeling progress", options.outputDir,
       report.checkpoints.map((step:any)=>({path:step.path,label:step.label})),
       [["Video",report.videoPath], ["Duration",`${report.durationSeconds}s`], ["Capture","Actual build checkpoints"]]);
-    return {...result(report), _meta:galleryMeta(gallery)};
+    return withPreview(result(report),gallery,resolve(options.outputDir));
   }
   catch (error) { return errorResult(error); }
 });
@@ -196,8 +196,8 @@ server.registerTool(
       const report = await readJsonFile(join(output, "comparison.json"));
       const response = result({process, report});
       const gallery = await makeGallery("Reference comparison", output, [{path: join(output, "comparison.png"), label: "Reference / model / overlay"}, {path: join(output, "overlay.png"), label: "Overlay"}], [["Purpose", "Projected geometry comparison"], ["Similarity", maskPath ? "See mask metrics in tool result" : "Visual comparison; no mask score"]]);
-      return {...response, _meta: galleryMeta(gallery), content: [...response.content,
-        {type: "image" as const, mimeType: "image/png", data: (await readFile(join(output, "comparison.png"))).toString("base64")}]};
+      return withPreview({...response, content: [...response.content,
+        {type: "image" as const, mimeType: "image/png", data: (await readFile(join(output, "comparison.png"))).toString("base64")}]},gallery,output);
     } catch (error) { return errorResult(error); }
   },
 );
@@ -345,7 +345,7 @@ server.registerTool(
         [["Scope", manifest.evidence_scope ?? "Evidence"], ["Lighting", manifest.requested_presentation ?? "Studio"]]);
       const content: Array<any> = [...response.content];
       if (gallery.images[0]) content.push({type: "image", mimeType: "image/png", data: gallery.images[0].src.split(",")[1]});
-      return {...response, content, _meta: galleryMeta(gallery)};
+      return withPreview({...response,content},gallery,resolvedOutput);
     } catch (error) {
       return errorResult(error);
     }
@@ -405,7 +405,7 @@ server.registerTool(
          ["Samples", String(manifest.effective?.samples ?? "Authored")],
          ["Denoising", manifest.denoise?.effectivePolicy ?? "Authored"],
          ["Device", manifest.device?.effective ?? "Not selected"]], inspectOnly ? "Preflight" : "Ready") : null;
-      return {...response, content, ...(gallery ? {_meta: galleryMeta(gallery)} : {}), isError: process.exitCode !== 0 || process.timedOut};
+      return {...(gallery ? withPreview({...response,content},gallery,resolvedOutput) : {...response,content}), isError: process.exitCode !== 0 || process.timedOut};
     } catch (error) { return errorResult(error); }
   },
 );

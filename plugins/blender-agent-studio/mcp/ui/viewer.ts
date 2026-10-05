@@ -1,9 +1,11 @@
 import {App,applyDocumentTheme,applyHostStyleVariables} from '@modelcontextprotocol/ext-apps';
 import type {Gallery} from '../viewer';
-import {galleryFromResult} from './result';
+import {restoreGallery} from './result';
 const el=<T extends HTMLElement>(id:string)=>document.getElementById(id) as T;
 const img=el<HTMLImageElement>('image'),views=el<HTMLSelectElement>('views'),zoom=el<HTMLButtonElement>('zoom');
 let gallery:Gallery|undefined;
+let input:Record<string,unknown>|undefined;
+let generation=0;
 function empty(message:string,status:string) {
  gallery=undefined;img.hidden=true;img.removeAttribute('src');el('controls').hidden=true;el('details').hidden=true;el('notice').hidden=true;
  el('empty').hidden=false;el('empty').textContent=message;el('status').textContent=status;
@@ -28,8 +30,18 @@ function render(value:unknown) {
 views.onchange=select;zoom.onclick=()=>{const active=el('stage').classList.toggle('zoom');zoom.setAttribute('aria-pressed',String(active));zoom.textContent=active?'Fit':'100%';};
 img.onerror=()=>empty('This image could not be displayed. The rendered file remains in the output directory.','Image unavailable');
 const app=new App({name:'Blender render viewer',version:'1.0.0'},{});
-app.ontoolinput=()=>empty('Rendering. Your preview will appear when it is ready.','Working…');
-app.ontoolresult=(result)=>{if(result.isError){empty('The render did not complete. Check the tool response for details.','Render failed');return;}render(galleryFromResult(result));};
-app.ontoolcancelled=()=>empty('Rendering was cancelled.','Cancelled');
+app.ontoolinput=(params)=>{generation++;input=params.arguments;empty('Rendering. Your preview will appear when it is ready.','Working…');};
+app.ontoolresult=async (result)=>{
+ const current=++generation;
+ if(result.isError){empty('The render did not complete. Check the tool response for details.','Render failed');return;}
+ empty('Loading your rendered views…','Loading…');
+ try {
+  const restored=await restoreGallery(result,input,outputDir=>app.callServerTool({name:'blender_get_preview',arguments:{outputDir}}));
+  if(current===generation)render(restored);
+ }catch{
+  if(current===generation)empty('The preview files could not be loaded. Reopen this panel to retry, or render again if the files were moved or removed.','Preview unavailable');
+ }
+};
+app.ontoolcancelled=()=>{generation++;empty('Rendering was cancelled.','Cancelled');};
 app.onhostcontextchanged=ctx=>{if(ctx.theme)applyDocumentTheme(ctx.theme);if(ctx.styles?.variables)applyHostStyleVariables(ctx.styles.variables);};
 app.connect().then(()=>{const ctx=app.getHostContext();if(ctx?.theme)applyDocumentTheme(ctx.theme);if(ctx?.styles?.variables)applyHostStyleVariables(ctx.styles.variables);}).catch(()=>empty('Open this viewer in an MCP Apps-compatible host. Inline image results remain available.','Connection unavailable'));

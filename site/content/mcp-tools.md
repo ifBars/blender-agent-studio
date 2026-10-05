@@ -77,3 +77,11 @@ The Mixamo and Pixabay tools are browser handoffs. They don't search the catalog
 ## Inline viewer
 
 In hosts that support MCP Apps, `blender_render_scene`, `blender_render_evidence`, and `blender_compare_reference` open a compact viewer. You can switch views, inspect at 100% or fit to the panel, and expand render details. Other hosts get the structured result and the first image inline.
+
+Reopened previews reload their images from the completed output manifest through
+the read-only, app-only `blender_get_preview` tool. This also supports older
+results whose output directory is preserved in the result or tool input, even
+when the host no longer supplies image blocks or custom result metadata. Keep
+the output directory and rendered PNGs in place. Missing files show an unavailable
+state; reopening a panel never starts another Blender render. Image loading stays
+inside the output directory and retains the 12-image / 10 MB gallery limits.

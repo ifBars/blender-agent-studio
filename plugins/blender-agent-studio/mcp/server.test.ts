@@ -36,6 +36,7 @@ describe("Blender Agent Studio MCP", () => {
         "blender_diagnose_topology",
         "blender_download_polyhaven_asset",
         "blender_fit_reference_camera",
+        "blender_get_preview",
         "blender_import_mixamo_animation",
         "blender_inspect_asset",
         "blender_inspect_motion",
