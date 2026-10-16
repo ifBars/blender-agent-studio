@@ -20,6 +20,7 @@ claude plugin install blender-agent-studio@blender-agent-studio
 Core capabilities:
 
 - reproducible procedural Blender modeling;
+- editable signage and surface graphics, physical integration and distance-readability review;
 - authored-scene and fresh-export validation;
 - standardized multiview and animation evidence;
 - adaptive studio presentation with explicit neutral, dark, and light presets;

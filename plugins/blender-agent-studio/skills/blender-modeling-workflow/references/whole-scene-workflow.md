@@ -53,6 +53,13 @@ intended contours, material boundaries and contacts still read in context.
 
 ## Decorate with relationships
 
+Treat communicative surfaces as designed assets: signs, menus, labels and
+display faces need deliberate copy hierarchy and readable graphics, as well
+as credible carriers. Use the signage workflow when available. Review a
+representative at viewer height and delivery resolution before replicating
+the family; close-up texture detail cannot rescue distant unreadable text.
+Keep static display artwork distinct from live scene or gameplay data.
+
 Group objects around a credible use: reading, serving, packing, repairing or
 displaying. Use varied heights and density, intentional gaps, and restrained
 accent colors. Avoid uniform scatter, identical clutter on every surface,

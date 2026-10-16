@@ -26,6 +26,7 @@ visual reviews. This selected example is not an average-quality claim.
 ## What you can do
 
 - Build props, environments, characters, and Geometry Nodes setups.
+- Design readable signs, labels and graphic panels as editable 2D artwork, then integrate their materials and supports and review them at the intended distance. See the [signage workflow](plugins/blender-agent-studio/skills/blender-signage-workflow/SKILL.md).
 - Optionally record real modeling milestones and deliver a timelapse from the empty/default scene to the completed render. Ask before modeling starts; [capture guide](plugins/blender-agent-studio/skills/blender-rendering-workflow/references/modeling-timelapse.md).
 - Gather references from several angles and compare the model's proportions before adding detail.
 - Overlay projected geometry on a reference image, with optional silhouette-mask measurements for missing and excess coverage. See [reference modeling](docs/reference-modeling.md).
@@ -37,7 +38,7 @@ visual reviews. This selected example is not an average-quality claim.
 - Check geometry and exported files, review renders, and repair what doesn't work.
 - Query scene parts and evaluated dimensions, check explicit geometry and ground constraints, and compare repairs against preserved SceneIR baselines with the optional Rust runtime.
 
-The plugin includes eleven specialist skills and a local MCP server for
+The plugin includes twelve specialist skills and a local MCP server for
 inspection, rendering, and asset downloads. Generated scenes come with Python
 source so you can rebuild them and keep making changes.
 

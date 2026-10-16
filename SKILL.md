@@ -17,6 +17,8 @@ adapt lighting/background after visual inspection, and preserve diagnostic views
 
 - Build or substantially refine geometry: read
   `plugins/blender-agent-studio/skills/blender-modeling-workflow/SKILL.md`.
+- Create readable signs, labels, graphic panels or static display faces: also
+  read `plugins/blender-agent-studio/skills/blender-signage-workflow/SKILL.md`.
 - Clarify art direction or offer a concept/mockup reference before creation:
   read `plugins/blender-agent-studio/skills/blender-art-direction-intake/SKILL.md`.
 - Inspect an authored scene or exported asset: read

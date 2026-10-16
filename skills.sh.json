@@ -16,6 +16,7 @@
       "description": "Build props, scenes, procedural geometry, and characters in local Blender.",
       "skills": [
         "blender-modeling-workflow",
+        "blender-signage-workflow",
         "blender-procedural-workflow",
         "blender-character-workflow"
       ]

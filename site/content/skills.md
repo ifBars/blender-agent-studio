@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: One router skill and eleven specialists. The agent loads only the ones a request needs.
+description: One router skill and twelve specialists. The agent loads only the ones a request needs.
 ---
 
 The router skill, `blender-agent-studio`, reads the request and picks the smallest set of specialists that covers it. A typical asset request uses **modeling** and **validation**; the others join when the work calls for them.
@@ -11,6 +11,7 @@ The router skill, `blender-agent-studio`, reads the request and picks the smalle
 | --- | --- |
 | [`blender-art-direction-intake`](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-art-direction-intake/SKILL.md) | Clarifying an ambiguous brief, with an optional concept mockup. |
 | [`blender-modeling-workflow`](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-modeling-workflow/SKILL.md) | Building or substantially refining a model from Python. |
+| [`blender-signage-workflow`](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-signage-workflow/SKILL.md) | Editable sign and label artwork, physical carriers, materials and distance readability. |
 | [`blender-asset-validation`](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-asset-validation/SKILL.md) | Geometry and export checks, fresh imports, and six-view evidence. |
 | [`blender-iterative-refinement`](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-iterative-refinement/SKILL.md) | An opt-in critique, targeted repair, and regression check. |
 | [`blender-procedural-workflow`](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-procedural-workflow/SKILL.md) | Geometry Nodes, scattering, terrain, and parametric generators. |
@@ -50,6 +51,29 @@ caps the modeling process tree at 20% CPU with Below Normal priority and request
 two Blender threads, preferring a verified GPU backend for rendering. Shared
 resource instructions apply equally to both conditions. Modeling and export
 still use the CPU; resource limits and interruptions are recorded with results.
+
+## Signage and surface graphics
+
+The signage specialist separates the graphic face from its physical carrier.
+It guides measured text layout, verified glyphs and pictograms, clean raster
+output, matching aspect ratios and UVs, suitable printed/backlit/display
+materials, credible supports and review in authored lighting. It does not
+prescribe a palette, font, industry or layout. A hand-painted shop sign,
+gallery label and machine plate should retain their own visual language.
+
+Text size is planned against its reading distance and projected glyph size
+before decoration takes the available space. Review covers every required
+line, including supporting copy, and compares revisions at the same output
+size so cleaner graphics do not quietly sacrifice useful readability.
+For text-heavy faces it compares a few measured layout options at projected
+size before committing to decoration. Required text gets usable space first;
+font weight, line breaks and occupied width are checked alongside glyph height.
+
+For example: “Build a ceramic workshop sign with a warm hand-lettered face,
+readable from two meters. Save editable artwork, the Blender source and a
+context render.” Copy and symbols remain editable; static display textures
+are not presented as live data. The skill includes a compact face specification
+and an integration guide, rather than a fixed sign generator or new MCP tool.
 
 ## Shared guidance
 

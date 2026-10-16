@@ -14,7 +14,7 @@ description: Install the plugin in Codex or Claude Code and point it at your Ble
 
 ## Install the plugin
 
-Both hosts install the same eleven specialist skills and local MCP server. Choose the commands for your host.
+Both hosts install the same twelve specialist skills and local MCP server. Choose the commands for your host.
 
 ```bash title="Codex"
 codex plugin marketplace add ifBars/blender-agent-studio
@@ -76,7 +76,7 @@ To install the skills without the MCP server, use the skills CLI:
 bunx skills add -g ifBars/blender-agent-studio --skill blender-agent-studio --agent codex -y
 ```
 
-```bash title="Router and all eleven specialists"
+```bash title="Router and all twelve specialists"
 bunx skills add -g ifBars/blender-agent-studio --skill "*" --agent codex --full-depth -y
 ```
 

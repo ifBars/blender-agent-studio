@@ -1,0 +1,176 @@
+# Astra workflow adaptation
+
+Apply this guidance with the domain skill's actual geometry, render, animation,
+simulation, and export gates. It also works with Sol, Terra, and Luna. A skill
+does not select the model or change the user's Codex or Claude Code settings.
+
+## Complete the requested result
+
+Infer routine choices from the request, references, and existing scene. Record
+reasonable defaults briefly and continue through the requested deliverables.
+Ask when competing plausible interpretations change subject identity, style,
+motion, simulation type or the usable deliverable and context does not resolve
+them. A convenient default does not resolve a consequential ambiguity. Use the
+art-direction intake workflow to ask one to three focused questions; default
+routine implementation settings without a survey. Continue independent work while the
+answer is pending. Do not turn the contract, optional concept art, or an
+internal stage review into an approval gate. Keep work that depends on a
+necessary answer pending; optional preferences may use stated assumptions after
+giving the user time to respond. Honor explicit no-question requests. Respect
+gates the user requested.
+Explicit user instructions take precedence over skill guidelines. If a skill
+would force a pause, quote and link the specific instruction and explain why
+existing authorization does not cover the next step.
+
+## Gather references that answer modeling questions
+
+For a new recognizable subject or a substantial shape/anatomy repair, retrieve
+and inspect real reference images before detailed modeling. Start with images
+the user supplied. Use the host's image search or browser tools to fill gaps;
+ordinary text search is a discovery fallback, not a substitute for opening the
+images. Do not assume a particular search tool exists. For a small edit, reuse
+the accepted references and investigate only the affected feature.
+
+- Plan coverage by question: front for width/spacing, profile for depth and
+  proportions, three-quarter for volume, rear/top when relevant, and close-ups
+  for difficult joints, contact surfaces or identifying features. Start with
+  roughly 3-6 useful images, not a quota of near-duplicates. Include whole-subject
+  views; close-ups alone cannot establish overall proportions.
+- Search for the subject plus the missing angle, pose and feature. Prefer the
+  same individual, product variant or consistent photo series when possible.
+  Label different examples as analogues; do not combine ages, species, variants
+  or poses into an imaginary turnaround. Prefer original photographers,
+  manufacturers, museums, wildlife organizations or documented asset sources.
+- Inspect the actual images for occlusion, perspective distortion and uncertain
+  identity. Perspective photos are not calibrated orthographic measurements.
+  Record inferred hidden structure and conflicting evidence as assumptions.
+- Separate structure/anatomy references from style, palette and lighting
+  references. An explicit low-poly request still benefits from real form and
+  proportion references; simplify those forms deliberately. Generated concepts
+  can guide style but cannot verify unseen geometry or biological anatomy.
+- Keep a compact `reference_notes.md` beside the source: source page URL,
+  image URL or local path, angle/pose, the feature it informs, observed proportion
+  or relationship, and uncertainty. Record access/license information if saving
+  or reusing an image; viewing permission does not grant redistribution or
+  texture reuse. Keep reference images out of published assets unless permitted.
+
+Stop searching when the main modeling questions have useful coverage. If a
+needed view is unavailable or the host cannot inspect images, state that gap
+and proceed with explicit assumptions where practical; do not claim inspection
+or invent a reference. Compare the graybox and final model with the chosen
+references from similar angles. Record concrete mismatches and repair source,
+preserving the user's intended stylization. Retrieval alone is not validation.
+For benchmarks, hold reference access and research limits constant across
+conditions. Search for the subject, never fixture solutions, prior submissions
+or hidden rubrics.
+
+## Reason across the whole asset
+
+Before detailed construction, connect the visual brief to a small set of
+spatial and functional invariants: dimensions, proportions, contact points,
+negative spaces, joint axes, material boundaries, and required motion states.
+Choose a construction method that satisfies those relationships together.
+Use procedural code, editable scene data, or available live Blender tools as
+appropriate; keep durable source and reproducible outputs.
+
+Treat the seven modeling stages as quality milestones. Adjacent stages may
+share a build and evidence pass when their exit criteria are observable.
+Never skip proportion review, hide unresolved structure with materials, or
+reduce the finish target to save steps. For a local repair, revisit affected
+milestones rather than rebuilding already accepted work.
+
+Before polishing a hero view, map the requested deliverable's review coverage:
+primary subject, secondary functional zones, reverse sides, broad surfaces and
+top/underside where inspectable. Spread the finish work across that scope before
+adding detail to the focal object. A complete asset or environment must not have
+a dressed hero area surrounded by primitive or blank construction. An explicitly
+interior-only/render-only brief does not require inventing an unseen exterior;
+an inspectable whole-asset brief does require its promised multiview finish.
+
+For humanoid work, use the character workflow's form/fit review proactively.
+Repeatedly observed failure patterns include oversized boxy torsos and shoes,
+disconnected pelvis/limbs, unfitted garment details, oversized thumbs and
+inconsistent skin patches. Check these against references before detail and
+again in motion; do not wait for serial user corrections. They are review
+priorities, not universal claims about a model or fixed anatomy thresholds.
+
+## Spend tool time on evidence that changes the next decision
+
+Make the asset handoff visually useful by default: show a polished hero image
+with readable material colors, controlled highlights, and a contrasting studio
+background. Use the renderer's automatic preset as a starting point and adapt
+after opening the image; provide two labeled looks only when both serve a useful
+purpose. Keep fixed diagnostic views alongside it. Pin a common preset for
+benchmark comparisons, where per-candidate adaptation would confound results.
+
+For photorealistic scenes, use authored cameras/lighting and suitable scanned
+materials or HDRIs. The rendering skill includes Poly Haven search/download
+tools and material setup guidance. Keep important modeling work authored, but
+do not equate originality with rebuilding every texture from procedural noise.
+Inspect material close-ups, record sourced assets, and preserve render-only
+deliverables without forcing an irrelevant GLB export.
+
+- During construction, run the relevant numerical checks and low-cost views
+  after a coherent change. Inspect the whole contact sheet, then open original
+  individual views or detail views for ambiguous joints, seams, or materials.
+- Tie a visible defect to its view/frame and a source-level cause. Compare
+  several plausible causes before editing; change the cause best supported by
+  the evidence. Use `unclear` when the image cannot establish a relationship.
+- Trigger fresh export/import checks early for export-sensitive changes:
+  topology, modifiers, transforms, hierarchy, skinning, materials, or actions.
+  At completion, always reproduce the final source in a clean process and run
+  the domain's full applicable authored/exported and visual gates.
+- Once appropriate checks pass, deliver. Repeat them only after relevant
+  changes, failures, or a specific unresolved concern. A separate agent critic
+  is optional; a distinct self-critique pass is sufficient unless the user or
+  evaluation protocol requests independence.
+
+## Preserve continuity during long work
+
+For multistage or interrupted work, keep a concise `work_state.md` beside the
+source: current brief and assumptions, accepted decisions, source revision or
+hash, artifact/evidence paths for that revision, known defects, pending tool
+jobs, and next action. Update it at meaningful checkpoints, not every call.
+On resume, verify files and job state before building on the checkpoint.
+
+When the user steers the task, preserve completed applicable work, update the
+brief, and invalidate only affected evidence or caches. Answer side questions
+briefly and continue the broader request unless the user cancels it.
+
+Where the host supports nonblocking tools, overlap independent inspection,
+documentation, or report preparation with renders/bakes from frozen inputs.
+Keep dependent steps sequential, use separate output directories, collect all
+results, and avoid competing heavy GPU jobs. Never mutate a scene or cache
+while a pending job consumes it. The bundled MCP is still a bounded batch
+evaluator; this guidance does not add Responses API async support to it.
+
+Use subagents only when the user or applicable instructions request delegation
+and the host supports it. Assign independent work and explicit file ownership;
+do not let multiple agents edit one live scene. Prefer Terra over Sol for
+bounded delegated work unless explicitly directed otherwise. Keep art direction
+and final acceptance with the lead agent. Do not spawn a separate agent task
+merely to obtain a second opinion.
+
+## Model choice and evidence limits
+
+Use the model selected by the user. For controlled runs, the benchmark's
+`--profile astra` selects `gpt-6-astra` at `medium`; explicit `--reasoning`
+can preserve the effort used by an existing comparison. Increase effort only
+for a concrete unresolved problem or an explicitly configured experiment.
+Do not silently upgrade all work to maximum effort or silently fall back to a
+different model after an error.
+
+The adaptation follows OpenAI's [Astra migration and prompting guide](https://developers.openai.com/api/docs/guides/latest-model),
+checked 2026-09-04: stronger long-task coherence and instruction following,
+with particular attention to unnecessary clarification and excess testing.
+These motivate the workflow changes; they are not Blender-specific results.
+The host's model catalog remains authoritative for available models and effort
+levels. Code-mode tools, image detail, async execution, and steering depend on
+the host; do not infer tool availability from the model name.
+
+Measure old versus revised skills on the same model first. Measure Astra versus
+Sol/Terra/Luna separately with fixed skills, task inputs, effort, permissions,
+Blender build, evaluator, and repeated blinded visual judging. Report model
+effects separately from skill effects. Keep prior results as historical
+evidence; do not relabel them as Astra results or promise a quality/speed gain
+without new measurements.

@@ -74,7 +74,7 @@ Install the umbrella skill:
 bunx skills add -g ifBars/blender-agent-studio --skill blender-agent-studio --agent codex -y
 ```
 
-Or install the umbrella and all eleven specialist skills:
+Or install the umbrella and all twelve specialist skills:
 
 ```bash
 bunx skills add -g ifBars/blender-agent-studio --skill "*" --agent codex --full-depth -y

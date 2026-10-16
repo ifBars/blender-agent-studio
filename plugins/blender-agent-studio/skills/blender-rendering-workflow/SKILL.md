@@ -11,6 +11,13 @@ for autonomous decisions, evidence cadence, and long-task continuity.
 Treat a render as a reproducible deliverable, not a screenshot that happened to
 look acceptable once.
 
+When signs or graphic faces fail to read, use the
+[signage integration guide](../blender-signage-workflow/references/surface-integration.md)
+if available. Compare the flat artwork with the authored-camera view before
+changing lighting: layout, projected text size, UV distortion and texture
+filtering can be the cause. Distinguish printed faces, backlit panels and
+screens instead of making every surface emissive.
+
 For a requested modeling/build timelapse, follow
 [checkpoint capture and video delivery](references/modeling-timelapse.md).
 Start recording the actual empty/default scene before modeling, capture real
