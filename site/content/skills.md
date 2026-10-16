@@ -68,6 +68,10 @@ size so cleaner graphics do not quietly sacrifice useful readability.
 For text-heavy faces it compares a few measured layout options at projected
 size before committing to decoration. Required text gets usable space first;
 font weight, line breaks and occupied width are checked alongside glyph height.
+For operational copy read on approach, a larger-text alternative tests whether
+unused space can improve reading comfort. Required codes and specifications
+keep their reading distance; a nicer hierarchy cannot excuse smaller useful
+text. Before/after review checks each required line separately.
 
 For example: “Build a ceramic workshop sign with a warm hand-lettered face,
 readable from two meters. Save editable artwork, the Blender source and a

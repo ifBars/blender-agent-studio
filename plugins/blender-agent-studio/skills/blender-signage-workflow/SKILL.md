@@ -47,6 +47,11 @@ sign, museum label and industrial machine plate can use the same workflow.
   action/information, or optional detail and state where it must be readable.
   Supporting copy can be secondary without becoming tiny or excessively light.
   Preserve useful differences in hierarchy; do not enlarge every line equally.
+  Required specifications, codes and instructions are reading tasks, not fine
+  print. Do not assign them a closer reading distance simply to justify smaller
+  type. For information read on approach, apply the
+  [comfortable-reading gate](references/surface-integration.md#comfortable-reading-gate)
+  before choosing the most attractive layout.
   Follow the [view-distance sizing pass](references/surface-integration.md#view-distance-sizing-pass)
   when the sign contains text that the viewer needs to read.
 - Use original vector pictograms or suitable licensed assets with consistent

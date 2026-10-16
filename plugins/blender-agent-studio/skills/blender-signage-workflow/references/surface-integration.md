@@ -38,6 +38,65 @@ to satisfy this gate; compare communication and craft independently of style.
 
 ## View-distance sizing pass
 
+### Comfortable-reading gate
+
+For operational information read on approach (instructions, identifiers,
+directions, specifications, hours or prices), default required lines to the
+same reading position unless the brief or actual use establishes otherwise.
+Secondary hierarchy means less emphasis, not permission to require moving
+closer. Paragraphs intended for close reading can have their own distance;
+do not turn a gallery caption or packaging ingredients into a billboard.
+
+Build at least one **larger-text** layout alternative: increase the visible
+height of the weakest required lines substantially, then reflow the remaining
+content around them. A useful trial is about 25–40% larger than the first
+layout, subject to real bounds; this is an experiment, not a universal ratio.
+A palette, alignment or weight change alone does not exercise this tradeoff.
+Also test a naturally wider typeface or width axis at the same cap height.
+Tall, extra-condensed bold letters can meet a height target while reducing
+word recognition, counter openings and punctuation spacing. Condensed is a
+style choice, not a legibility shortcut: use moderate condensation when it
+fits, and compare normal width when the brief permits utilitarian typography.
+Never simulate width by scaling the raster or mesh.
+Compare the alternatives at the same projected face size. Prefer the larger
+comfortable setting when it still fits with clear separation, instead of
+preserving unused space for its own sake. Keep the heading readable too.
+
+Use actual glyph height and surviving stroke width, not point size or a font's
+bold label. For short operational lines, start testing roughly 28–36 visible
+pixels at the limiting delivered view; 16 pixels may be decipherable without
+being comfortable. These are screen-preview diagnostics, not safety or
+accessibility standards. Verify the rendered result rather than claiming a
+pass from those numbers. If the view is unspecified, state a reasonable
+approach view and inspect it; do not select a close-up to make tiny text pass.
+
+Fit the largest useful sizes within the **whole usable face**, not arbitrarily
+small bands chosen earlier. Reallocate excessive gaps, divider space and icon
+area before shrinking required copy. Let short technical lines use a robust
+size even when their left-aligned text occupies little width. Do not stretch
+letters, make every line equally large, over-condense a font, or erase spacing
+around a symbol just to inflate measurements. Preserve generous whitespace
+when the brief calls for it, while keeping its required reading tasks viable.
+
+Record each required line's visible height in the limiting view, the chosen
+alternative and any clipping, crowding or weak strokes. As a diagnostic, when
+a short required line occupies less than about two-thirds of its available
+text band, try spending that spare width on larger or wider natural letterforms
+before accepting it. Include a trial fitted near the band's usable width, with
+safe margins and height bounds. This is a trial to inspect, not a rule to
+stretch every line or fill all whitespace. If that trial is too large or
+crowded, step back from it deliberately; do not stop at the first merely
+legible setting. Record word width as well as cap height so a narrower font
+cannot silently undo the size improvement. Keep warning symbols clear of
+letters and preserve openings within the pictogram itself.
+
+A revision must not trade a readable identifier or technical line for a
+prettier hierarchy. When
+before/after views are available, judge every required line separately: an
+overall aesthetic preference cannot compensate for a readability regression.
+Keep camera, output size and lighting fixed and repair a weaker line before
+calling the revision a readability improvement.
+
 Assign each required line a reading task and distance before finalizing the
 graphic. A shop name must attract recognition; its opening hours still need to
 be read from the intended approach. A gallery's descriptive paragraph may have
