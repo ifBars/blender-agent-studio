@@ -13,6 +13,6 @@
     "shiki": "4.4.3"
   },
   "devDependencies": {
-    "@types/bun": "1.4.2"
+    "@types/bun": "1.4.3"
   }
 }
