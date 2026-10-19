@@ -54,6 +54,11 @@ Studio views are for inspection. They don't replace your scene's own lighting.
 | `final` | Favors quality, using OIDN High or Accurate. |
 | `off` | Turns off render denoising. Compositor denoising stays as authored. |
 
+Some distribution builds omit OpenImageDenoise. If neither compiled OIDN nor a
+supported OptiX denoiser is available, `preview` and `final` render without
+denoising and record the fallback in the manifest. Inspect noise before accepting
+the image. `preserve` and authored compositor denoisers remain unchanged.
+
 ## Python is the source
 
 Generated assets are built by deterministic Python. The `.blend` is the editable result; the script records how to make it. Before delivery, the agent regenerates the scene from clean source, so what you receive matches the script.

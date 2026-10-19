@@ -23,6 +23,16 @@ paired examples](https://ifbars.github.io/blender-agent-studio/comparisons/) to
 see results with and without the plugin, including failed checks and mixed
 visual reviews. This selected example is not an average-quality claim.
 
+## Start here
+
+1. [Install for Codex or Claude Code](#install). Use your existing agent and local Blender.
+2. [Check your setup](#verify-your-setup). Save, reopen, and render a tiny scene before a larger project.
+3. [Make your first asset](#try-it). Start with the walnut desk lamp prompt and review both images.
+
+Your first success is an editable `.blend`, the Python source, and two renders
+you can open. No separate Blender AI subscription or asset download is required
+for this example; your chosen agent's normal usage costs still apply.
+
 ## What you can do
 
 - Build props, environments, characters, and Geometry Nodes setups.
@@ -101,10 +111,30 @@ For example, in PowerShell:
 $env:BLENDER_EXECUTABLE = "C:\path\to\Blender\blender.exe"
 ```
 
-Start a new Codex task or Claude Code session after installing or updating the
+Launch your CLI agent from the terminal where you set `BLENDER_EXECUTABLE`, or
+configure your desktop host's environment; a new conversation may not inherit
+shell changes. Start a new task or session after installing or updating the
 plugin. In Codex, invoke a skill as `$blender-agent-studio:blender-modeling-workflow`;
 in Claude Code, as `/blender-agent-studio:blender-modeling-workflow`. Both hosts
 also pick the relevant skill from a plain request.
+
+### Verify your setup
+
+Before a larger project, ask your agent:
+
+> Run Blender Agent Studio's setup doctor from its installed plugin directory
+> with `bun run doctor`, then call `blender_version` to verify the MCP connection.
+
+The doctor saves and reopens a tiny scene, then renders a 128px preview with
+Cycles on CPU. It needs no API key, GPU, downloaded assets, or Rust. It retains
+the `.blend`, preview, logs, and a JSON report in a new temporary folder and
+prints its location. A nonzero exit means a check failed. This checks the local
+Blender pipeline; the separate `blender_version` call checks the host connection.
+
+From a repository checkout, the same `bun run doctor` command works at the root.
+Use `--blender "/path/to/blender"` to override discovery, or `--output-dir NEW_DIRECTORY`
+to choose where to keep the evidence. See [setup troubleshooting](docs/development.md#setup-troubleshooting)
+if a check fails.
 
 For the optional scene-understanding tools, build the Rust runtime in the
 installed plugin directory with `bun run setup:runtime`. See

@@ -155,6 +155,19 @@ def _set_cycles_value(cycles, name, value):
         return False
 
 
+def oidn_build_available():
+    """RNA may accept OIDN even when a distro build omitted the library.
+
+    Match the capability used by Cycles' own denoiser UI. If a future build
+    removes this private flag, preserve the prior capability-selection behavior.
+    """
+    try:
+        import _cycles
+        return getattr(_cycles, 'with_openimagedenoise', True) is not False
+    except ImportError:
+        return True
+
+
 def configure_denoising(scene, requested, device):
     """Apply the bounded render denoise policy and return manifest-safe facts.
 
@@ -209,11 +222,19 @@ def configure_denoising(scene, requested, device):
             return device.get('effective') != 'CPU' and bool(getattr(prefs, method)())
         except (AttributeError, RuntimeError, TypeError):
             return False
-    oidn_gpu = supports('has_oidn_gpu_devices')
+    oidn_available = oidn_build_available()
+    oidn_gpu = oidn_available and supports('has_oidn_gpu_devices')
     optix_gpu = supports('has_optixdenoiser_gpu_devices')
     # Repeated local still-life timings favor OIDN GPU FAST over OptiX for the
     # bounded preview path. OptiX is the supported GPU fallback for either policy.
     use_optix = not oidn_gpu and optix_gpu
+    if not oidn_available and not use_optix:
+        cycles.use_denoising = False
+        return {'requestedPolicy': requested, 'effectivePolicy': 'off',
+                'denoiser': None, 'quality': None, 'prefilter': None, 'gpu': False,
+                'renderDenoisingEnabled': False,
+                'decisionReason': 'OpenImageDenoise is not compiled into this Blender build and no supported OptiX denoiser was found; rendering without denoising. Increase samples or use an official Blender build for cleaner output.',
+                'compositorDenoiseNodes': nodes}
     desired_denoiser = 'OPENIMAGEDENOISE' if oidn_gpu or not use_optix else 'OPTIX'
     if not _set_cycles_value(cycles, 'denoiser', desired_denoiser):
         return {'requestedPolicy': requested, 'effectivePolicy': 'preserve',

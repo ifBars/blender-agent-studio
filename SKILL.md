@@ -13,6 +13,17 @@ reviews into approval gates. The specialists bundle Astra execution guidance
 for continuity and focused verification. Start with a polished hero presentation,
 adapt lighting/background after visual inspection, and preserve diagnostic views.
 
+## Check a new installation
+
+When setup is unverified or Blender execution fails, run `bun run doctor` from
+an installed plugin directory (the one containing `mcp`, `scripts`, and
+`package.json`) or from this repository root. It creates its own tiny scene,
+saves and reopens it, and renders a bounded CPU preview. Read the report and
+retain its output path. Then call `blender_version` to verify the host MCP
+connection. The doctor checks local Blender, not the host connection or GPU.
+For skills-only installations without bundled scripts, resolve Blender and
+follow the specialist workflow's executable/version checks instead.
+
 ## Route the request
 
 - Build or substantially refine geometry: read

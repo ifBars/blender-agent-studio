@@ -23,11 +23,12 @@ Run these commands from the repository root:
 
 ```bash
 bun install --cwd plugins/blender-agent-studio
+bun run doctor
 bun run check
 bun run test
 bun run test:python
-bun --cwd plugins/blender-agent-studio run setup:runtime
-bun --cwd plugins/blender-agent-studio run test:runtime
+bun run --cwd plugins/blender-agent-studio setup:runtime
+bun run --cwd plugins/blender-agent-studio test:runtime
 ```
 
 Set `BLENDER_EXECUTABLE` or put Blender on `PATH` to run the live Blender tests.
@@ -95,6 +96,41 @@ export BLENDER_EXECUTABLE="/path/to/blender"
 Benchmark commands also accept `--blender`. The MCP tools accept `blenderPath`.
 See the [MCP integration guide](../plugins/blender-agent-studio/skills/blender-mcp-integration/SKILL.md)
 for tool setup and alternatives.
+
+## Setup troubleshooting
+
+Run `bun run doctor` from the repository root or the installed plugin directory.
+It creates its own small scene, saves and reopens it with scripts disabled, and
+renders a 128px Cycles CPU preview with two threads. It never opens your projects
+or downloads assets. Output is retained in a new temporary folder; use
+`--output-dir NEW_DIRECTORY` to keep it somewhere specific. Existing directories
+are rejected to avoid overwriting files.
+
+- **`bun` is not found:** install [Bun](https://bun.sh), then open a new terminal
+  and restart the agent session. The doctor requires Bun 1.3.5 or newer.
+- **Blender executable not found:** put Blender on `PATH`, set
+  `BLENDER_EXECUTABLE`, or run `bun run doctor --blender "/absolute/path/to/blender"`.
+  Pass the executable, not its containing folder. Paths containing spaces must
+  be quoted. On macOS a typical path is
+  `/Applications/Blender.app/Contents/MacOS/Blender`; use your actual installation.
+- **Version warning:** 5.2 LTS is the tested Blender version. A warning alone
+  does not fail the doctor; it means other workflows still need testing on that version.
+- **Save/reopen passes but rendering fails:** inspect `blender-process.json` in
+  the output folder for the Blender error. The probe uses Cycles on CPU, so it
+  does not require a working GPU. `--skip-render` isolates startup and file I/O,
+  but a passing result with that flag does not verify rendering.
+- **Timeout:** the whole Blender probe has a 90-second limit. On a slow CPU,
+  try `--timeout-ms 180000`; the maximum is 300000 ms. Partial results and process
+  logs remain in the output folder.
+- **Doctor passes but agent tools are missing:** start a fresh Codex task or
+  Claude Code session after installing or changing the environment. Ask for
+  `blender_version`. The doctor does not check host plugin loading, MCP transport,
+  GPU rendering, network assets, or the optional Rust runtime.
+
+Use `bun run doctor --json` for a machine-readable report. `doctor-report.json`
+always records completed diagnostics after a probe attempt. A failed check exits
+nonzero; warnings and explicitly skipped checks are labeled. Review logs for
+local paths before sharing them in an issue.
 
 ## Scripts and benchmarks
 

@@ -13,7 +13,7 @@ import { preparePixabaySoundSearch } from "../scripts/pixabay.ts";
 import { renderModelingTimelapse } from "../scripts/modeling-timelapse.ts";
 import {
   readJsonFile,
-  resolveBlenderExecutable,
+  runBlenderVersion,
   runBlender,
 } from "../scripts/blender-process.ts";
 
@@ -207,25 +207,21 @@ server.registerTool(
   {
     title: "Blender version",
     description:
-      "Verify the configured Blender executable and return its exact build fingerprint.",
+      "Verify the configured Blender executable and return its exact build fingerprint, with a bounded startup timeout.",
     inputSchema: z.object({
       blenderPath: z.string().optional(),
+      timeoutMs: z.number().int().min(1000).max(30000).default(10000),
     }),
   },
-  async ({ blenderPath }) => {
+  async ({ blenderPath, timeoutMs }) => {
     try {
-      const executable = resolveBlenderExecutable(blenderPath);
-      const proc = Bun.spawn([executable, "--version"], {
-        stdout: "pipe",
-        stderr: "pipe",
-        windowsHide: true,
-      });
-      const [stdout, stderr, exitCode] = await Promise.all([
-        new Response(proc.stdout).text(),
-        new Response(proc.stderr).text(),
-        proc.exited,
-      ]);
-      return result({ executable, exitCode, stdout, stderr });
+      const process = await runBlenderVersion({blenderPath, timeoutMs});
+      const valid = !process.timedOut && process.exitCode === 0 && /^Blender \d+\.\d+/m.test(process.stdout);
+      const error = valid ? undefined : process.timedOut
+        ? `Blender --version exceeded ${timeoutMs} ms. Check the executable path or increase timeoutMs (maximum 30000).`
+        : process.exitCode !== 0 ? `Blender --version exited with code ${process.exitCode}.`
+        : "The executable did not return a Blender version fingerprint. Check blenderPath or BLENDER_EXECUTABLE.";
+      return {...result({executable: process.command[0], ...process, error}), isError: !valid};
     } catch (error) {
       return errorResult(error);
     }

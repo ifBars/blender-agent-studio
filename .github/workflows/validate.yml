@@ -25,7 +25,7 @@ jobs:
       - run: bun run docs:assets
       - run: bun run docs:test
       - run: bun run docs:build
-      - run: bun --cwd plugins/blender-agent-studio run setup:runtime
-      - run: bun --cwd plugins/blender-agent-studio run test:runtime
+      - run: bun run --cwd plugins/blender-agent-studio setup:runtime
+      - run: bun run --cwd plugins/blender-agent-studio test:runtime
       - run: bun run test
       - run: bun run test:python

@@ -103,6 +103,12 @@ The CLI equivalent is `--denoise preview` or `--denoise final`.
 - `denoise: "preserve"` is the backward-compatible default for deliberately
   authored settings and reproducible comparisons.
 
+If the Blender build has no compiled OpenImageDenoise and no supported OptiX
+denoiser, preview/final render without denoising and record `effectivePolicy:
+"off"` with the reason in the manifest. Review noise and raise the bounded
+sample budget or use an official Blender build when needed. Preserve mode and
+authored compositor denoisers are never silently changed by this fallback.
+
 Inspect texture, fine edges, contact shadows and reflections at delivery size.
 When a surface looks smeared, compare a small raw crop or matching no-denoise
 preview before increasing samples. Use one denoising stage; an existing active

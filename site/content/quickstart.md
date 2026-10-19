@@ -3,6 +3,9 @@ title: First project
 description: Ask for an asset, say what matters, and review what comes back.
 ---
 
+First, run the [setup check](install.md#verify-before-your-first-project) to verify
+Blender can save, reopen and render a scene on your machine.
+
 ## Ask for something
 
 Open a new Codex task or Claude Code session and describe what you want:
@@ -10,6 +13,18 @@ Open a new Codex task or Claude Code session and describe what you want:
 > Use Blender Agent Studio to build a walnut desk lamp. Give it warm lighting, render it from two angles, and save the .blend and Python source.
 
 The agent records routine assumptions and asks only when different readings of the brief would produce a different result.
+
+### Your first success
+
+For this lamp prompt, ask the agent to show you both rendered images and the
+paths to the editable `.blend` and build script. Open the images and check that
+the lamp has a supported shade, readable walnut material, and warm light. A
+saved scene alone is not a completed render task.
+
+You can make this example with procedural materials and local Blender, without
+an asset download or extra service account. Your agent's normal usage costs
+still apply. If execution fails, return to the [setup check](install.md#verify-before-your-first-project)
+and share the failing step with the agent.
 
 ## Say what matters
 
