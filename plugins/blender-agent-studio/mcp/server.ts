@@ -1,4 +1,4 @@
-import {registerViewer, viewerToolMeta, makeGallery, withPreview} from "./viewer.ts";
+import {registerViewer, viewerToolMeta, sceneGallery, evidenceGallery, comparisonGallery, timelapseGallery, withPreview} from "./viewer.ts";
 import { existsSync } from "node:fs";
 import { mkdir, readFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
@@ -13,7 +13,7 @@ import { preparePixabaySoundSearch } from "../scripts/pixabay.ts";
 import { renderModelingTimelapse } from "../scripts/modeling-timelapse.ts";
 import {
   readJsonFile,
-  resolveBlenderExecutable,
+  runBlenderVersion,
   runBlender,
 } from "../scripts/blender-process.ts";
 
@@ -49,9 +49,7 @@ server.registerTool("blender_render_modeling_timelapse", {
 }, async (options) => {
   try {
     const report = await renderModelingTimelapse(options);
-    const gallery = await makeGallery("Modeling progress", options.outputDir,
-      report.checkpoints.map((step:any)=>({path:step.path,label:step.label})),
-      [["Video",report.videoPath], ["Duration",`${report.durationSeconds}s`], ["Capture","Actual build checkpoints"]]);
+    const gallery = await timelapseGallery(options.outputDir, report);
     return withPreview(result(report),gallery,resolve(options.outputDir));
   }
   catch (error) { return errorResult(error); }
@@ -195,7 +193,7 @@ server.registerTool(
       if (process.exitCode !== 0 || process.timedOut) return {...result({process, report: null}), isError: true};
       const report = await readJsonFile(join(output, "comparison.json"));
       const response = result({process, report});
-      const gallery = await makeGallery("Reference comparison", output, [{path: join(output, "comparison.png"), label: "Reference / model / overlay"}, {path: join(output, "overlay.png"), label: "Overlay"}], [["Purpose", "Projected geometry comparison"], ["Similarity", maskPath ? "See mask metrics in tool result" : "Visual comparison; no mask score"]]);
+      const gallery = await comparisonGallery(output, Boolean(maskPath));
       return withPreview({...response, content: [...response.content,
         {type: "image" as const, mimeType: "image/png", data: (await readFile(join(output, "comparison.png"))).toString("base64")}]},gallery,output);
     } catch (error) { return errorResult(error); }
@@ -207,25 +205,21 @@ server.registerTool(
   {
     title: "Blender version",
     description:
-      "Verify the configured Blender executable and return its exact build fingerprint.",
+      "Verify the configured Blender executable and return its exact build fingerprint, with a bounded startup timeout.",
     inputSchema: z.object({
       blenderPath: z.string().optional(),
+      timeoutMs: z.number().int().min(1000).max(30000).default(10000),
     }),
   },
-  async ({ blenderPath }) => {
+  async ({ blenderPath, timeoutMs }) => {
     try {
-      const executable = resolveBlenderExecutable(blenderPath);
-      const proc = Bun.spawn([executable, "--version"], {
-        stdout: "pipe",
-        stderr: "pipe",
-        windowsHide: true,
-      });
-      const [stdout, stderr, exitCode] = await Promise.all([
-        new Response(proc.stdout).text(),
-        new Response(proc.stderr).text(),
-        proc.exited,
-      ]);
-      return result({ executable, exitCode, stdout, stderr });
+      const process = await runBlenderVersion({blenderPath, timeoutMs});
+      const valid = !process.timedOut && process.exitCode === 0 && /^Blender \d+\.\d+/m.test(process.stdout);
+      const error = valid ? undefined : process.timedOut
+        ? `Blender --version exceeded ${timeoutMs} ms. Check the executable path or increase timeoutMs (maximum 30000).`
+        : process.exitCode !== 0 ? `Blender --version exited with code ${process.exitCode}.`
+        : "The executable did not return a Blender version fingerprint. Check blenderPath or BLENDER_EXECUTABLE.";
+      return {...result({executable: process.command[0], ...process, error}), isError: !valid};
     } catch (error) {
       return errorResult(error);
     }
@@ -337,12 +331,7 @@ server.registerTool(
         ? await readJsonFile(join(resolvedOutput, "evidence.json")) as Record<string, any> : null;
       const response = result({process, outputDir: resolvedOutput, manifest});
       if (!manifest) return {...response, isError: true};
-      const candidates = [
-        ...(manifest.contact_sheet ? [{path: manifest.contact_sheet, label: "All views"}] : []),
-        ...(manifest.views ?? []).map((path:string, i:number)=>({path, label: manifest.requested_views?.[i] ?? `View ${i+1}`})),
-      ];
-      const gallery = await makeGallery("Model views", resolvedOutput, candidates,
-        [["Scope", manifest.evidence_scope ?? "Evidence"], ["Lighting", manifest.requested_presentation ?? "Studio"]]);
+      const gallery = await evidenceGallery(resolvedOutput, manifest);
       const content: Array<any> = [...response.content];
       if (gallery.images[0]) content.push({type: "image", mimeType: "image/png", data: gallery.images[0].src.split(",")[1]});
       return withPreview({...response,content},gallery,resolvedOutput);
@@ -398,13 +387,7 @@ server.registerTool(
         if (png.length <= 10_000_000) content.push({type: "image", mimeType: "image/png", data: png.toString("base64")});
         else content.push({type: "text", text: `PNG exceeds the 10 MB inline limit; open the rendered image at ${manifest.renders[0].path}`});
       }
-      const gallery = manifest ? await makeGallery(inspectOnly ? "Scene details" : "Scene render", resolvedOutput,
-        (manifest.renders ?? []).map((r:any)=>({path:r.path,label:`${r.camera} · Frame ${r.frame}`})),
-        [["Engine", manifest.preflight?.engine ?? "Unknown"],
-         ["Size", manifest.effective?.resolution?.join(" × ") ?? manifest.preflight?.resolution?.slice(0,2).join(" × ") ?? "Unknown"],
-         ["Samples", String(manifest.effective?.samples ?? "Authored")],
-         ["Denoising", manifest.denoise?.effectivePolicy ?? "Authored"],
-         ["Device", manifest.device?.effective ?? "Not selected"]], inspectOnly ? "Preflight" : "Ready") : null;
+      const gallery = manifest ? await sceneGallery(resolvedOutput, manifest, inspectOnly) : null;
       return {...(gallery ? withPreview({...response,content},gallery,resolvedOutput) : {...response,content}), isError: process.exitCode !== 0 || process.timedOut};
     } catch (error) { return errorResult(error); }
   },

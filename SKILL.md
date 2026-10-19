@@ -13,6 +13,17 @@ reviews into approval gates. The specialists bundle Astra execution guidance
 for continuity and focused verification. Start with a polished hero presentation,
 adapt lighting/background after visual inspection, and preserve diagnostic views.
 
+## Check a new installation
+
+When setup is unverified or Blender execution fails, run `bun run doctor` from
+an installed plugin directory (the one containing `mcp`, `scripts`, and
+`package.json`) or from this repository root. It creates its own tiny scene,
+saves and reopens it, and renders a bounded CPU preview. Read the report and
+retain its output path. Then call `blender_version` to verify the host MCP
+connection. The doctor checks local Blender, not the host connection or GPU.
+For skills-only installations without bundled scripts, resolve Blender and
+follow the specialist workflow's executable/version checks instead.
+
 ## Route the request
 
 - Build or substantially refine geometry: read
@@ -64,7 +75,8 @@ their respective capability is required.
    secondary forms, structural refinement, materials and textures, final
    surface polish, and export validation.
 5. Keep deterministic Python as the durable source for generated assets.
-6. Inspect both the authored scene and a fresh import of the exported artifact.
+6. Inspect the authored scene. When an export is requested, also inspect a fresh
+   import of that deliverable; do not add exports to a render-only task.
 7. Open and review fixed multiview evidence before claiming visual quality.
 8. Treat automated metrics as gates and measurements, not substitutes for
    request compliance or visual judgment.

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import {mkdtemp, writeFile, rm, readFile} from "node:fs/promises";
+import {mkdtemp, writeFile, rm, readFile, chmod} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import { Client } from "@modelcontextprotocol/client";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
@@ -79,6 +79,26 @@ describe("Blender Agent Studio MCP", () => {
       }});
       expect(invalid.isError).toBe(true);
       expect(JSON.stringify(invalid.content)).toContain("12 camera/frame");
+
+      const versionSchema = listed.tools.find(tool => tool.name === 'blender_version')!.inputSchema;
+      expect(versionSchema.properties?.timeoutMs).toMatchObject({default: 10000, maximum: 30000});
+      if (process.platform !== 'win32') {
+        const temporary = await mkdtemp(join(tmpdir(), 'bas-version-failure-'));
+        try {
+          const fake = join(temporary, 'fake blender');
+          for (const body of ['exit 7', 'echo not-blender', 'trap \'\' TERM\nexec sleep 30']) {
+            await writeFile(fake, `#!/bin/sh\n${body}\n`);
+            await chmod(fake, 0o755);
+            const failure = await client.callTool({name: 'blender_version', arguments: {blenderPath: fake, timeoutMs: 1000}});
+            expect(failure.isError).toBe(true);
+            if (body.includes('sleep')) expect((failure.structuredContent as any).timedOut).toBe(true);
+          }
+          await chmod(fake, 0o644);
+          const denied = await client.callTool({name: 'blender_version', arguments: {blenderPath: fake}});
+          expect(denied.isError).toBe(true);
+          expect(JSON.stringify(denied.content)).toContain('not executable');
+        } finally { await rm(temporary, {recursive: true, force: true}); }
+      }
 
       const blenderPath =
         process.env.BLENDER_EXECUTABLE ?? Bun.which("blender");

@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { accessSync, constants, existsSync, statSync } from "node:fs";
 import { mkdir, readFile } from "node:fs/promises";
 import { dirname, isAbsolute, resolve } from "node:path";
 
@@ -32,11 +32,15 @@ export function resolveBlenderExecutable(path?: string): string {
     return resolve(fromPath);
   }
   const candidate = isAbsolute(requested) ? requested : resolve(requested);
-  if (existsSync(candidate)) {
+  if (existsSync(candidate) && statSync(candidate).isFile()) {
+    if (process.platform !== "win32") {
+      try { accessSync(candidate, constants.X_OK); }
+      catch { throw new Error(`Blender path is not executable: ${candidate}. Select an executable Blender installation.`); }
+    }
     return candidate;
   }
   throw new Error(
-    `Blender executable not found: ${requested}. Set BLENDER_EXECUTABLE, add blender to PATH, or pass --blender.`,
+    `Blender executable not found: ${requested}. Set BLENDER_EXECUTABLE, add blender to PATH, or pass --blender (CLI) / blenderPath (MCP).`,
   );
 }
 
@@ -63,6 +67,14 @@ export async function runBlender(options: {
     args.push("--", ...options.scriptArgs);
   }
 
+  return runBlenderCommand(blenderPath, args, cwd, options.timeoutMs ?? 300_000);
+}
+
+export async function runBlenderVersion(options: {blenderPath?: string; timeoutMs?: number} = {}): Promise<BlenderRunResult> {
+  return runBlenderCommand(resolveBlenderExecutable(options.blenderPath), ["--version"], process.cwd(), options.timeoutMs ?? 10_000);
+}
+
+async function runBlenderCommand(blenderPath: string, args: string[], cwd: string, timeoutMs: number): Promise<BlenderRunResult> {
   const started = performance.now();
   const proc = Bun.spawn([blenderPath, ...args], {
     cwd,
@@ -71,10 +83,9 @@ export async function runBlender(options: {
     windowsHide: true,
   });
   let timedOut = false;
-  const timeoutMs = options.timeoutMs ?? 300_000;
   const timer = setTimeout(() => {
     timedOut = true;
-    proc.kill();
+    proc.kill("SIGKILL");
   }, timeoutMs);
 
   const [stdout, stderr, exitCode] = await Promise.all([

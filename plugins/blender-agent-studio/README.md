@@ -11,8 +11,8 @@ Codex reads `.codex-plugin/plugin.json` and `.mcp.json`. Claude Code reads
 `.claude-plugin/plugin.json`, which starts the same `mcp/server.ts` through
 `${CLAUDE_PLUGIN_ROOT}`. Claude Code resolves relative MCP paths from the
 session's project directory; pass absolute paths when the location matters.
-The benchmark harness drives the Codex CLI as the agent under test, so it
-needs Codex installed even when you start it from Claude Code.
+For the supported benchmark hosts and CLI prerequisites, see the
+[benchmark workflow](skills/blender-agent-benchmark/SKILL.md).
 
 ## Astra adaptation
 

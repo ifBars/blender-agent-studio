@@ -3,15 +3,17 @@
 ## Universal hard gates
 
 - Blender process exits successfully within the timeout.
-- At least one non-empty mesh exists.
-- No non-finite vertex coordinates or object transforms exist.
+- No non-finite object transforms exist.
 - Required deliverables are written.
-- GLB can be imported into a new Blender process.
-- Required object, material, action, and anchor names survive export.
+- When export is required, the requested format imports into a new Blender
+  process and preserves required object, material, action, and anchor names.
 
 ## Contextual geometry checks
 
 Treat these as failures only when the asset contract requires them:
+
+- a mesh deliverable has at least one non-empty mesh with finite vertices;
+  curve-, volume-, or render-only tasks do not require an artificial mesh;
 
 - watertight/manifold surface;
 - exactly one connected component;

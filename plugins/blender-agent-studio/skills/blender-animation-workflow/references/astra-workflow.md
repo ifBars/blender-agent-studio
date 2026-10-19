@@ -125,6 +125,22 @@ deliverables without forcing an irrelevant GLB export.
   is optional; a distinct self-critique pass is sufficient unless the user or
   evaluation protocol requests independence.
 
+## Match effort to scene scope
+
+Plan for hour-long work where the scope warrants it: detailed environments,
+many distinct asset families or close-inspection deliverables. Allocate useful
+work across composition, construction, materials, lighting and actual defect
+repairs. Never idle, repeat unchanged renders, or add filler geometry to consume
+time; a skill cannot keep the host alive or enforce a runtime. Small props,
+local fixes and requested blockouts should stay proportionate.
+
+Respect explicit user time limits, approval gates, and stop requests. For full
+scenes, use the modeling workflow's `references/whole-scene-workflow.md` when
+available. Its build-review-repair loop is normal creation, not an opt-in second
+pass. Continue while important contracted gates fail and authorized work is
+possible. If a time, tooling or session limit prevents completion, preserve a
+resumable checkpoint and report the result as partial with remaining defects.
+
 ## Preserve continuity during long work
 
 For multistage or interrupted work, keep a concise `work_state.md` beside the
@@ -146,8 +162,8 @@ evaluator; this guidance does not add Responses API async support to it.
 
 Use subagents only when the user or applicable instructions request delegation
 and the host supports it. Assign independent work and explicit file ownership;
-do not let multiple agents edit one live scene. Prefer Terra over Sol for
-bounded delegated work unless explicitly directed otherwise. Keep art direction
+do not let multiple agents edit one live scene. Use the user-selected model
+and the host's supported defaults unless the task specifies a comparison. Keep art direction
 and final acceptance with the lead agent. Do not spawn a separate agent task
 merely to obtain a second opinion.
 

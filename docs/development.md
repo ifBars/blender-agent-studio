@@ -23,11 +23,12 @@ Run these commands from the repository root:
 
 ```bash
 bun install --cwd plugins/blender-agent-studio
+bun run doctor
 bun run check
+bun run --cwd plugins/blender-agent-studio setup:runtime
+bun run --cwd plugins/blender-agent-studio test:runtime
 bun run test
 bun run test:python
-bun --cwd plugins/blender-agent-studio run setup:runtime
-bun --cwd plugins/blender-agent-studio run test:runtime
 ```
 
 Set `BLENDER_EXECUTABLE` or put Blender on `PATH` to run the live Blender tests.
@@ -95,6 +96,21 @@ export BLENDER_EXECUTABLE="/path/to/blender"
 Benchmark commands also accept `--blender`. The MCP tools accept `blenderPath`.
 See the [MCP integration guide](../plugins/blender-agent-studio/skills/blender-mcp-integration/SKILL.md)
 for tool setup and alternatives.
+
+## Setup troubleshooting
+
+Run `bun run doctor` from the repository root or the installed plugin directory.
+It creates its own small scene, saves and reopens it with scripts disabled, and
+renders a 128px Cycles CPU preview with two threads. It never opens your projects
+or downloads assets. Output is retained in a new temporary folder; use
+`--output-dir NEW_DIRECTORY` to keep it somewhere specific. Existing directories
+are rejected to avoid overwriting files.
+
+For executable discovery, version warnings, render failures, timeouts, and host
+connection issues, use the [installation troubleshooting guide](https://ifbars.github.io/blender-agent-studio/install/#troubleshooting).
+Use `--json` for a structured report or `--skip-render` to isolate startup and
+file I/O. Skipping rendering does not verify it. Failed checks exit nonzero;
+review logs for local paths before sharing them in an issue.
 
 ## Scripts and benchmarks
 

@@ -5,6 +5,58 @@ workflow to the scene; a short list of zones and asset families is sufficient.
 Preserve useful natural modeling choices rather than making every scene a
 large paperwork or validation exercise.
 
+## Plan sustained work for complex scenes
+
+Detailed environments, multiple occupied zones and close-up exploration need
+sustained construction and repair, not a single generation plus a beauty render.
+Plan roughly an hour of useful work when appropriate to the brief and host,
+allocating effort to composition/blockout, hero and secondary assets, materials
+and lighting, then review and repairs. Reserve time for integration, not just
+hero detail. These are flexible priorities, not timed quotas. Finish sooner if
+gates pass; otherwise continue useful authorized work. An explicit user time
+limit wins: save a partial checkpoint rather than overrunning it or silently
+lowering quality. A skill cannot guarantee an uninterrupted host session.
+
+Keep one compact zone/family list in the existing `work_state.md`: intended
+finish, current stage, most important defect, and `pass`, `fail` or `unclear`
+with evidence. For example: `reading zone / armchair | fail: boxy cushion in
+reverse.png | reshape cushion profile before replication`. Small scenes need
+only a short list; do not inventory every screw or create another tracking system.
+
+## Build, inspect, fix, repeat
+
+1. Block out the whole space and review composition, scale and activity zones
+   from hero, opposite and secondary-area views before detailed decoration.
+2. Finish representative hero and secondary families before replication. Review
+   their silhouette, thickness, supports, joints and functional features in
+   close/context views. Replace visible placeholder shapes, not just materials.
+3. Integrate materials and lighting, then inspect all promised zones, including
+   reverse surfaces. Finish weak families before adding hero microdetail.
+4. Open inexpensive multiview renders after each coherent batch. Name the
+   highest-impact defect, fix durable source, regenerate and compare the same
+   cameras/settings. Record before/after paths and the retain/revert decision;
+   preserve good features and revert regressions. Reconsider the construction
+   method when repeated edits fail instead of adding random detail.
+5. Inspect final hero, reverse, secondary-area and representative close-up
+   images in authored light. Run the applicable clean reproduction and export
+   gates. Only then deliver as finished; otherwise identify a partial
+   scene/checkpoint with specific unfinished families and unverified gates.
+
+A bevelled primitive pile, uniform clutter or procedural noise is not detail.
+Judge recognizable construction, credible contact, intentional negative space,
+material readability and consistent finish at delivery size. Do not hide defects
+with darkness, bloom or strategic crops. Obtain a better view for ambiguous
+requirements: unclear is not a pass. Time spent and object count prove no quality
+improvement; static workflow tests cannot prove generated scene quality.
+
+At meaningful milestones, preserve a source/artifact checkpoint and update
+`work_state.md` with source revision/hash, matching evidence paths, pending jobs
+and next concrete source change. Keep render inputs frozen. On resume, verify
+files/source revision and pending job status, open the latest evidence and
+continue the highest-priority unfinished item. Invalidate evidence affected by
+new edits. If interrupted or blocked, provide the checkpoint, exact resume
+command, remaining defects and next action rather than starting over.
+
 ## Solve the picture and the space together
 
 Write a one-sentence scene intention: what should the viewer notice, what is

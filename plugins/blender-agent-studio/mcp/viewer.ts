@@ -64,6 +64,34 @@ export function withPreview<T extends {content:any[];structuredContent:Record<st
   _meta:galleryMeta(gallery)};
 }
 
+// Keep fresh tool results and reopened previews on the same presentation path.
+export function sceneGallery(outputDir:string,manifest:Record<string,any>,preflight=manifest.status==='preflight') {
+ return makeGallery(preflight?'Scene details':'Scene render',outputDir,
+  (manifest.renders??[]).map((render:any)=>({path:render.path,label:`${render.camera} · Frame ${render.frame}`})),
+  [['Engine',manifest.preflight?.engine??'Unknown'],
+   ['Size',manifest.effective?.resolution?.join(' × ')??manifest.preflight?.resolution?.slice(0,2).join(' × ')??'Unknown'],
+   ['Samples',String(manifest.effective?.samples??'Authored')],
+   ['Denoising',manifest.denoise?.effectivePolicy??'Authored'],['Device',manifest.device?.effective??'Not selected']],
+  preflight?'Preflight':'Ready');
+}
+
+export function evidenceGallery(outputDir:string,manifest:Record<string,any>) {
+ return makeGallery('Model views',outputDir,[...(manifest.contact_sheet?[{path:manifest.contact_sheet,label:'All views'}]:[]),
+  ...(manifest.views??[]).map((path:string,index:number)=>({path,label:manifest.requested_views?.[index]??`View ${index+1}`}))],
+  [['Scope',manifest.evidence_scope??'Evidence'],['Lighting',manifest.requested_presentation??'Studio']]);
+}
+
+export function comparisonGallery(outputDir:string,hasMask:boolean) {
+ return makeGallery('Reference comparison',outputDir,
+  [{path:join(outputDir,'comparison.png'),label:'Reference / model / overlay'},{path:join(outputDir,'overlay.png'),label:'Overlay'}],
+  [['Purpose','Projected geometry comparison'],['Similarity',hasMask?'See mask metrics in tool result':'Visual comparison; no mask score']]);
+}
+
+export function timelapseGallery(outputDir:string,manifest:Record<string,any>) {
+ return makeGallery('Modeling progress',outputDir,manifest.checkpoints.map((step:any)=>({path:step.path,label:step.label})),
+  [['Video',manifest.videoPath],['Duration',`${manifest.durationSeconds}s`],['Capture','Actual build checkpoints']]);
+}
+
 // Read only known render manifests and PNGs contained in their output folder.
 // The original files are the durable backing store; no in-memory token expires
 // when the MCP process restarts or the conversation is reopened.
@@ -76,26 +104,18 @@ export async function loadGallery(outputDir:string):Promise<Gallery> {
   const m=JSON.parse(await readFile(path,'utf8'));
   if(name==='render-manifest.json') {
    if(!['complete','preflight'].includes(m.status)||!Array.isArray(m.renders))throw Error('Incomplete render');
-   return makeGallery(m.status==='preflight'?'Scene details':'Scene render',root,
-    m.renders.map((r:any)=>({path:r.path,label:`${r.camera} · Frame ${r.frame}`})),
-    [['Engine',m.preflight?.engine??'Unknown'],['Size',m.effective?.resolution?.join(' × ')??m.preflight?.resolution?.slice(0,2).join(' × ')??'Unknown'],
-     ['Samples',String(m.effective?.samples??'Authored')],['Denoising',m.denoise?.effectivePolicy??'Authored'],['Device',m.device?.effective??'Not selected']],
-    m.status==='preflight'?'Preflight':'Ready');
+   return sceneGallery(root,m);
   }
   if(name==='evidence.json') {
    if(!Array.isArray(m.views))throw Error('Invalid evidence');
-   return makeGallery('Model views',root,[...(m.contact_sheet?[{path:m.contact_sheet,label:'All views'}]:[]),
-    ...m.views.map((path:string,i:number)=>({path,label:m.requested_views?.[i]??`View ${i+1}`}))],
-    [['Scope',m.evidence_scope??'Evidence'],['Lighting',m.requested_presentation??'Studio']]);
+   return evidenceGallery(root,m);
   }
   if(name==='comparison.json') {
    if(m.scope!=='projected_geometry_reference_comparison')throw Error('Invalid comparison');
-   return makeGallery('Reference comparison',root,[{path:join(root,'comparison.png'),label:'Reference / model / overlay'},{path:join(root,'overlay.png'),label:'Overlay'}],
-    [['Purpose','Projected geometry comparison'],['Similarity',m.mask?'See mask metrics in tool result':'Visual comparison; no mask score']]);
+   return comparisonGallery(root,Boolean(m.mask));
   }
   if(m.status!=='complete'||!Array.isArray(m.checkpoints))throw Error('Incomplete timelapse');
-  return makeGallery('Modeling progress',root,m.checkpoints.map((s:any)=>({path:s.path,label:s.label})),
-   [['Video',m.videoPath],['Duration',`${m.durationSeconds}s`],['Capture','Actual build checkpoints']]);
+  return timelapseGallery(root,m);
  }
  throw Error('No completed preview manifest');
 }

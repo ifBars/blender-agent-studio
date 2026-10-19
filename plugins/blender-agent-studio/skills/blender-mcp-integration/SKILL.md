@@ -12,7 +12,7 @@ Use the narrowest MCP layer that improves the task.
 
 ## Choose the layer
 
-1. Prefer Blender's official Lab MCP for Blender 5.1+ live scene inspection, screenshots, documentation lookup, rendering, navigation, and Python execution.
+1. Use the bundled tools and Blender CLI for ordinary scripted builds, inspection, and rendering. Add Blender's official Lab MCP only when the task needs live interaction with an open Blender session on a supported version.
 2. Use Blender Agent Studio's MCP for deterministic batch inspection, standardized geometry evidence, and bounded authored-scene renders. `blender_render_scene` preserves cameras, lights, volumes and color management and returns the first image inline; `inspectOnly` discovers scene settings before rendering. The bundled Poly Haven search/download tools also acquire verified CC0 textures and HDRIs without another add-on or API key; see the rendering workflow for material setup and standalone CLI use.
 3. Consider `ahujasid/blender-mcp` only when the request needs its additional remote-host, Poly Haven, Sketchfab, or external 3D-generation integrations and accepts the extra installation, network, credential, and telemetry surface.
 4. Do not run multiple add-on socket servers on the same host/port.

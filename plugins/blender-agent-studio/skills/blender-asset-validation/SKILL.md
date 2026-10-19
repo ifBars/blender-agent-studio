@@ -8,7 +8,7 @@ description: Inspect and validate Blender assets technically and visually. Use f
 Read [the shared execution guidance](references/astra-workflow.md) once per task
 for autonomous decisions, evidence cadence, and long-task continuity.
 
-Validate both the authored scene and the exported deliverable. A clean export or low triangle count is not proof of visual or functional quality.
+Validate the supplied asset and any requested exported deliverable. Do not create an export for an inspection-only or render-only task. A clean export or low triangle count is not proof of visual or functional quality.
 
 ## Run deterministic inspection
 
@@ -205,9 +205,12 @@ optimization. Use reference-relative judgments rather than universal ratios.
 
 ## Verify the exported artifact
 
-1. Export GLB from the authored `.blend`.
+Use this gate when an export is requested or supplied. For a `.blend`-only task,
+reopen and inspect that scene instead.
+
+1. Produce the requested export format, or use the supplied exported artifact.
 2. Start a fresh Blender process.
-3. Inspect and render the GLB independently.
+3. Import, inspect, and render the actual exported file independently.
 4. Compare required names, materials, dimensions, actions, and critical frames with the authored scene.
 5. Report authored and re-imported metrics separately.
 

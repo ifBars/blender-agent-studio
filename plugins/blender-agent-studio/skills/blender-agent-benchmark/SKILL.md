@@ -44,14 +44,14 @@ suite. Default to a five-minute wall-clock budget for one targeted repair:
 1. Identify the highest-impact visible defect in an existing saved asset.
 2. Copy its durable source and inputs into a new repair directory. Preserve the
    original asset and images as the before condition.
-3. Use Luna or Terra for one local source repair. Preserve good proportions,
+3. Use the selected model for one local source repair. Preserve good proportions,
    silhouette, materials and detail outside the affected area; do not rebuild
    the asset from scratch or simplify it to satisfy a numerical check.
 4. Regenerate once and request two relevant fixed views at resolution 256 with
    `blender_render_evidence`, the same explicit presentation and framing inputs
    for before and after. Open the images; inspect full-size views if needed.
-5. Use one Astra visual review to check the stated defect and collateral loss
-   of finish. Keep the original if the repair does not visibly help. Record
+5. Review the result to check the stated defect and collateral loss of finish.
+   Use a separate model only when the experiment explicitly calls for one. Keep the original if the repair does not visibly help. Record
    elapsed time, exact source changes and any unresolved weakness.
 
 This is a repair demonstration, not evidence of a general model capability

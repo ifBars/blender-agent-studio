@@ -16,12 +16,7 @@ from mathutils import Vector
 # Blender --python does not consistently put the script directory on sys.path.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from evidence_settings import EVIDENCE_SETTINGS_VERSION, resolve_presentation, studio_settings
-
-
-def script_args() -> list[str]:
-    if "--" not in sys.argv:
-        return []
-    return sys.argv[sys.argv.index("--") + 1 :]
+from inspect_asset import load_asset, script_args
 
 
 def parse_args() -> argparse.Namespace:
@@ -39,28 +34,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--head-texture", default="")
     parser.add_argument("--presentation", choices=("auto", "neutral", "dark", "light"), default="auto")
     return parser.parse_args(script_args())
-
-
-def load_asset(path: Path) -> None:
-    suffix = path.suffix.lower()
-    if suffix == ".blend":
-        bpy.ops.wm.open_mainfile(filepath=str(path))
-        return
-    bpy.ops.wm.read_factory_settings(use_empty=True)
-    if suffix in {".glb", ".gltf"}:
-        bpy.ops.import_scene.gltf(filepath=str(path))
-    elif suffix == ".fbx":
-        if hasattr(bpy.ops.wm, "fbx_import"):
-            bpy.ops.wm.fbx_import(filepath=str(path))
-        else:
-            bpy.ops.import_scene.fbx(filepath=str(path))
-    elif suffix == ".obj":
-        if hasattr(bpy.ops.wm, "obj_import"):
-            bpy.ops.wm.obj_import(filepath=str(path))
-        else:
-            bpy.ops.import_scene.obj(filepath=str(path))
-    else:
-        raise ValueError(f"Unsupported asset extension: {suffix}")
 
 
 def scene_bounds(names: set[str] | None = None) -> tuple[Vector, Vector]:
