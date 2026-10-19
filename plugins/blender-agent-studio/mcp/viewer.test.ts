@@ -2,7 +2,7 @@ import {test,expect} from 'bun:test';
 import {mkdtemp,writeFile,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {makeGallery,viewerHtml,VIEWER_URI,withPreview,loadGallery} from './viewer';
+import {makeGallery,viewerHtml,VIEWER_URI,withPreview,loadGallery,sceneGallery,evidenceGallery,comparisonGallery,timelapseGallery} from './viewer';
 import {Client} from '@modelcontextprotocol/client';
 import {StdioClientTransport} from '@modelcontextprotocol/client/stdio';
 import {galleryFromResult,restoreGallery,previewDirectory} from './ui/result';
@@ -81,5 +81,43 @@ test('gallery scopes image reads and caps aggregate bytes without leaking reject
   await writeFile(join(root,'ok.png'),png);await writeFile(join(root,'bad.png'),'not png');await writeFile(join(root,'big.png'),Buffer.alloc(10_000_001));
   const result=await makeGallery('Render',root,[{path:join(root,'ok.png'),label:'Front'},{path:join(root,'bad.png'),label:'Bad'},{path:join(root,'big.png'),label:'Big'},{path:join(import.meta.dir,'server.ts'),label:'Outside'}]);
   expect(result.images).toHaveLength(1);expect(result.notice).toContain('3 image(s)');expect(JSON.stringify(result)).not.toContain('server.ts');
+ }finally{await rm(root,{recursive:true,force:true});}
+});
+
+
+test('fresh and reopened galleries share labels, details and optional-field defaults',async()=>{
+ const root=await mkdtemp(join(tmpdir(),'bas-gallery-parity-'));
+ try {
+  const image=join(root,'comparison.png');
+  await writeFile(image,Buffer.from('89504e470d0a1a0a','hex'));
+  await writeFile(join(root,'overlay.png'),Buffer.from('89504e470d0a1a0a','hex'));
+  const cases=[
+   {file:'render-manifest.json',manifest:{status:'complete',renders:[{path:image,camera:'Hero',frame:12}],preflight:{engine:'CYCLES',resolution:[640,480,100]},effective:{samples:16},denoise:{effectivePolicy:'final'},device:{effective:'CPU'}},
+    fresh:sceneGallery,title:'Scene render',labels:['Hero · Frame 12'],detail:['Size','640 × 480']},
+   {file:'render-manifest.json',manifest:{status:'preflight',renders:[]},
+    fresh:sceneGallery,title:'Scene details',labels:[],detail:['Engine','Unknown']},
+   {file:'render-manifest.json',manifest:{status:'complete',renders:[],effective:{resolution:[320,240]}},
+    fresh:sceneGallery,title:'Scene render',labels:[],detail:['Size','320 × 240']},
+   {file:'evidence.json',manifest:{views:[image,image],contact_sheet:image,requested_views:['front'],evidence_scope:'detail',requested_presentation:'neutral'},
+    fresh:evidenceGallery,title:'Model views',labels:['All views','front','View 2'],detail:['Scope','detail']},
+   {file:'evidence.json',manifest:{views:[image]},
+    fresh:evidenceGallery,title:'Model views',labels:['View 1'],detail:['Lighting','Studio']},
+   ...[false,true].map(mask=>({file:'comparison.json',manifest:{scope:'projected_geometry_reference_comparison',mask},
+    fresh:(dir:string,m:Record<string,any>)=>comparisonGallery(dir,Boolean(m.mask)),title:'Reference comparison',labels:['Reference / model / overlay','Overlay'],
+    detail:['Similarity',mask?'See mask metrics in tool result':'Visual comparison; no mask score']})),
+   {file:'timelapse.json',manifest:{status:'complete',checkpoints:[{path:image,label:'Blockout'},{path:image,label:'Final'}],videoPath:join(root,'modeling-timelapse.mp4'),durationSeconds:3},
+    fresh:timelapseGallery,title:'Modeling progress',labels:['Blockout','Final'],detail:['Duration','3s']},
+  ];
+  for(const entry of cases) {
+   const path=join(root,entry.file);
+   await writeFile(path,JSON.stringify(entry.manifest));
+   const fresh=await entry.fresh(root,entry.manifest);
+   expect(await loadGallery(root)).toEqual(fresh);
+   expect(fresh.title).toBe(entry.title);
+   expect(fresh.images.map(image=>image.label)).toEqual(entry.labels);
+   expect(fresh.details).toContainEqual(entry.detail);
+   if(entry.manifest.status==='preflight')expect(fresh.status).toBe('Preflight');
+   await rm(path);
+  }
  }finally{await rm(root,{recursive:true,force:true});}
 });

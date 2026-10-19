@@ -45,7 +45,7 @@ compatibility or retargeting workflow.
 
 ## Validate
 
-1. Run `$blender-agent-studio:blender-asset-validation` on the source and exported GLB.
+1. Run `$blender-agent-studio:blender-asset-validation` on the source and, when required by the task, the requested export.
 2. Render all semantic critical frames from at least two useful cameras.
 3. Render the complete action to video when timing or causality matters.
 4. Open the contact sheet and video.
@@ -56,7 +56,7 @@ compatibility or retargeting workflow.
    - readable cause and effect;
    - believable weight, impact, rebound, and settling;
    - visibility/material continuity;
-   - exported action frame range.
+   - exported action frame range when animation export is required.
 6. For every dynamic connector, report the maximum endpoint residual at the
    critical frames and inspect both endpoints in the rendered frames.
 

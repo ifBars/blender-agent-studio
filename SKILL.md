@@ -75,7 +75,8 @@ their respective capability is required.
    secondary forms, structural refinement, materials and textures, final
    surface polish, and export validation.
 5. Keep deterministic Python as the durable source for generated assets.
-6. Inspect both the authored scene and a fresh import of the exported artifact.
+6. Inspect the authored scene. When an export is requested, also inspect a fresh
+   import of that deliverable; do not add exports to a render-only task.
 7. Open and review fixed multiview evidence before claiming visual quality.
 8. Treat automated metrics as gates and measurements, not substitutes for
    request compliance or visual judgment.

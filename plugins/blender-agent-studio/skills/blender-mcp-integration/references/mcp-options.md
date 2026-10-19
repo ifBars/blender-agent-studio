@@ -6,7 +6,9 @@ Source: https://www.blender.org/lab/mcp-server/
 
 Repository: https://projects.blender.org/lab/blender_mcp
 
-Use by default with Blender 5.1 or newer.
+Use when the task needs live Blender interaction on a supported version.
+Ordinary scripted builds, inspection, and rendering use the bundled tools and
+Blender CLI; do not install a second server without a task-specific need.
 
 Strengths:
 

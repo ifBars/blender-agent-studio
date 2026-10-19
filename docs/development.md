@@ -25,10 +25,10 @@ Run these commands from the repository root:
 bun install --cwd plugins/blender-agent-studio
 bun run doctor
 bun run check
-bun run test
-bun run test:python
 bun run --cwd plugins/blender-agent-studio setup:runtime
 bun run --cwd plugins/blender-agent-studio test:runtime
+bun run test
+bun run test:python
 ```
 
 Set `BLENDER_EXECUTABLE` or put Blender on `PATH` to run the live Blender tests.
@@ -106,31 +106,11 @@ or downloads assets. Output is retained in a new temporary folder; use
 `--output-dir NEW_DIRECTORY` to keep it somewhere specific. Existing directories
 are rejected to avoid overwriting files.
 
-- **`bun` is not found:** install [Bun](https://bun.sh), then open a new terminal
-  and restart the agent session. The doctor requires Bun 1.3.5 or newer.
-- **Blender executable not found:** put Blender on `PATH`, set
-  `BLENDER_EXECUTABLE`, or run `bun run doctor --blender "/absolute/path/to/blender"`.
-  Pass the executable, not its containing folder. Paths containing spaces must
-  be quoted. On macOS a typical path is
-  `/Applications/Blender.app/Contents/MacOS/Blender`; use your actual installation.
-- **Version warning:** 5.2 LTS is the tested Blender version. A warning alone
-  does not fail the doctor; it means other workflows still need testing on that version.
-- **Save/reopen passes but rendering fails:** inspect `blender-process.json` in
-  the output folder for the Blender error. The probe uses Cycles on CPU, so it
-  does not require a working GPU. `--skip-render` isolates startup and file I/O,
-  but a passing result with that flag does not verify rendering.
-- **Timeout:** the whole Blender probe has a 90-second limit. On a slow CPU,
-  try `--timeout-ms 180000`; the maximum is 300000 ms. Partial results and process
-  logs remain in the output folder.
-- **Doctor passes but agent tools are missing:** start a fresh Codex task or
-  Claude Code session after installing or changing the environment. Ask for
-  `blender_version`. The doctor does not check host plugin loading, MCP transport,
-  GPU rendering, network assets, or the optional Rust runtime.
-
-Use `bun run doctor --json` for a machine-readable report. `doctor-report.json`
-always records completed diagnostics after a probe attempt. A failed check exits
-nonzero; warnings and explicitly skipped checks are labeled. Review logs for
-local paths before sharing them in an issue.
+For executable discovery, version warnings, render failures, timeouts, and host
+connection issues, use the [installation troubleshooting guide](https://ifbars.github.io/blender-agent-studio/install/#troubleshooting).
+Use `--json` for a structured report or `--skip-render` to isolate startup and
+file I/O. Skipping rendering does not verify it. Failed checks exit nonzero;
+review logs for local paths before sharing them in an issue.
 
 ## Scripts and benchmarks
 

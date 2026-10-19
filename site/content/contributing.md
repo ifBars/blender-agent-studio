@@ -23,16 +23,15 @@ From the repository root:
 ```bash
 bun install --cwd plugins/blender-agent-studio
 bun run check
+bun run --cwd plugins/blender-agent-studio setup:runtime
+bun run --cwd plugins/blender-agent-studio test:runtime
 bun run test
 bun run test:python
 ```
 
-Set `BLENDER_EXECUTABLE` or put Blender on `PATH` to include the live Blender tests. For the Rust tests, build the runtime first:
-
-```bash
-bun --cwd plugins/blender-agent-studio run setup:runtime
-bun --cwd plugins/blender-agent-studio run test:runtime
-```
+Set `BLENDER_EXECUTABLE` or put Blender on `PATH` to include the live Blender tests.
+The runtime build precedes the Bun suite so SceneIR protocol tests run rather
+than skip. Rust is needed for these development checks, not ordinary plugin use.
 
 After editing `references/astra-workflow.md`, run `bun tools/sync-guidance.ts` to update the copy bundled with each skill.
 

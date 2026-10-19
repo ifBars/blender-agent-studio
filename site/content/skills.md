@@ -86,3 +86,20 @@ Every specialist bundles the same [execution guidance](https://github.com/ifBars
 - Decide routine details from context and state the defaults. Ask only when interpretations would change the subject, style, motion, or deliverable.
 - Gather and inspect real references for new subjects before detailed modeling.
 - Finish with clean-source reproduction, fresh-import checks where exports apply, and opened visual evidence.
+
+
+## Sustained work on large scenes
+
+Detailed environments use the modeling workflow's
+[whole-scene iteration plan](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-modeling-workflow/references/whole-scene-workflow.md).
+The agent plans hour-scale work when warranted, builds and reviews composition,
+hero and secondary asset families, materials and lighting, and repairs concrete
+defects before delivery. A short zone/family list and revision-linked
+checkpoints support resuming interrupted work without losing accepted progress.
+
+Completion requires opened hero, reverse, secondary-area and close-up evidence:
+a primitive pile, decorative noise or a polished single camera is insufficient.
+User time limits and requested blockout/low-poly styles still apply. The skill
+cannot guarantee a host session's duration or automatically judge aesthetics;
+unfinished work is reported as partial with a specific next action. This loop is
+part of normal scene creation, not the opt-in second-pass refinement workflow.

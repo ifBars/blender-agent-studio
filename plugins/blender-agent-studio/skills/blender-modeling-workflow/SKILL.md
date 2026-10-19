@@ -8,16 +8,19 @@ description: Build or substantially refine reproducible Blender models through P
 Read [the shared execution guidance](references/astra-workflow.md) once per task
 for autonomous decisions, evidence cadence, and long-task continuity.
 
-Create the asset as source-controlled Python plus generated `.blend` and `.glb` outputs. Treat the script as the durable source and Blender as the execution runtime.
+Create the asset as durable Python plus an editable `.blend`, and add exported files only when required by the task. Treat the script as the durable source and Blender as the execution runtime.
 
 For a render-only scene, route final delivery through the rendering workflow:
 source, self-contained `.blend`, images and render manifest are sufficient.
-Require GLB and fresh-import gates when a downstream asset/export is part of the
+Require the requested export format and fresh-import gates when a downstream asset/export is part of the
 contract. Do not imply that procedural shaders, atmospheric volumes or Cycles
 lighting survive a GLB export unchanged.
 
 For full environments, interiors or decoration, read
 [complete scene composition and decoration](references/whole-scene-workflow.md).
+Use its sustained iteration plan for large or detail-rich scenes, including
+hour-scale work where warranted, checkpoint/resume records and evidence-backed
+finish gates. This is normal creation, not an opt-in second pass.
 Resolve composition, functional zones and representative asset quality before
 replication. Review scene finish in authored lighting, including reverse and
 secondary areas, and use the intended export/render contract.
@@ -120,7 +123,7 @@ may share a build and review pass; a repair revisits only affected stages:
 4. structural refinement and production topology;
 5. UVs, materials, and textures;
 6. tertiary detail, smoothing, subdivision, and presentation polish;
-7. export, fresh-import validation, and final evidence.
+7. requested export and fresh-import validation when applicable, then final evidence.
 
 Do not add final materials to disguise unresolved proportions or unsupported
 parts. Do not call a graybox or refined blockout “finished.” If the user asks
@@ -202,7 +205,7 @@ For animated or articulated assets, also use `$blender-agent-studio:blender-anim
 Do not call the model complete until:
 
 - the source script reruns from a clean Blender process;
-- generated artifacts open after fresh GLB import;
+- the saved `.blend` reopens, and requested exports pass fresh-import checks;
 - technical gates appropriate to the task pass;
 - every required stage reached its exit criteria or was explicitly excluded by
   the user;
@@ -214,4 +217,4 @@ Do not call the model complete until:
   shading, or lighting failures are resolved;
 - required parts and spatial relationships are visible from the evidence views;
 - no major component reads as floating, accidental, or mechanically unexplained;
-- the final response includes the source, `.blend`, `.glb`, metrics, and rendered evidence paths.
+- the final response includes the source, `.blend`, requested exports, applicable metrics, and rendered evidence paths.

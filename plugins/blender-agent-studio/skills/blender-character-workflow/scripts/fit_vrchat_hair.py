@@ -178,11 +178,9 @@ def main() -> None:
 
     head_points = world_points(head)
     hair_points = world_points(hair)
-    hx = [point.x for point in head_points]
     hy = [point.y for point in head_points]
     hz = [point.z for point in head_points]
     hair_x = [point.x for point in hair_points]
-    hair_y = [point.y for point in hair_points]
     hair_z = [point.z for point in hair_points]
 
     head_z_mid = quantile(hz, 0.52)
@@ -197,22 +195,25 @@ def main() -> None:
     skull_top = quantile([p.z for p in cranial], 0.995)
     cranial_x = [p.x for p in cranial]
     skull_center = Vector(((quantile(cranial_x, 0.02) + quantile(cranial_x, 0.98)) * 0.5, statistics.median([p.y for p in cranial]), statistics.median([p.z for p in cranial])))
-    head_crown = [point for point in cranial if point.z >= quantile([p.z for p in cranial], 0.90)]
+    head_crown_cutoff = quantile([p.z for p in cranial], 0.90)
+    head_crown = [point for point in cranial if point.z >= head_crown_cutoff]
     head_crown_y = statistics.median(point.y for point in head_crown)
 
     hair_center_x = (quantile(hair_x, 0.02) + quantile(hair_x, 0.98)) * 0.5
     hair_width = quantile(hair_x, 0.98) - quantile(hair_x, 0.02)
     hair_height = quantile(hair_z, 0.99) - quantile(hair_z, 0.01)
-    upper_band = [point for point in hair_points if quantile(hair_z, 0.70) <= point.z <= quantile(hair_z, 0.85)]
+    upper_low, upper_high = quantile(hair_z, 0.70), quantile(hair_z, 0.85)
+    upper_band = [point for point in hair_points if upper_low <= point.z <= upper_high]
     upper_band_width = quantile([point.x for point in upper_band], 0.95) - quantile([point.x for point in upper_band], 0.05)
     has_lateral_style_outliers = (
         hair_width / max(upper_band_width, 1e-6) > 1.40
         and hair_height / max(hair_width, 1e-6) < 2.0
     )
     scalp_width = upper_band_width if has_lateral_style_outliers else hair_width
+    scalp_cutoff = quantile(hair_z, 0.42)
     scalp_samples = [
         point for point in hair_points
-        if point.z >= quantile(hair_z, 0.42)
+        if point.z >= scalp_cutoff
         and abs(point.x - hair_center_x) <= hair_width * 0.43
     ]
     if len(scalp_samples) > 1800:
@@ -222,7 +223,8 @@ def main() -> None:
     # the placement anchor pulls the actual root cluster onto the forehead.
     # Anchor Y from the upper crown vertices instead, while retaining the
     # lower Z pivot that keeps a uniform transform stable for long styles.
-    hair_crown = [point for point in hair_points if point.z >= quantile(hair_z, 0.90)]
+    hair_crown_cutoff = quantile(hair_z, 0.90)
+    hair_crown = [point for point in hair_points if point.z >= hair_crown_cutoff]
     hair_crown_y = statistics.median(point.y for point in hair_crown)
     hair_anchor = Vector((hair_center_x, hair_crown_y, quantile(hair_z, 0.72)))
     target_clearance = args.target_clearance_mm / 1000.0
@@ -233,7 +235,7 @@ def main() -> None:
         score, measures = fit_score(scalp_samples, head_bvh(head), hair_anchor, target_anchor, scale, target_clearance, hair_width * scale / skull_width)
     else:
         initial_scale = skull_width * 1.06 / max(scalp_width, 1e-6)
-        initial_target = Vector((skull_center.x, head_crown_y, skull_top - (quantile(hair_z, 0.90) - hair_anchor.z) * initial_scale + target_clearance))
+        initial_target = Vector((skull_center.x, head_crown_y, skull_top - (hair_crown_cutoff - hair_anchor.z) * initial_scale + target_clearance))
         bvh = head_bvh(head)
         best: tuple[float, float, Vector, dict[str, float]] | None = None
         for scale_step in range(-3, 4):
