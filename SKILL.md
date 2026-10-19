@@ -15,14 +15,16 @@ adapt lighting/background after visual inspection, and preserve diagnostic views
 
 ## Check a new installation
 
-When setup is unverified or Blender execution fails, run `bun run doctor` from
-an installed plugin directory (the one containing `mcp`, `scripts`, and
-`package.json`) or from this repository root. It creates its own tiny scene,
-saves and reopens it, and renders a bounded CPU preview. Read the report and
-retain its output path. Then call `blender_version` to verify the host MCP
-connection. The doctor checks local Blender, not the host connection or GPU.
-For skills-only installations without bundled scripts, resolve Blender and
-follow the specialist workflow's executable/version checks instead.
+When the user asks to check setup, setup is unverified, or Blender execution
+fails, call `blender_check_setup`. It finds Blender, builds its own tiny scene in
+a new folder, saves and reopens it, renders bounded Cycles and EEVEE previews,
+and returns each check with the preview image. Tell the user the result, the
+output folder holding the preview, and any failed or warning check with its
+next step. Without the MCP tools, run
+`bun run doctor` from an installed plugin directory (the one containing `mcp`,
+`scripts`, and `package.json`) or from this repository root; it prints the same
+report. For skills-only installations without bundled scripts, resolve Blender
+and follow the specialist workflow's executable/version checks instead.
 
 ## Route the request
 
@@ -59,7 +61,9 @@ their respective capability is required.
 
 ## Preserve the workflow contract
 
-1. Resolve and record the exact Blender executable and version.
+1. Resolve and record the exact Blender executable and version. With the
+   plugin tools, `blender_version` returns the resolved `executable`; use that
+   path for shell commands when `blender` is not on `PATH`.
 2. Convert the request into explicit parts, relationships, style, scale,
    animation, finish quality, export, evidence, and approval requirements.
    Ask focused clarification questions when competing interpretations change

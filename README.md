@@ -1,37 +1,60 @@
 # Blender Agent Studio
 
-Your Blender agent, in the tools you already use.
+**Describe a model, scene or animation to Codex or Claude Code. Get back an
+editable `.blend`, the Python that built it, and renders your agent has checked.**
 
-A free, open-source Blender AI plugin for Codex and Claude Code for creating and refining models,
-animations, and scenes.
-It gives your agent a way to plan the work, build it in your local Blender
-installation, and inspect the result before delivery.
+A free, open-source Blender AI plugin. It runs your local Blender and needs no
+extra service, API key or subscription beyond the agent you already use.
 
-Describe what you want to make. Keep the editable `.blend` file and the Python
-that built it. The goal is a portable Blender agent: open workflows and local
-tools that you can use from your existing agent harness. Codex and Claude Code
-have bundled plugin installers today. Other hosts need compatible skill
-loading and local execution; see [portability and host requirements](https://ifbars.github.io/blender-agent-studio/bring-your-agent/).
+[![Validate](https://github.com/ifBars/blender-agent-studio/actions/workflows/validate.yml/badge.svg)](https://github.com/ifBars/blender-agent-studio/actions/workflows/validate.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Docs](https://img.shields.io/badge/docs-ifbars.github.io-E87D0D.svg)](https://ifbars.github.io/blender-agent-studio/)
 
-[Docs](https://ifbars.github.io/blender-agent-studio/) · [Install](#install) · [Examples](https://ifbars.github.io/blender-agent-studio/comparisons/) · [Try it](#try-it) · [How it works](#how-it-works) · [Workflows](plugins/blender-agent-studio/skills) · [Development](docs/development.md) · [Report a bug](https://github.com/ifBars/blender-agent-studio/issues)
+[Docs](https://ifbars.github.io/blender-agent-studio/) · [Quick start](#quick-start) · [Examples](https://ifbars.github.io/blender-agent-studio/comparisons/) · [How it works](#how-it-works) · [Workflows](plugins/blender-agent-studio/skills) · [Development](docs/development.md) · [Report a bug](https://github.com/ifBars/blender-agent-studio/issues)
 
 [![A furnished reading room built with Blender Agent Studio and Claude Sonnet 5.5](https://ifbars.github.io/blender-agent-studio/benchmarks/gallery-matrix/scene-character/decorated_reading_room--claude-sonnet-5-5--r01/plugin/preview/hero.png)](https://ifbars.github.io/blender-agent-studio/comparisons/)
 
-One example from the published gallery: a reading room built with Claude Code
-and Sonnet 5.5. The image is an HD render of the saved scene. [Explore the
-paired examples](https://ifbars.github.io/blender-agent-studio/comparisons/) to
-see results with and without the plugin, including failed checks and mixed
-visual reviews. This selected example is not an average-quality claim.
+A reading room built with Claude Code and Sonnet 5.5, rendered from the saved
+scene. It is one selected result, not an average: the [paired
+examples](https://ifbars.github.io/blender-agent-studio/comparisons/) show runs
+with and without the plugin, including failed checks and mixed visual reviews.
 
-## Start here
+## Quick start
 
-1. [Install for Codex or Claude Code](#install). Use your existing agent and local Blender.
-2. [Check your setup](#verify-your-setup). Save, reopen, and render a tiny scene before a larger project.
-3. [Make your first asset](#try-it). Start with the walnut desk lamp prompt and review both images.
+You need [Claude Code](https://code.claude.com) or
+[Codex](https://developers.openai.com/codex), [Blender](https://www.blender.org/download/)
+(5.2 LTS is the tested version) and [Bun](https://bun.sh) 1.3.5 or newer.
 
-Your first success is an editable `.blend`, the Python source, and two renders
-you can open. No separate Blender AI subscription or asset download is required
-for this example; your chosen agent's normal usage costs still apply.
+**1. Install the plugin.**
+
+```bash
+# Claude Code
+claude plugin marketplace add ifBars/blender-agent-studio
+claude plugin install blender-agent-studio@blender-agent-studio
+
+# Codex
+codex plugin marketplace add ifBars/blender-agent-studio
+codex plugin add blender-agent-studio@blender-agent-studio
+```
+
+**2. Check your setup.** Start a new Claude Code session or Codex task and ask:
+
+> Check my Blender Agent Studio setup.
+
+The agent runs `blender_check_setup`. It finds Blender, saves and reopens a tiny
+scene, renders a small preview image, and tells you what to fix if a step fails.
+It never opens your own files. Usually Blender is found
+automatically; if not, see [point it at Blender](#point-it-at-blender).
+
+**3. Make something.**
+
+> Use Blender Agent Studio to build a walnut desk lamp. Give it warm lighting,
+> render it from two angles, and save the .blend and Python source.
+
+You get an editable `.blend`, the Python that built it, and two renders. Open
+the images and judge the lamp yourself: the automated checks catch broken
+geometry and exports, not taste. See [more to try](#more-to-try) for writing
+your own requests.
 
 ## What you can do
 
@@ -50,7 +73,9 @@ for this example; your chosen agent's normal usage costs still apply.
 
 The plugin includes twelve specialist skills and a local MCP server for
 inspection, rendering, and asset downloads. Generated scenes come with Python
-source so you can rebuild them and keep making changes.
+source so you can rebuild them and keep making changes. Codex and Claude Code
+have bundled installers today; other hosts need compatible skill loading and
+local execution; see [portability and host requirements](https://ifbars.github.io/blender-agent-studio/bring-your-agent/).
 
 ## How it works
 
@@ -81,65 +106,68 @@ scene's authored lighting in beauty renders.
 
 ## Install
 
-You'll need [Codex](https://developers.openai.com/codex) or [Claude
-Code](https://code.claude.com) with plugin support, [Bun](https://bun.sh), and
-Blender. Blender 5.2 LTS is the tested version; use Bun 1.3.5 or newer. Both
-hosts install the same skills, MCP server, and SceneIR tools from this
-repository.
+The [quick start](#quick-start) has the install commands. Both hosts install
+the same skills, MCP server, and SceneIR tools from this repository. Inside a
+Claude Code session, `/plugin marketplace add ifBars/blender-agent-studio` and
+`/plugin install blender-agent-studio@blender-agent-studio` do the same as the
+terminal commands.
 
-**Codex**
+Start a new task or session after installing or updating the plugin. Both hosts
+pick the relevant skill from a plain request. To name one, use
+`$blender-agent-studio:blender-modeling-workflow` in Codex or
+`/blender-agent-studio:blender-modeling-workflow` in Claude Code.
 
-```bash
-codex plugin marketplace add ifBars/blender-agent-studio
-codex plugin add blender-agent-studio@blender-agent-studio
-```
+### Point it at Blender
 
-**Claude Code**
+The plugin uses the first Blender it finds:
 
-```bash
-claude plugin marketplace add ifBars/blender-agent-studio
-claude plugin install blender-agent-studio@blender-agent-studio
-```
+1. A `blenderPath` given to a tool, or `--blender` on the command line.
+2. The `BLENDER_EXECUTABLE` environment variable.
+3. `blender` on your `PATH`.
+4. Standard install locations: the official installers on macOS
+   (`/Applications`) and Windows (`Program Files\Blender Foundation`), Steam,
+   and on Linux Snap, Flatpak, and archives unpacked in your home folder or
+   `/opt`. When several are installed, it prefers 5.2 LTS.
 
-Inside a Claude Code session, `/plugin marketplace add ifBars/blender-agent-studio`
-and `/plugin install blender-agent-studio@blender-agent-studio` do the same.
-
-Put `blender` on your `PATH`, or set `BLENDER_EXECUTABLE` to its location.
-For example, in PowerShell:
+A configured path that is wrong is reported, never silently replaced. For any
+other location, set `BLENDER_EXECUTABLE` to the executable itself, not its folder:
 
 ```powershell
 $env:BLENDER_EXECUTABLE = "C:\path\to\Blender\blender.exe"
 ```
 
-Launch your CLI agent from the terminal where you set `BLENDER_EXECUTABLE`, or
-configure your desktop host's environment; a new conversation may not inherit
-shell changes. Start a new task or session after installing or updating the
-plugin. In Codex, invoke a skill as `$blender-agent-studio:blender-modeling-workflow`;
-in Claude Code, as `/blender-agent-studio:blender-modeling-workflow`. Both hosts
-also pick the relevant skill from a plain request.
+```bash
+export BLENDER_EXECUTABLE="/Applications/Blender.app/Contents/MacOS/Blender"
+```
 
-### Verify your setup
+Launch your CLI agent from the terminal where you set the variable, or configure
+your desktop host's environment; a new conversation may not inherit shell
+changes. `blender_version` reports which executable was found and how.
 
-Before a larger project, ask your agent:
+### Check from a terminal
 
-> Run Blender Agent Studio's setup doctor from its installed plugin directory
-> with `bun run doctor`, then call `blender_version` to verify the MCP connection.
+The same setup check runs without an agent. From a repository checkout or the
+installed plugin directory:
 
-The doctor saves and reopens a tiny scene, then renders a 128px preview with
-Cycles on CPU. It needs no API key, GPU, downloaded assets, or Rust. It retains
-the `.blend`, preview, logs, and a JSON report in a new temporary folder and
-prints its location. A nonzero exit means a check failed. This checks the local
-Blender pipeline; the separate `blender_version` call checks the host connection.
+```bash
+bun run doctor
+```
 
-From a repository checkout, the same `bun run doctor` command works at the root.
-Use `--blender "/path/to/blender"` to override discovery, or `--output-dir NEW_DIRECTORY`
-to choose where to keep the evidence. See [setup troubleshooting](docs/development.md#setup-troubleshooting)
+It saves and reopens a tiny scene, renders a 128px Cycles preview on CPU, and
+tries a 64px EEVEE render. It needs no API key, GPU, downloads, or Rust, and it
+keeps the `.blend`, previews, logs, and a JSON report in a new temporary folder.
+A failed check exits nonzero. An EEVEE warning means Cycles works but the studio
+inspection views need OpenGL, which headless Linux machines may lack. Use
+`--blender "/path/to/blender"` to override discovery or `--output-dir NEW_DIRECTORY`
+to keep the evidence somewhere specific. See [setup troubleshooting](docs/development.md#setup-troubleshooting)
 if a check fails.
+
+### Optional and alternative installs
 
 For the optional scene-understanding tools, build the Rust runtime in the
 installed plugin directory with `bun run setup:runtime`. See
 [scene understanding](docs/scene-understanding.md) for setup, examples and
-measurement limits. The existing tools do not require Rust.
+measurement limits. The other tools do not require Rust.
 
 <details>
 <summary>Update an existing GitHub installation</summary>
@@ -163,17 +191,19 @@ claude plugin update blender-agent-studio@blender-agent-studio
 Prefer skills only? See the [alternative installation options](docs/development.md#skills-only-installation)
 and [browse the workflows on skills.sh](https://skills.sh/ifbars/blender-agent-studio).
 
-## Try it
+## More to try
 
-> Use Blender Agent Studio to build a walnut desk lamp. Give it warm lighting,
-> render it from two angles, and save the .blend and Python source.
+Include the style, dimensions, and intended use when they matter:
 
-Include the style, dimensions, and intended use when they matter. For a game
-asset, ask for a GLB export and a check that it imports correctly. For a render,
-you can specify a camera angle, lighting, or reference image.
+> Build a 30 cm stylized brass lantern for a mobile game. Export a GLB and
+> check that it imports correctly.
 
-You can also give the agent an existing `.blend` and ask it to inspect or refine
-the scene. For a second review, ask it to check the result from multiple views.
+> Here is `desk.blend`. Inspect it from every side, list what looks wrong, and
+> fix the worst problem without changing anything else.
+
+For a game asset, ask for a GLB export and an import check. For a render, you
+can specify a camera angle, lighting, or reference image. For a second review,
+ask the agent to check the result from multiple views.
 
 ## How well does it work?
 

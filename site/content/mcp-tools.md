@@ -1,15 +1,26 @@
 ---
 title: MCP tools
-description: Sixteen bounded tools for inspecting, rendering, comparing, and sourcing assets. None of them runs arbitrary Python.
+description: Eighteen bounded tools for checking setup, inspecting, rendering, comparing, and sourcing assets. None of them runs arbitrary Python.
 ---
 
 The plugin runs the same local MCP server with Bun in Codex and Claude Code. Tools that inspect or render files start Blender in the background for one bounded job and return structured results. Asset searches, downloads, and browser handoffs do not need to launch Blender. For live control of an open Blender session, pair it with Blender's official Lab MCP; the [MCP integration skill](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-mcp-integration/SKILL.md) explains when to use which.
+
+## Check setup
+
+| Tool | What it does |
+| --- | --- |
+| `blender_check_setup` | Finds Blender, saves and reopens a fixed tiny scene, renders a 128px Cycles CPU preview and a 64px EEVEE preview, and returns each check with the preview image. Never opens user files. |
+| `blender_version` | Verifies the Blender executable and returns its exact build, the resolved path and how it was found. |
+
+Both tools look for Blender in a `blenderPath` argument, then `BLENDER_EXECUTABLE`,
+then `PATH`, then standard install locations. A configured path that does not
+exist is reported rather than replaced. Agents running Blender from a shell use
+the `executable` that `blender_version` returns.
 
 ## Inspect and validate
 
 | Tool | What it does |
 | --- | --- |
-| `blender_version` | Verifies the Blender executable and returns its exact build. |
 | `blender_inspect_asset` | Reports geometry, hierarchy, material, and animation metrics for `.blend`, `.glb`, `.gltf`, `.fbx`, or `.obj` files. |
 | `blender_render_evidence` | Renders fixed multiview evidence and a contact sheet. |
 | `blender_diagnose_topology` | Locates degenerate faces and zero-length edges in world space. |

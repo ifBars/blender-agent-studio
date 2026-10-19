@@ -1,6 +1,6 @@
 ---
 title: Installation
-description: Install the plugin in Codex or Claude Code and point it at your Blender executable.
+description: Install the plugin in Codex or Claude Code, check your setup, and point it at Blender if needed.
 ---
 
 ## Requirements
@@ -28,63 +28,84 @@ claude plugin install blender-agent-studio@blender-agent-studio
 
 Inside a Claude Code session, you can also run `/plugin marketplace add ifBars/blender-agent-studio` followed by `/plugin install blender-agent-studio@blender-agent-studio`.
 
+## Check your setup
+
+Start a new Codex task or Claude Code session after installing, then ask:
+
+> Check my Blender Agent Studio setup.
+
+The agent calls `blender_check_setup`. It finds Blender, saves and reopens a tiny
+scene with scripts disabled, renders a 128px preview with Cycles on CPU and a
+64px preview with EEVEE, and reports where it saved them. It needs no GPU, API key,
+downloads, or Rust, and it never opens your projects. Each check reports pass,
+warning, or failure with the next step. The `.blend`, previews, process logs and
+`doctor-report.json` stay in a new temporary folder.
+
 ## Point it at Blender
 
-Put `blender` on your `PATH`, or set `BLENDER_EXECUTABLE` to the executable:
+Usually there is nothing to configure. The plugin uses the first Blender it finds:
+
+1. A `blenderPath` argument to an MCP tool, or `--blender` for the doctor and benchmarks.
+2. The `BLENDER_EXECUTABLE` environment variable.
+3. `blender` on your `PATH`.
+4. Standard install locations: `/Applications` on macOS, `Program Files\Blender Foundation`
+   on Windows, Steam, and on Linux Snap, Flatpak, and archives unpacked in your
+   home folder or `/opt`. When several are installed, it prefers 5.2 LTS.
+
+A configured path that is wrong is reported, never silently replaced. For any
+other location, set `BLENDER_EXECUTABLE` to the executable itself, not its folder:
 
 ```bash title="macOS / Linux"
-export BLENDER_EXECUTABLE="/path/to/blender"
+export BLENDER_EXECUTABLE="/Applications/Blender.app/Contents/MacOS/Blender"
 ```
 
 ```powershell title="Windows (PowerShell)"
 $env:BLENDER_EXECUTABLE = "C:\path\to\Blender\blender.exe"
 ```
 
-MCP tools also accept a `blenderPath` argument, and benchmark commands accept `--blender`.
-
 Shell environment changes apply to that terminal and programs launched from it.
 Launch your CLI agent from that terminal, or configure the environment used by
 your desktop host. A new conversation alone may not inherit a changed variable.
-You can also pass `blenderPath` directly when calling an MCP tool.
+`blender_version` reports which executable was found and how.
 
-## Verify before your first project
+## Check from a terminal
 
-Start a new Codex task or Claude Code session after installing or changing your
-environment. Ask your agent:
+The same check runs without an agent, from a repository checkout or the
+installed plugin directory (the one containing `mcp`, `scripts`, and `package.json`):
 
-> Run `bun run doctor` in the installed Blender Agent Studio plugin directory,
-> then call `blender_version` to check the MCP connection.
-
-The doctor saves and reopens a tiny scene and renders a 128px preview with Cycles
-on CPU. It needs no GPU, API key, downloads, or Rust. It retains the `.blend`,
-preview, process logs and `doctor-report.json` in a new temporary folder and
-prints the location. It never opens your projects. From a repository checkout,
-`bun run doctor` also works at the root.
+```bash
+bun run doctor
+```
 
 ```bash title="Optional explicit paths"
 bun run doctor --blender "/absolute/path/to/blender" --output-dir setup-check
 ```
 
-The output directory must be new. Quote paths containing spaces.
+The output directory must be new. Quote paths containing spaces. A failed check
+returns a nonzero exit code, and `--json` prints the structured report.
 
 ### Troubleshooting
 
 - **Bun not found:** install [Bun](https://bun.sh), then open a new terminal and
   restart your agent session. Use version 1.3.5 or newer.
-- **Blender not found:** use the executable path, not the enclosing directory.
-  On macOS, a typical path is `/Applications/Blender.app/Contents/MacOS/Blender`.
-  `--blender` overrides `BLENDER_EXECUTABLE` and `PATH` for this check.
+- **Blender not found:** install [Blender](https://www.blender.org/download/), or
+  set `BLENDER_EXECUTABLE` as above. Use the executable path, not the enclosing
+  directory. `--blender` overrides every other source for the doctor.
 - **Blender version warning:** 5.2 LTS is the tested version; another version can
   pass the probe, but that does not establish compatibility with every workflow.
+- **EEVEE warning:** Cycles works, but the studio inspection views from
+  `blender_render_evidence` need OpenGL. Install a GPU driver, or on a headless
+  Linux machine software OpenGL such as Mesa (`libegl1` and `libgl1-mesa-dri` on
+  Debian and Ubuntu). Software OpenGL works but is slow.
 - **Rendering fails:** inspect `blender-process.json` in the output folder.
   `--skip-render` isolates Python and save/reopen; it does not verify rendering.
-- **Timeout:** try `--timeout-ms 180000` for a slow CPU. The default whole-process
-  limit is 90 seconds, with a maximum of 300 seconds.
-- **Doctor passes, tools still missing:** restart the agent session and ask for
-  `blender_version`. The doctor checks local Blender only, not host plugin loading,
-  MCP transport, GPU rendering, network assets or the optional Rust runtime.
+- **Timeout:** try `--timeout-ms 180000` for a slow CPU. Each Blender process has a
+  90-second limit by default, with a maximum of 300 seconds.
+- **The agent cannot find `blender_check_setup`:** the plugin's MCP server did not
+  load. Restart the agent session, check that Bun is on the `PATH` your host sees,
+  and confirm the plugin is installed. The first start needs network access so Bun
+  can fetch the server's dependencies.
 
-A failed check returns a nonzero exit code. `--json` prints the structured report.
 Review logs for local paths before sharing them in an issue.
 
 ## Update

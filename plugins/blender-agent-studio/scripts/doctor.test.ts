@@ -64,6 +64,8 @@ test.skipIf(!blender)("real Blender saves, reopens and CPU-renders without requi
     for (const name of ["python", "save", "reopen", "cpu-render"]) {
       expect(report.checks.find(c => c.name === name)?.status).toBe("pass");
     }
+    // EEVEE needs OpenGL, which headless machines may lack; that is a warning, not a failure.
+    expect(["pass", "warn"]).toContain(report.checks.find(c => c.name === "eevee-render")?.status);
     const png = await readFile(join(report.outputDir, "preview.png"));
     expect(png.subarray(1, 4).toString()).toBe("PNG");
     expect(png.readUInt32BE(16)).toBe(128);
@@ -71,6 +73,7 @@ test.skipIf(!blender)("real Blender saves, reopens and CPU-renders without requi
     const skipped = await checkSetup({blenderPath: blender!, outputDir: join(root, "skip"), skipRender: true});
     expect(skipped.status).toBe("pass");
     expect(skipped.checks.find(c => c.name === "cpu-render")?.status).toBe("skip");
+    expect(skipped.checks.some(c => c.name === "eevee-render")).toBe(false);
     expect(await Bun.file(join(skipped.outputDir, "preview.png")).exists()).toBe(false);
   } finally { await rm(root, {recursive: true, force: true}); }
 }, 120000);
