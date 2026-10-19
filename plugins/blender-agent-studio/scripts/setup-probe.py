@@ -20,19 +20,20 @@ passed('python')
 bpy.ops.wm.read_factory_settings(use_empty=False)
 scene = bpy.context.scene
 scene.name = 'Blender Agent Studio setup check'
-scene.render.engine = 'CYCLES'
-scene.cycles.device = 'CPU'
-scene.cycles.samples = 4
-scene.cycles.use_denoising = False
-scene.cycles.time_limit = 15
-scene.render.threads_mode = 'FIXED'
-scene.render.threads = 2
-scene.render.resolution_x = scene.render.resolution_y = 128
-scene.render.resolution_percentage = 100
-scene.render.image_settings.file_format = 'PNG'
-scene.render.filepath = str(output / 'preview.png')
-scene.render.use_compositing = False
-scene.render.use_sequencer = False
+if render:
+    scene.render.engine = 'CYCLES'
+    scene.cycles.device = 'CPU'
+    scene.cycles.samples = 4
+    scene.cycles.use_denoising = False
+    scene.cycles.time_limit = 15
+    scene.render.threads_mode = 'FIXED'
+    scene.render.threads = 2
+    scene.render.resolution_x = scene.render.resolution_y = 128
+    scene.render.resolution_percentage = 100
+    scene.render.image_settings.file_format = 'PNG'
+    scene.render.filepath = str(output / 'preview.png')
+    scene.render.use_compositing = False
+    scene.render.use_sequencer = False
 cube = bpy.data.objects['Cube']
 material = bpy.data.materials.new('Studio orange')
 material.diffuse_color = (0.9, 0.18, 0.035, 1)
