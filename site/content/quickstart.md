@@ -3,8 +3,9 @@ title: First project
 description: Ask for an asset, say what matters, and review what comes back.
 ---
 
-First, run the [setup check](install.md#verify-before-your-first-project) to verify
-Blender can save, reopen and render a scene on your machine.
+First, ask your agent to "check my Blender Agent Studio setup". The [setup
+check](install.md#check-your-setup) verifies Blender can save, reopen and render
+a scene on your machine.
 
 ## Ask for something
 
@@ -23,7 +24,7 @@ saved scene alone is not a completed render task.
 
 You can make this example with procedural materials and local Blender, without
 an asset download or extra service account. Your agent's normal usage costs
-still apply. If execution fails, return to the [setup check](install.md#verify-before-your-first-project)
+still apply. If execution fails, return to the [setup check](install.md#check-your-setup)
 and share the failing step with the agent.
 
 ## Say what matters

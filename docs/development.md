@@ -99,10 +99,12 @@ for tool setup and alternatives.
 
 ## Setup troubleshooting
 
-Run `bun run doctor` from the repository root or the installed plugin directory.
-It creates its own small scene, saves and reopens it with scripts disabled, and
-renders a 128px Cycles CPU preview with two threads. It never opens your projects
-or downloads assets. Output is retained in a new temporary folder; use
+Ask the agent to check setup, which calls the `blender_check_setup` MCP tool, or
+run `bun run doctor` from the repository root or the installed plugin directory.
+Both create a small scene, save and reopen it with scripts disabled, render a
+128px Cycles CPU preview with two threads, and then try a 64px EEVEE render in a
+separate Blender process, because EEVEE needs OpenGL and Cycles does not. They
+never open your projects or download assets. Output is retained in a new temporary folder; use
 `--output-dir NEW_DIRECTORY` to keep it somewhere specific. Existing directories
 are rejected to avoid overwriting files.
 

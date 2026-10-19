@@ -11,10 +11,25 @@ render = '--skip-render' not in args[1:]
 report = {'blenderVersion': bpy.app.version_string, 'checks': []}
 
 
+def render_eevee():
+    """Separate process: a missing OpenGL context aborts Blender outright."""
+    bpy.ops.wm.open_mainfile(filepath=str(output / 'setup-check.blend'), use_scripts=False)
+    scene = bpy.context.scene
+    engines = {item.identifier for item in scene.render.bl_rna.properties['engine'].enum_items}
+    scene.render.engine = next(e for e in ('BLENDER_EEVEE', 'BLENDER_EEVEE_NEXT') if e in engines)
+    scene.render.resolution_x = scene.render.resolution_y = 64
+    scene.render.filepath = str(output / 'eevee-preview.png')
+    bpy.ops.render.render(write_still=True)
+
+
 def passed(name):
     report['checks'].append(name)
     (output / 'probe.json').write_text(json.dumps(report, indent=2))
 
+
+if '--eevee' in args[1:]:
+    render_eevee()
+    raise SystemExit(0)
 
 passed('python')
 bpy.ops.wm.read_factory_settings(use_empty=False)

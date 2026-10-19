@@ -12,10 +12,12 @@ import { prepareMixamoSearch } from "../scripts/mixamo.ts";
 import { preparePixabaySoundSearch } from "../scripts/pixabay.ts";
 import { renderModelingTimelapse } from "../scripts/modeling-timelapse.ts";
 import {
+  locateBlender,
   readJsonFile,
   runBlenderVersion,
   runBlender,
 } from "../scripts/blender-process.ts";
+import { checkSetup } from "../scripts/doctor.ts";
 
 const pluginRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const validationScripts = join(
@@ -205,7 +207,7 @@ server.registerTool(
   {
     title: "Blender version",
     description:
-      "Verify the configured Blender executable and return its exact build fingerprint, with a bounded startup timeout.",
+      "Verify the Blender executable and return its exact build fingerprint, with a bounded startup timeout. Uses blenderPath, then BLENDER_EXECUTABLE, then PATH, then standard install locations; `executable` is the path to use for Blender shell commands.",
     inputSchema: z.object({
       blenderPath: z.string().optional(),
       timeoutMs: z.number().int().min(1000).max(30000).default(10000),
@@ -213,13 +215,41 @@ server.registerTool(
   },
   async ({ blenderPath, timeoutMs }) => {
     try {
-      const process = await runBlenderVersion({blenderPath, timeoutMs});
+      const located = locateBlender(blenderPath);
+      const process = await runBlenderVersion({blenderPath: located.executable, timeoutMs});
       const valid = !process.timedOut && process.exitCode === 0 && /^Blender \d+\.\d+/m.test(process.stdout);
       const error = valid ? undefined : process.timedOut
         ? `Blender --version exceeded ${timeoutMs} ms. Check the executable path or increase timeoutMs (maximum 30000).`
         : process.exitCode !== 0 ? `Blender --version exited with code ${process.exitCode}.`
         : "The executable did not return a Blender version fingerprint. Check blenderPath or BLENDER_EXECUTABLE.";
-      return {...result({executable: process.command[0], ...process, error}), isError: !valid};
+      return {...result({executable: located.executable, source: located.source, ...process, error}), isError: !valid};
+    } catch (error) {
+      return errorResult(error);
+    }
+  },
+);
+
+server.registerTool(
+  "blender_check_setup",
+  {
+    title: "Check Blender Agent Studio setup",
+    description:
+      "First-run check. Builds a fixed tiny scene in a new folder, saves and reopens it with scripts disabled, renders a 128px Cycles CPU preview, then tries a 64px EEVEE render in a separate process (EEVEE studio views need OpenGL). Never opens user files, downloads assets or runs caller code. Returns each check with its next step, the resolved executable, the output folder and the Cycles preview image. Each Blender process is bounded by timeoutMs.",
+    inputSchema: z.object({
+      blenderPath: z.string().optional(),
+      outputDir: z.string().min(1).optional().describe("New directory for the retained evidence; defaults to a new temporary folder"),
+      timeoutMs: z.number().int().min(1000).max(300000).default(90000),
+      skipRender: z.boolean().default(false),
+    }),
+  },
+  async ({ blenderPath, outputDir, timeoutMs, skipRender }) => {
+    try {
+      const report = await checkSetup({blenderPath, outputDir, timeoutMs, skipRender, viaMcp: true});
+      const response = result(report);
+      const preview = join(report.outputDir, "preview.png");
+      const image = existsSync(preview)
+        ? [{type: "image" as const, mimeType: "image/png", data: (await readFile(preview)).toString("base64")}] : [];
+      return {...response, content: [...response.content, ...image], isError: report.status !== "pass"};
     } catch (error) {
       return errorResult(error);
     }

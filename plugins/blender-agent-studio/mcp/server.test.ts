@@ -30,6 +30,7 @@ describe("Blender Agent Studio MCP", () => {
 
       const listed = await client.listTools();
       expect(listed.tools.map((tool) => tool.name).sort()).toEqual([
+        "blender_check_setup",
         "blender_compare_reference",
         "blender_compare_scenes",
         "blender_describe_scene",
@@ -97,6 +98,9 @@ describe("Blender Agent Studio MCP", () => {
           const denied = await client.callTool({name: 'blender_version', arguments: {blenderPath: fake}});
           expect(denied.isError).toBe(true);
           expect(JSON.stringify(denied.content)).toContain('not executable');
+          const setupFailure = await client.callTool({name: 'blender_check_setup', arguments: {blenderPath: fake, outputDir: join(temporary, 'setup')}});
+          expect(setupFailure.isError).toBe(true);
+          expect(setupFailure.structuredContent).toMatchObject({status: 'fail'});
         } finally { await rm(temporary, {recursive: true, force: true}); }
       }
 
@@ -109,6 +113,15 @@ describe("Blender Agent Studio MCP", () => {
         });
         expect(version.isError).not.toBe(true);
         expect(JSON.stringify(version.content)).toContain("Blender");
+        expect(version.structuredContent).toMatchObject({source: "argument"});
+        const setupRoot = await mkdtemp(join(tmpdir(), 'bas-setup-tool-'));
+        try {
+          const setup = await client.callTool({name: 'blender_check_setup', arguments: {blenderPath, outputDir: join(setupRoot, 'check')}});
+          expect(setup.isError).not.toBe(true);
+          expect(setup.structuredContent).toMatchObject({status: 'pass'});
+          expect((setup.structuredContent as any).checks.find((c: any) => c.name === 'host-integration').status).toBe('pass');
+          expect((setup.content as any[]).some(item => item.type === 'image' && item.mimeType === 'image/png')).toBe(true);
+        } finally { await rm(setupRoot, {recursive: true, force: true}); }
         const temporary = await mkdtemp(join(tmpdir(), 'bas-stale-metrics-'));
         try {
           const outputJson = join(temporary,'metrics.json');
@@ -121,6 +134,6 @@ describe("Blender Agent Studio MCP", () => {
         } finally {await rm(temporary,{recursive:true,force:true});}
       }
     },
-    30_000,
+    120_000,
   );
 });

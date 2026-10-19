@@ -3,6 +3,16 @@ title: Introduction
 description: A free, open-source Blender AI plugin for the tools you already use. Start in Codex or Claude Code and keep your .blend file and Python source.
 ---
 
+## Get started in three steps
+
+1. **Install** with the commands above. You also need Blender (5.2 LTS is the
+   tested version) and [Bun](https://bun.sh) 1.3.5 or newer.
+2. **Check your setup.** In a new Codex task or Claude Code session, ask: "Check
+   my Blender Agent Studio setup." The agent finds Blender, renders a tiny test
+   scene, and tells you what to fix if a step fails. See [installation](install.md#check-your-setup)
+   if a step fails.
+3. **Make something.** Try the walnut desk lamp in [your first project](quickstart.md).
+
 ## Start with an example
 
 Browse the [interactive gallery](comparisons.md) before installing. It includes
