@@ -8,6 +8,7 @@ try:
     import bmesh
     import bpy
     from mathutils import Vector
+    from mathutils.bvhtree import BVHTree
 except ModuleNotFoundError:
     bpy = None
 
@@ -114,6 +115,28 @@ class HandTests(unittest.TestCase):
         for a, h in [([0, 1], [3, 4, 5]), ([0, 1, 1], [3, 4, 5]),
                      ([0, 1, 2], [2, 3, 4]), ([False, 1, 2], [3, 4, 5])]:
             with self.assertRaises(ValueError): bridge_wrist_loops(a, h)
+
+    def test_short_digits_do_not_fold_through_palm(self):
+        # Closed-manifold topology alone missed thumb/palm intersections,
+        # including on the default unsubdivided cage. Test evaluated surfaces
+        # too: subdivision may hide a cage defect or introduce a new fold.
+        for length in (.1, .2, .3, .4, .5, .6, .7, 1.0, 1.5, 2.0):
+            for subdivision in (0, 1, 2):
+                for mirror in (False, True):
+                    with self.subTest(length=length, subdivision=subdivision, mirror=mirror):
+                        obj = self.hand(finger_length=length, subdivision=subdivision,
+                                        mirror=mirror)
+                        evaluated = obj.evaluated_get(bpy.context.evaluated_depsgraph_get())
+                        mesh = evaluated.to_mesh()
+                        try:
+                            polygons = [tuple(p.vertices) for p in mesh.polygons]
+                            tree = BVHTree.FromPolygons(
+                                [v.co.copy() for v in mesh.vertices], polygons)
+                            crossings = [(a, b) for a, b in tree.overlap(tree)
+                                         if a < b and not set(polygons[a]) & set(polygons[b])]
+                            self.assertEqual(crossings, [])
+                        finally:
+                            evaluated.to_mesh_clear()
 
     def test_transform_and_validation(self):
         obj = self.hand(scale=.12, location=(1, 2, 3), rotation=(.2, .3, .4))

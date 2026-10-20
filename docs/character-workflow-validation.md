@@ -270,3 +270,134 @@ Its timeout and assertions were not relaxed, and the full suite is not reported
 as green. An earlier concurrent run also hit the MCP client's 60-second evidence
 render timeout; that test passes in isolation and in the final suite. No
 performance improvement is claimed from these runs.
+
+## Expanded failure search (October 20 follow-up)
+
+This pass freezes `fdcab9688cc856deba5e58d37a1fd11919132e22` as its starting
+point. It is **not** another run of the historical pinned CLI benchmark. Two
+native-agent invocations authored (a) slender and stocky full-body stress
+fixtures sharing one generator and (b) a separate cartoon outfit/walk. The
+fixtures are not two independent generation replicates or finished scout and
+mechanic passes. Each retains initial failures, repair attempts, scripts,
+models, matching views and fresh GLB imports outside Git. Blender 5.2.2 LTS,
+CPU rendering and two render threads were used. Concurrent diagnostic work
+means no timings establish performance improvements.
+
+### Construction stress matrices
+
+The old closed-manifold tests missed self-overlapping surfaces. The expanded
+checks use Blender BVH on evaluated polygons, exclude every pair sharing a
+vertex, and count nonadjacent surface contacts/intersections. They do not
+measure penetration depth, test all possible positive multipliers, or prove
+anatomy, clearance during motion, or collision freedom between samples.
+
+- **Hands:** ten finger-length multipliers from 0.1 to 2.0 at subdivision 0/1/2
+  produce 22 failing conditions out of 30 before the repair, including the
+  default unsubdivided cage. The first finger ring can sit behind a staggered
+  root corner; thumb sections can cut back through the palm. Moving finger
+  sections beyond their own root corners and shifting all thumb sections
+  together outside the palm removes those contacts in the sampled matrix.
+  The regression also tests mirrored hands: all 60 candidate conditions pass.
+  An earlier trial thinned short thumbs too much and is retained as a rejected
+  visual repair; the accepted repair preserves their girth.
+- **Upper body:** width/depth 0.7/1.0/1.5, arm drop 15/40/65 degrees and
+  subdivision 0/1/2 produce 21 failures out of 81 before the repair and zero
+  afterward. In steep poses the first arm section folds behind the torso
+  opening. The construction now reserves local clearance at that opening.
+  Arm sections also use evenly distributed samples instead of inheriting the
+  rectangular opening's two approximately 110-degree gaps. This corrects a
+  flattened cross-section. An initial substitution also thickened the wrist
+  and worsened its taper into an unchanged hand. That failed join is retained;
+  the final endpoint radius restores approximately the prior wrist envelope
+  while retaining regularized arm loops. Existing joins still need pose review.
+- **Wrist bridge:** a separate 324-case circular-loop sweep (3–20 vertices on
+  each boundary) found no nonadjacent intersections, degenerate faces or
+  nonmanifold interior edges. No bridge algorithm change was needed. This
+  does not validate arbitrary nonconvex or incorrectly ordered loops.
+
+Matching underarm close-ups confirm removal of the intersecting fold, but an
+angular crease remains. Matching hand views show the thumb no longer cutting
+across the palm; it remains simplified. Dark palm and cropped oblique diagnostic
+images are preserved but are not used as complete three-condition evidence.
+The acceptance evidence uses complete dorsal and corrected lit-palm framing.
+
+### Region masks: positive and negative controls
+
+The two full-body fixtures test neutral, 90/120-degree elbow bend, arm raise,
+and forearm twist in native and imported animation. Initially, the arm mask
+pulls 46/96 slender and 44/96 stocky lower-waist vertices more than 1 mm during
+an arm-only raise; maxima are 212.38 and 156.87 mm. Their original exported
+surfaces closely match those bad native deformations. Export parity alone
+therefore cannot pass this test.
+
+A coordinate-band repair fixes the waist but incorrectly leaves 132/1698 and
+126/1698 hand-region vertices with over 10% spine influence, visibly stretching
+hands into spikes. That failed attempt is retained. The accepted targeted
+repair carries semantic arm/hand membership through rest subdivision, reads
+the interpolated mask before deleting construction groups, and only then
+assigns bone weights. Both fixtures have zero sampled waist drift and zero
+hand spine influence afterward. These are specific binding invariants, not
+whole-character approval. The guide now requires both controls rather than
+assuming a smooth coordinate formula establishes correct ownership.
+
+A separate helper substitution rounds the outer elbow section in matching
+close-ups, but the inner bend still pinches. The authored finishing iterations
+add coherent trousers, shoes and facial features; these larger edits are not
+attributed to the two helper fixes. Simplified anatomy and broad shoulder/neck
+transitions remain visible. Sampled one-way nearest-point native/export
+measurements are not reported as bidirectional surface equality.
+
+### Cartoon motion failures
+
+The separate cartoon run exposed an orientation error invisible to topology
+checks: aiming bones with a fixed track/up quaternion discarded their rest
+roll, flipping footwear. Across 49 sampled frames, the lowest sole remained
+137–155 mm above a fixed world floor in native and fresh GLB. Preserving the
+full rest frame removes that error. Subsequent tests separately exposed stance
+sliding, sock penetration and jagged face-selected garment boundaries; a
+fixed floor and garment review are necessary even when skin/export checks pass.
+The guide now distinguishes sole height, horizontal stance motion, garment
+clearance and complete bone-frame preservation. Later repair results and
+remaining limitations are recorded with the retained evidence, not silently
+included in the original generation.
+
+The later cartoon repairs preserve rest-frame roll, use a deliberate sole
+pivot for stance, replace jagged garment boundaries with coherent loops, and
+separate a local ankle-clearance adjustment from rebinding. Recomputing the
+weight field at newly displaced sock vertices initially made deformation worse;
+that failed larger-gap trial remains retained. Preserving the pre-offset
+binding coordinates during the final local 6 mm clearance reduces sampled
+sock/body signed-distance events over 1 mm to zero in native and imported
+49-frame checks. Residual signed overlap is about 0.84 mm, and the lifted
+sock-to-shoe silhouette remains visibly scalloped. This is not collision-free
+or a fully accepted outfit. Sole-pivot diagnostics show negligible sampled
+stance-axis drift, not a proof of between-frame or complete no-slip contact.
+The torso weight shift, garment seam fit and facial/anatomical finish still
+need work. No run in this pass establishes production-ready characters.
+
+### Final follow-up validation
+
+- Twelve live Blender construction regressions pass (six hand, six upper
+  body), including the 60/81-condition matrices and preserved wrist envelope.
+  The two Bun wrappers pass against the final scripts.
+- Full local Bun suite: 96 passes, one failure. The unchanged MCP reference
+  comparison still exceeds its internal ten-second Eevee render budget on
+  this software-rendered cloud host. Its timeout and assertions are unchanged;
+  the full suite is not reported as green.
+- Standalone Python discovery: 26 pass, 12 bpy-only cases skipped there and
+  executed separately inside Blender as above. Rust: 17 pass. Repository
+  validation, documentation tests (44 pass, one platform skip) and build pass.
+- Initial setup attempts mixed the installed Blender 4.3.2 with 5.2.2 or hit
+  process/resource limits during concurrent rendering. Those partial attempts
+  are retained, not counted as final passes. The final checks consistently use
+  official Blender 5.2.2; software-render threads are bounded and a writable
+  shader cache is supplied where supported. No performance claim follows.
+- The initial in-memory gallery fetch was killed; bounded-memory streaming
+  extraction verified the same pinned archive hash, every image
+  hash and the manifest counts before docs validation. No gallery data changed.
+
+The final wrist-envelope adjustment was also inspected in eight native/imported
+views (palm/edge, elbow bend/overhead) on one slender fixture using the unchanged
+old hand to isolate the upper-body change. Its join remains continuous without
+the earlier thick-wrist bulge. Cropped distal fingertips and a partly occluded
+opposite hand limit those views to the wrist; they do not validate finger form.

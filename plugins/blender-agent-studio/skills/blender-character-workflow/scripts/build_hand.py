@@ -98,11 +98,15 @@ def create_hand(name="Hand", *, scale=1.0, palm_width=1.0,
         center = sum((Vector(verts[i]) for i in root), Vector()) / 4
         half_width = (xs[col + 1] - xs[col]) / 2
         sections = []
+        length = lengths[number] * finger_length
+        # Short fingers still need their first ring beyond both staggered
+        # root corners. Otherwise the closed cage folds back into the palm.
+        root_clearance = max(
+            0.0, max(verts[i][1] for i in root) - center.y - .13 * length + .001)
         # Rings flank both joints; gentle palmward flexion increases distally.
         for t, taper in ((.13, .98), (.40, .89), (.47, .88),
                          (.70, .77), (.77, .74), (.94, .63), (1, .40)):
-            length = lengths[number] * finger_length
-            cy = center.y + t * length
+            cy = center.y + t * length + root_clearance
             cx = center.x + spreads[number] * t
             cz = -.035 - (.24 + number * .025) * t * t
             hw, hd = half_width * taper, .165 * taper
@@ -121,10 +125,20 @@ def create_hand(name="Hand", *, scale=1.0, palm_width=1.0,
                              (.82, .20, .16), (1, .14, .12)):
         c = origin + axis * (1.35 * finger_length * t)
         c.z -= .10 * t * t
-        sections.append([c - across * width - depth * thick,
-                         c + across * width - depth * thick,
-                         c + across * width + depth * thick,
-                         c - across * width + depth * thick])
+        points = [c - across * width - depth * thick,
+                  c + across * width - depth * thick,
+                  c + across * width + depth * thick,
+                  c - across * width + depth * thick]
+        sections.append(points)
+    # A manifold thumb can still pass through the palm. Keep every section
+    # outside the outer root plane, translating all rings together so short
+    # thumbs retain their ordering instead of folding into each other.
+    outward_shift = max(
+        0.0, max(p.x for section in sections for p in section)
+        - min(verts[i][0] for i in root) + .001)
+    for section in sections:
+        for p in section:
+            p.x -= outward_shift
     digit('thumb', root, sections)
 
     # Apply proportions in the cage; transform is reserved for placement.

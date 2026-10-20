@@ -98,6 +98,13 @@ garment fitting and visual pose/export review; they are not finished characters
 or a guarantee of anatomical quality. Low-poly and realistic work retain their own
 form and topology requirements.
 
+The helper regressions also sample nonadjacent surface intersections, including
+short thumbs and steep underarms that pass closed-manifold checks. The workflow
+preserves semantic limb membership through rest subdivision, checks that an
+arm raise cannot pull the waist, and verifies bone roll before posing footwear.
+A grounded foot must also remain planted horizontally during stance; world-floor
+and fresh-export checks stay separate from garment-clearance review.
+
 Animated outfits distinguish rigid accessories from flexible layers. Socks,
 cuffs and straps follow the appropriate local surface, while soles and rigid
 details follow their intended bones. Side/rear ankle checks during foot lift,

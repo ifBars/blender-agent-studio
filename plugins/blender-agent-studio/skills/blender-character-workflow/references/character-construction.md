@@ -153,6 +153,18 @@ locally appropriate torso/underarm band (for example, a clamped smoothstep
 mask), retain the remaining spine weight, and normalize. Adapt bands to the
 chosen landmarks; do not copy universal world-coordinate thresholds.
 
+For procedural cages, preserve semantic arm/hand membership through rest
+subdivision instead of reconstructing it from final world-space coordinates:
+mark arm interior and attached hand vertices as 1, unrelated torso as 0, and
+blend only the shared shoulder boundary. Apply the rest subdivision with those
+construction groups intact, read their interpolated weights as the arm mask,
+then multiply the along-bone weights by that mask. Assign the remainder to the
+appropriate torso bones and remove construction groups before export. A hand
+can lie below the torso cutoff in an A-pose; a height mask can leave it bound
+to the spine and stretch it into spikes when raised. Verify both invariants:
+unrelated waist vertices stay still during an arm-only raise, and hand skin
+has no residual torso influence. A smooth blend alone proves neither.
+
 Do not rely solely on Blender's Preserve Volume option: ordinary exported
 skinning may deform differently. Inspect the fresh export in the same bend,
 reach and twist poses. If native corrective shapes or helpers are necessary,
@@ -191,6 +203,29 @@ Classify each attachment before binding it:
   sole follows the foot, while the ankle opening must accommodate ankle flexion.
   Making the entire sock rigid to the foot leaves an upright tube behind the
   moving shin. Binding it entirely to the shin can drag it out of the shoe.
+
+When procedurally aiming bones, preserve the complete rest frame, including
+bone roll. Rebuilding orientation with a fixed track/up quaternion can flip a
+shoe even when the bone points the right way. In armature coordinates, use the
+shortest rotation from the rest direction to the desired direction, multiplied
+by the rest rotation; choose a deliberate axis for an antiparallel target and
+handle intended twist separately. Use Blender's pose/local-space conversion
+for the parent chain. A zero-motion test must reproduce the full rest matrix,
+not just the head/tail positions. Pose-bone location channels are local, not
+world-space root displacement.
+
+For a walk, test world-space sole height AND horizontal sole displacement over
+each stance interval. Moving the root to make a foot touch the floor can still
+leave it sliding; a floor rendered under each posed bound hides both problems.
+Sample every authored frame plus passing/toe-off extremes in native and fresh
+export, preserving a fixed world floor. Contact checks do not approve garment
+clearance: inspect sock/shin and sock/shoe intersections separately.
+
+For a clearance adjustment to an already bound garment, preserve its accepted
+support correspondence and weights unless rebinding is intentional. Recomputing
+a distance-based field at displaced sock vertices can change their joint
+ownership and worsen penetration despite a larger rest-space gap. Compare the
+same poses after a geometric offset, and test rebinding as a separate change.
 
 Bind geometry in the same rest coordinate system as its driver. Avoid applying
 the same bone motion twice through both bone parenting and an armature
@@ -244,6 +279,12 @@ directory; do not install them as an add-on or use them as an arbitrary MCP tool
   about 0.047 for an 18 cm starting hand), then inspect actual dimensions.
   `mirror=True` reflects local X and repairs winding. Width, length, finger
   length and thickness are independent multipliers.
+
+The helpers are also checked for nonadjacent evaluated surface intersections
+across sampled proportion settings. This catches folded underarms and thumb
+roots that a closed-manifold test misses. It is not a guarantee for every
+positive multiplier, a collision-free pose, or finished anatomy. Inspect
+unsubdivided and final surfaces whenever changing proportions.
 
 Both return linked editable mesh objects and optionally add subdivision.
 Construction vertex groups mark regions, wrist loops and digit tips; they are

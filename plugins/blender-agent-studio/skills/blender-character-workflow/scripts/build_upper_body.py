@@ -55,26 +55,33 @@ def create_upper_body(name="UpperBody", *, scale=1.0, width=1.0, depth=1.0,
         # Preserve the boundary's ordering and translate its angular positions
         # to elliptical arm sections. The first section stays close to chest;
         # there is no oversized deltoid sphere or capped intersecting tube.
-        angles = []
-        for index in boundary:
-            _, y, z = verts[index]
-            angles.append(math.atan2((z - 1.385) / .085,
-                                     y / (.081 * depth)))
-        shoulder = Vector((sign * .195 * width, 0, 1.39))
+        # The rectangular torso opening clusters its samples at the top and
+        # bottom. Reusing those angles for every limb ring leaves two ~110-degree
+        # gaps and a flattened front/back profile, especially during elbow bend.
+        # Keep the shared opening, but distribute the ten limb samples evenly.
+        angles = [-math.pi + math.pi / 10 + i * math.tau / 10
+                  for i in range(10)]
+        # A steep arm drop otherwise places the inside of the first ellipse
+        # behind the torso opening, making a folded, self-intersecting armpit.
+        clearance = max(0.0, .075 * math.sin(drop) - .055 * math.cos(drop)
+                        - .010 * width)
+        shoulder = Vector((sign * (.195 * width + clearance), 0, 1.39))
         direction = Vector((sign * math.cos(drop), 0, -math.sin(drop)))
         up = Vector((sign * math.sin(drop), 0, math.cos(drop)))
         previous = boundary
         arm_indices = list(boundary)
-        # Three elbow loops localize later weight blending; wrist narrows.
+        # Three elbow loops localize later weight blending. The wrist's
+        # front/back radius retains the old endpoint envelope after uniform
+        # sampling, rather than silently thickening existing hand joins.
         sections = [(0.055, .069, .075), (.14, .061, .065),
                     (.245, .050, .052), (.285, .048, .050),
                     (.325, .047, .049), (.43, .040, .041),
-                    (.52, .029, .030)]
+                    (.52, .0216, .030)]
         for distance, ry, rz in sections:
             center = shoulder + distance * direction
             current = []
             for a in angles:
-                p = center + Vector((0, math.cos(a) * ry, 0)) + up * (math.sin(a) * rz)
+                p = center + Vector((0, sign * math.cos(a) * ry, 0)) + up * (math.sin(a) * rz)
                 current.append(len(verts))
                 verts.append(tuple(p))
             for i in range(len(previous)):
