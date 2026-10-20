@@ -50,6 +50,14 @@ palm-to-digit construction, footprint/profile shoe lofting, continuous
 shoulder/pelvis transitions and localized weight bands. Use these construction
 methods alongside the form review; naming the right parts is not enough.
 
+For a procedural stylized humanoid, the optional Blender-Python starting cages
+in `scripts/build_upper_body.py` and `scripts/build_hand.py` implement these
+shared boundaries directly. Use them when appropriate instead of rebuilding
+shoulders from capped tubes or fingers from intersecting primitives. Read
+[the helper contract](references/character-construction.md#editable-starting-cages)
+before importing them. Adapt proportions and inspect the actual result; they
+are blockouts, not finished anatomy, clothing, or rigs.
+
 Build a complete simple character before finishing regions. Preserve shared
 boundaries and whole-body landmarks during local refinement. Review hand
 palm/dorsal/edge views and shoe top/profile views before adding small details.

@@ -138,6 +138,21 @@ in this order: pivot placement, rest shape, loop placement, weight transition,
 then corrective deformation. Subdivision cannot repair a wrongly placed
 pivot, and more smoothing cannot restore missing joint volume.
 
+Match the native and exported evaluation order. A native armature followed by
+subdivision can look smooth while an export that subdivides the rest surface
+before skinning develops a different fold. For a portable finalized mesh,
+preserve the editable cage separately, finalize the intended rest topology,
+then compute the region-local weights on that surface and deform the same mesh
+in both native and exported paths. Recheck the poses; changing modifier order
+alone may expose a bad weight field rather than repair it.
+
+Make region membership continuous too. A smooth along-bone blend still creates
+a seam if a hard torso-height or lateral cutoff suddenly assigns adjacent
+vertices entirely to the spine. Fade the arm contribution through a finite,
+locally appropriate torso/underarm band (for example, a clamped smoothstep
+mask), retain the remaining spine weight, and normalize. Adapt bands to the
+chosen landmarks; do not copy universal world-coordinate thresholds.
+
 Do not rely solely on Blender's Preserve Volume option: ordinary exported
 skinning may deform differently. Inspect the fresh export in the same bend,
 reach and twist poses. If native corrective shapes or helpers are necessary,
@@ -209,3 +224,67 @@ Record each unresolved defect and repair its source. Inspect skin continuity
 using geometry, not object names: joining objects does not weld their meshes.
 Once the primary forms pass, add clothing detail, preserving the accepted
 shape. Recheck affected regions after the final edit and after export.
+
+## Editable starting cages
+
+Two optional Blender-Python helpers provide a small executable starting point
+for stylized adult humanoids. They use shared vertices without boolean unions,
+voxel remeshing or third-party assets. Import them from this skill's `scripts`
+directory; do not install them as an add-on or use them as an arbitrary MCP tool.
+
+- `build_upper_body.create_upper_body(...)` makes a continuous torso with arm
+  openings bridged into tapered arm loops. Defaults are a 1.75 m adult blockout,
+  +Z up and -Y front. `width` and `depth` alter torso proportions; `arm_drop`
+  is 15–65 degrees below horizontal. `scale` multiplies all coordinates.
+  Waist, neck and both wrists are deliberately open for further construction.
+- `build_hand.create_hand(...)` makes one connected capped hand with four
+  staggered finger roots and a side-branching thumb. Local +Y runs from wrist
+  toward fingers, -Z is the palm, -X is the thumb. The default hand is roughly
+  3.8 units long; choose `scale` from the requested hand length (for example,
+  about 0.047 for an 18 cm starting hand), then inspect actual dimensions.
+  `mirror=True` reflects local X and repairs winding. Width, length, finger
+  length and thickness are independent multipliers.
+
+Both return linked editable mesh objects and optionally add subdivision.
+Construction vertex groups mark regions, wrist loops and digit tips; they are
+NOT skin weights. Remove/exclude them when normalizing deform groups. The upper
+body's ten-vertex wrist and the hand's sixteen-vertex capped wrist do not match:
+remove the cap and bridge the ordered transition loops as described below.
+Joining objects or overlapping the wrists does not connect the surfaces.
+
+Fit sleeve surfaces to the accepted body cage (or derive them from its faces),
+then skin them consistently with the body; do not place an inflated shoulder
+sphere over the arm root. These helpers do not supply weights, corrective
+shapes, garment clearance, feet, head or reference-backed sex/build variants.
+They do not establish deformation quality. Test the brief's raise/bend/twist
+poses and fresh export before accepting a generated character. Preserve the
+requested style; do not force realistic or cartoon briefs into these defaults.
+
+### Join the wrist instead of overlapping it
+
+`build_hand.bridge_wrist_loops(arm_loop, hand_loop)` returns connecting faces
+for ordered loops in one mesh, including the helpers' 10-to-16 vertex case.
+It does not guess placement or transfer weights. Use this short construction
+sequence before rigging:
+
+1. Transform both cages into the same rest-space coordinates. Match the wrist
+   centers, orientation and width; leave a short, positive-length transition.
+   Check that the thumb points inward/palmward on the correct side.
+2. Copy the hand vertices into the body's vertex array and offset its face
+   indices. Remove all hand-cap faces whose vertices are entirely in the
+   `wrist` group. The upper-body wrist is already open.
+3. Order both boundary loops around the forearm axis, starting on the same
+   physical side and traversing in the same direction. For approximately
+   convex wrist loops, sort by `atan2(offset.dot(palm_normal),
+   offset.dot(wrist_width_axis))` in the same local basis for both loops.
+4. Append `bridge_wrist_loops(arm_loop, hand_loop)` to the combined face list.
+   Recalculate normals and inspect palm/dorsal/edge views. The new faces share
+   both existing boundaries; merely joining Blender objects is insufficient.
+5. Assign region-local normalized deform weights across the transition after
+   finalizing its topology. Test wrist bend/hand-forward and fresh export.
+
+The bridge function rejects repeated, overlapping or malformed index loops.
+It cannot detect incorrect geometric ordering, self-intersections, an excessive
+transition gap or poor weights. The regression fixture joins an actual open
+hand wrist to a ten-vertex forearm ring and checks a single closed surface;
+visual pose/export review is still required.

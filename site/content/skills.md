@@ -91,8 +91,11 @@ boundaries and whole-body proportions.
 Review uses palm/dorsal/edge hand views, top/profile shoe views, and bend/reach
 poses when rigging is requested. The same poses are checked after export;
 native volume-preserving skinning alone is not proof of portable deformation.
-These are construction and review methods, not a supplied base mesh or a
-guarantee of anatomical quality. Low-poly and realistic work retain their own
+Optional Blender-Python upper-body and hand helpers provide editable shared-edge
+starting cages, rather than intersecting shoulder caps or finger tubes. They
+require proportion adaptation, intentional wrist joining, local skin weights,
+garment fitting and visual pose/export review; they are not finished characters
+or a guarantee of anatomical quality. Low-poly and realistic work retain their own
 form and topology requirements.
 
 Animated outfits distinguish rigid accessories from flexible layers. Socks,
