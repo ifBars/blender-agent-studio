@@ -564,7 +564,7 @@ async function main(): Promise<void> {
     scorerVersion: SCORER_VERSION,
     motionEvidenceVersion: 1,
     inspectorSchemaVersion: 3,
-    evidenceSettingsVersion: 2,
+    evidenceSettingsVersion: 3,
     evidencePresentation: selected.some(task=>task.authoredCameras) ? "authored_per_task" : "neutral",
     startedAt: new Date().toISOString(),
     mode: options.conditionLabel,

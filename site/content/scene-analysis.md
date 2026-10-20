@@ -71,6 +71,12 @@ vertices and projects their weighted centroids into SceneIR `SURFACE_ANCHOR`
 objects. The existing Rust connection analyzer then measures each declared pair.
 These projections are inspection evidence, never objects added to the source.
 
+Standardized evidence rendering also excludes meshes hidden by ancestor
+collections or view-layer exclusion. This prevents invisible imported rig
+helpers from enlarging the framing bounds or moving the diagnostic floor.
+The correction is recorded as evidence settings version 3; compare both
+conditions with the same renderer version.
+
 ```json
 {
   "assetPath": "/work/character.blend",
