@@ -205,6 +205,16 @@ optimization. Use reference-relative judgments rather than universal ratios.
 
 ## Verify the exported artifact
 
+For deforming attachments, `blender_inspect_attachments` measures fixed small
+vertex patches across explicit poses using SceneIR. It requires the Rust
+runtime and topology-preserving meshes. Use several boundary pairs, record
+thresholds in scene units, and inspect the reported worst frame. Preserve
+bindings and tolerances across repairs; rebind and visually verify after
+topology changes. Object-local connection points and whole-object motion
+hashes cannot establish skinned attachment fit. Numeric compliance remains
+`review_required`, not an aesthetic pass. Check native and fresh export
+separately with selectors verified against each mesh.
+
 Use this gate when an export is requested or supplied. For a `.blend`-only task,
 reopen and inspect that scene instead.
 

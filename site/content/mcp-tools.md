@@ -59,13 +59,14 @@ See [Reference images](reference-images.md) for the workflow.
 
 ## Analyze the scene
 
-These three need the optional Rust runtime. See [Scene analysis](scene-analysis.md).
+These tools need the optional Rust runtime. See [Scene analysis](scene-analysis.md).
 
 | Tool | What it does |
 | --- | --- |
 | `blender_describe_scene` | Lists hierarchy, evaluated bounds, authored roles, and spatial candidates. |
 | `blender_quality_report` | Checks explicit triangle, closed-mesh, ground, and contact constraints. |
 | `blender_compare_scenes` | Diffs a repaired scene against its baseline. |
+| `blender_inspect_attachments` | Measures explicit evaluated surface-patch gaps across poses; compares repairs against preserved evidence. Requires stable topology. |
 
 ## Assets
 

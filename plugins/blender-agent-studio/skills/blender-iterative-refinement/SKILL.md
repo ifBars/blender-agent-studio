@@ -64,6 +64,15 @@ Keep numeric findings and factual diffs separate from the visual ledger:
 intersection. Compare actual evidence before retaining a repair; no aesthetic
 score or automatic checkpoint tool is implied.
 
+For character repairs, keep separate ledger rows for hand/thumb construction,
+shoe footprint/profile, shoulder/underarm continuity, joint deformation, and
+clothing/accessory attachment. A single connected body or exported action
+cannot pass these rows. Preserve intended cartoon proportions and simplified
+hands. Use `blender_inspect_attachments` for explicit deforming surface pairs
+where supported, with unchanged selectors, thresholds and frames. Review the
+worst frame and surrounding views after the weight/geometry repair; a passing
+centroid distance can still conceal penetration or a visibly detached shoulder.
+
 ## Repair durable source
 
 Identify the smallest source-level cause that can address the highest-priority

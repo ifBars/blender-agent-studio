@@ -79,6 +79,34 @@ context render.” Copy and symbols remain editable; static display textures
 are not presented as live data. The skill includes a compact face specification
 and an integration guide, rather than a fixed sign generator or new MCP tool.
 
+## Character construction
+
+The character workflow includes a
+[connected-surface construction guide](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-character-workflow/references/character-construction.md).
+It develops the palm into finger roots and an opposing thumb, builds footwear
+from a shared footprint and side profile, and tests joint loops and localized
+weight transitions before garment detail. Local refinements preserve shared
+boundaries and whole-body proportions.
+
+Review uses palm/dorsal/edge hand views, top/profile shoe views, and bend/reach
+poses when rigging is requested. The same poses are checked after export;
+native volume-preserving skinning alone is not proof of portable deformation.
+These are construction and review methods, not a supplied base mesh or a
+guarantee of anatomical quality. Low-poly and realistic work retain their own
+form and topology requirements.
+
+Animated outfits distinguish rigid accessories from flexible layers. Socks,
+cuffs and straps follow the appropriate local surface, while soles and rigid
+details follow their intended bones. Side/rear ankle checks during foot lift,
+passing and toe-off catch separation hidden in an idle pose. Intentional
+cartoon proportions and mitten hands remain valid style choices.
+
+The loop now also uses [surface attachment inspection](scene-analysis.md#deforming-character-attachments):
+declare small surface patches and pose frames, measure the gaps, repair the
+binding or geometry, and compare against preserved baseline evidence.
+Numeric checks and visual review remain separate; a connected mesh or a
+within-tolerance patch distance does not prove good character form.
+
 ## Shared guidance
 
 Every specialist bundles the same [execution guidance](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/references/astra-workflow.md), so behavior stays consistent:

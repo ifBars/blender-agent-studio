@@ -7,6 +7,7 @@ import { McpServer } from "@modelcontextprotocol/server";
 import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
 import { z } from "zod";
 import { compareAssets, describeAsset } from "../scripts/scene-analysis.ts";
+import { attachmentSchema, inspectAttachments } from "../scripts/attachment-inspection.ts";
 import { createPolyHavenClient } from "../skills/blender-rendering-workflow/scripts/poly-haven.ts";
 import { prepareMixamoSearch } from "../scripts/mixamo.ts";
 import { preparePixabaySoundSearch } from "../scripts/pixabay.ts";
@@ -442,6 +443,15 @@ server.registerTool("blender_download_polyhaven_asset", {
   }),
 }, async (options) => {
   try {return result(await polyHaven.download(options));} catch(error) {return errorResult(error);}
+});
+
+server.registerTool("blender_inspect_attachments", {
+  title: "Inspect surface attachments across poses",
+  description: "Read-only evaluated mesh-patch anchors at 2-12 frames, analyzed as SceneIR connection points. Detects declared sock/shin, cuff, shoe or accessory gaps even when object transforms stay fixed. Optional baselineJson compares a repair under the same constraints. Requires stable mesh topology and setup:runtime. Saves full evidence; no automatic aesthetic pass, baking, or repair.",
+  inputSchema: attachmentSchema,
+}, async (args) => {
+  try { return result(await inspectAttachments(args)); }
+  catch (error) { return errorResult(error); }
 });
 
 server.registerTool("blender_inspect_motion", {

@@ -1,6 +1,6 @@
 # Full scenes and game characters
 
-Two opt-in suites add six briefs without changing the historical `full`,
+Two opt-in suites provide seven briefs without changing the historical `full`,
 `quality`, `spatial` or `whole_scene` task sets.
 
 | Suite | Task | Main review |
@@ -11,6 +11,7 @@ Two opt-in suites add six briefs without changing the historical `full`,
 | `game_characters` | `game_ranger_character` | Static human identity, coherent form, fitted garments, hands/boots/back and export. |
 | `game_characters` | `game_scout_deformation` | Actual native and fresh-export skin deformation in neutral, bend, reach and twist poses. |
 | `game_characters` | `game_badger_merchant_holdout` | Nonhuman identity, different proportions, fitted clothing and export. |
+| `game_characters` | `cartoon_outfit_motion` | Intentional cartoon proportions, moving sock/ankle/shoe continuity, accessory support and a two-second walk video. |
 
 See the bundled [protocol](../plugins/blender-agent-studio/skills/blender-agent-benchmark/references/scene-character-suites.md)
 for rendering and scoring. The reading room and cafe are render-only; the
@@ -56,7 +57,7 @@ Validate old versus revised skills under a common current evaluator, then
 no-plugin versus revised plugin separately. Preserve the old snapshot, images
 and source hashes. Updated evaluator fingerprints intentionally prevent strict
 comparisons to incompatible old runs. New-scene gains cannot offset historical
-regressions. The six tasks are runnable coverage; new gallery results require
+regressions. These tasks are runnable coverage; new gallery results require
 actual completed and judged generations.
 
 ## Extend the preview matrix
