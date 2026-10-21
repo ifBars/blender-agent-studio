@@ -46,6 +46,22 @@ evaluate modifiers and inspect a representative before repeating it through
 a scene. Full-scene guidance also reviews focal-zone scale, upholstery and
 broad floor reflections alongside architectural trim and material detail.
 
+For image-based modeling, the [reference board helper](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-modeling-workflow/scripts/setup_reference_board.py)
+reads a JSON manifest of up to eight front, back, left or right PNG views, each
+with an optional pixel crop. It writes a new `.blend` with semi-transparent image
+guides that are hidden from renders, plus a matching orthographic camera for
+each view. Each guide's size comes from its declared height and the crop's
+aspect ratio. View names give the camera position; for a subject facing -Y, a
+profile with the nose pointing left is `right`. The helper checks every input
+before it changes anything. It never overwrites the input file, the output or
+the reference images, and it leaves render settings and the active camera
+unchanged. Crops are copied exactly into a new evidence folder and packed into
+the output `.blend`, so the guides stay with the file when it is moved. A report
+records hashes and the meters assumption. It does not infer orientation, scale
+or proportions, and the guides do not prove that the shape matches. The
+[image-to-3D guide](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-modeling-workflow/references/image-to-3d.md)
+gives the manifest format and view conventions.
+
 The repository's comparison queue runs one generation at a time. On Windows it
 caps the modeling process tree at 20% CPU with Below Normal priority and requests
 two Blender threads, preferring a verified GPU backend for rendering. Shared

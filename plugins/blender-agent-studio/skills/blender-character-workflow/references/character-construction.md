@@ -44,6 +44,32 @@ Stop decomposition at a useful modeling unit: a finger includes its palm
 attachment, a boot includes its ankle opening, and a shoulder includes the
 underarm. Independent isolated parts cannot satisfy these relationships.
 
+## Adapt anatomical templates without inheriting their defects
+
+A licensed anatomical mesh can supply connected face and hand topology, but
+does not establish the requested identity, proportions or clothing. Record the
+asset's source revision and license separately from its application's code
+license. Inspect imported groups: fitting cages, joint markers, teeth and eye
+helpers are not automatically renderable character surfaces. Retain the source
+data and document which groups became visible geometry.
+
+Define garment regions in the unposed mesh using stable topology, groups or
+weights, then carry those regions through posing. Selecting trousers by height
+after lowering the arms can also select forearm faces. Inspect every resulting
+component and opening before deriving belts, hems or accessories from its
+boundary. A valid mesh operation does not establish anatomical ownership.
+
+Fit seams, brows, laces and other surface details to the evaluated supporting
+surface. Coordinate guesses can bury a brow in the forehead or leave a lace
+floating above a shoe. Check the projection direction and missed hits, then
+inspect attachment from another angle. Preserve intentional clearance and
+avoid projecting through the intended surface onto its far side.
+
+Review garment overlap and footwear contact in an opaque silhouette pass as
+well as a shaded close-up. A narrow waist gap or an upper that touches its sole
+only at the centre can disappear in a full-body beauty render. Recheck the
+same regions after subdivision and fresh export.
+
 ## Hands: build the palm into the fingers
 
 Use a palm with width, thickness, a curved knuckle line, a narrower wrist, and

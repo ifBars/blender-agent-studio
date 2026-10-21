@@ -486,3 +486,10 @@ on future generations has not been measured.
   guidance and opened the native/export face evidence. Generated assets and
   transcripts are excluded from the commit. No new generation-quality or
   performance claim follows from these checks.
+
+### Reference-led follow-up
+
+The later Jonesy, Luna Snow and generated original-human exercise is documented
+in [reference-board validation](reference-board-validation.md). It adds a
+bounded helper for packed orthographic image guides and records actual modeling
+failures separately from software checks and character likeness.
