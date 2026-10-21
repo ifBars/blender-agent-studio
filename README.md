@@ -241,6 +241,18 @@ The [earlier Claude Code lantern samples](docs/plugin-quality-evidence.md#claude
 had no baseline and remain separate from those paired scene comparisons.
 Keep each result tied to its tested host, model, task, and plugin revision.
 
+## Support development
+
+If Blender Agent Studio helps you build or inspect scenes, consider supporting
+its maintainer through [GitHub Sponsors](https://github.com/sponsors/ifBars) or
+[Ko-fi](https://ko-fi.com/ifbars). Contributions help sustain the time spent on
+Blender and agent compatibility, reproducible examples, bug fixes, and benchmark
+runs that report failures as well as improvements.
+
+The plugin stays free, MIT-licensed, and runs Blender locally. Sponsorship is
+optional and does not purchase priority support or feature commitments. Sharing
+a scene, reporting a reproducible bug, or improving the docs also helps.
+
 ## Star history
 
 <a href="https://www.star-history.com/?repos=ifBars%2Fblender-agent-studio&type=date&legend=top-left">
