@@ -70,6 +70,19 @@ well as a shaded close-up. A narrow waist gap or an upper that touches its sole
 only at the centre can disappear in a full-body beauty render. Recheck the
 same regions after subdivision and fresh export.
 
+Inspect shell modifiers on a representative hand, shoulder and scalp before
+applying them across an outfit. Smoothing can shrink a fitted shell through the
+body; retain a clearance check after smoothing, including when using a
+volume-preserving method. If thickness creates long spikes, compare the raw
+surface with the evaluated result and inspect degenerate corners, normals and
+Solidify's even-thickness setting. Correct the cause and recheck openings and
+clearance; reducing thickness alone can hide a defect without repairing it.
+
+For image-backed materials, use explicit output paths, confirm the bake files
+exist, and pack or embed the required images. A successful background build
+does not establish that its textures were saved. Compare those materials in a
+fresh import under the same lights and color management.
+
 ## Hands: build the palm into the fingers
 
 Use a palm with width, thickness, a curved knuckle line, a narrower wrist, and

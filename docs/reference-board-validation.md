@@ -65,6 +65,13 @@ separate visual acceptance question. The construction guide now emphasizes
 rest-space region membership, evaluated-surface detail placement and opaque
 silhouette review alongside shaded close-ups.
 
+The Jonesy and Luna trials also exposed long spikes after applying shell
+thickness to finger or shoulder geometry. Comparing raw and evaluated surfaces
+localized those failures to Solidify's even-thickness behavior. Jonesy's
+garment smoothing needed a body-clearance check, and its background texture
+bakes needed absolute output paths. These observations add focused inspection
+guidance; they do not establish a universally correct modifier configuration.
+
 The campaign also reconstructs classic Jonesy and default Luna Snow from
 opened character references, using separately adapted CC0 anatomical topology.
 The MakeHuman asset license is distinct from its application's code license;
