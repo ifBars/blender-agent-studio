@@ -62,9 +62,14 @@ def bind(spec):
     weights.sort()
     signature = topology(obj.data)
     binding = hashlib.sha256(json.dumps([obj.name, signature, weights]).encode()).hexdigest()
+    # The centroid is invariant under uniform rescaling of the group weights.
+    # Identify aliases without changing the historical repair-binding hash.
+    total = sum(weight for _, weight in weights)
+    normalized = [(index, weight / total) for index, weight in weights]
     return obj, weights, signature, dict(
         id=PREFIX + spec["id"], object_name=obj.name, selector=spec,
         vertex_count=len(weights), binding_sha256=binding,
+        surface_weights=normalized,
         topology_sha256=signature,
     )
 

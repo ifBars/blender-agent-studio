@@ -214,6 +214,10 @@ topology changes. Object-local connection points and whole-object motion
 hashes cannot establish skinned attachment fit. Numeric compliance remains
 `review_required`, not an aesthetic pass. Check native and fresh export
 separately with selectors verified against each mesh.
+Each connection must use different surface patches. Different anchor IDs or
+group names do not make a check independent: the tool rejects both ends bound
+to the same weighted patch on one object, including proportional group weights.
+Distinct coincident surfaces on separate objects remain valid contact checks.
 
 Use this gate when an export is requested or supplied. For a `.blend`-only task,
 reopen and inspect that scene instead.

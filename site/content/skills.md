@@ -117,6 +117,17 @@ binding or geometry, and compare against preserved baseline evidence.
 Numeric checks and visual review remain separate; a connected mesh or a
 within-tolerance patch distance does not prove good character form.
 
+The [form review guide](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-character-workflow/references/character-form-review.md)
+lists the features that decide a brief: a realistic face, hair and named
+footwear, or a known character's identifying features. Each feature records
+its acceptance basis: an opened reference, the brief or an approved design for
+original work, or `unreferenced`. It then gives a matched model view, the
+concrete differences and a verdict. A failed download does not count
+as a reference. A realistic or likeness claim needs an accepted face. Raking
+light reveals skin banding, and comparing native with fresh-export renders shows
+procedural patterns that glTF drops. These gates make missing evidence visible. They do
+not guarantee better generations.
+
 ## Shared guidance
 
 Every specialist bundles the same [execution guidance](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/references/astra-workflow.md), so behavior stays consistent:

@@ -31,6 +31,64 @@ test("missing sampled evidence cannot report success", async () => {
   await expect(assessAttachmentEvidence({ scenes: [] }, request)).rejects.toThrow();
 });
 
+test("connected anchor aliases cannot measure the same patch against itself", () => {
+  for (const selectors of [
+    [{ vertexIndices: [2, 3] }, { vertexIndices: [3, 2] }],
+    [{ vertexGroup: "seam" }, { vertexGroup: "seam" }],
+  ]) {
+    const anchors = selectors.map((selector, i) => ({ id: i ? "sock" : "leg", objectName: "Leg", ...selector }));
+    expect(() => validateAttachmentRequest({ ...request, anchors })).toThrow("same surface patch");
+  }
+  // Distinct patches on a continuous mesh remain useful for seam checks.
+  expect(validateAttachmentRequest({ ...request, anchors: [
+    request.anchors[0], { ...request.anchors[1], objectName: "Leg", vertexIndices: [3] },
+  ] }).anchors).toHaveLength(2);
+});
+
+test("saved evidence rejects resolved patch aliases, including legacy binding hashes", async () => {
+  for (const legacy of [false, true]) {
+    const evidence = {
+      schema_version: "bas-surface-motion/0.1", source_sha256: "a".repeat(64),
+      scenes: [{ frame: 1 }, { frame: 13 }],
+      bindings: request.anchors.map((a, i) => ({
+        id: `bas:surface:${a.id}`,
+        object_name: "Leg",
+        binding_sha256: (legacy || i === 0 ? "b" : "c").repeat(64),
+        ...(legacy ? {} : { surface_weights: [[0, 1 / 6 + i * 1e-8], [1, 1 / 3], [2, 1 / 2 - i * 1e-8]] }),
+      })),
+    };
+    await expect(assessAttachmentEvidence(evidence, request)).rejects.toThrow("same surface patch");
+  }
+});
+
+test("maximum resolved patches fit in reusable baseline evidence", async () => {
+  const indices = Array.from({ length: 4096 }, (_, i) => 499_999 - 4095 + i);
+  const anchors = Array.from({ length: 32 }, (_, i) => ({ id: `a${i}`, objectName: `Mesh${i}`, vertexIndices: indices }));
+  const args = validateAttachmentRequest({ ...request, anchors, connections: [
+    { name: "seam", anchorA: "a0", anchorB: "a1", maxDistance: 0.02 },
+  ] });
+  const weights = indices.map((index, i) => [index, (i + 1) / (4096 * 4097 / 2)]);
+  const evidence = {
+    schema_version: "bas-surface-motion/0.1", source_sha256: "a".repeat(64),
+    bindings: anchors.map((a, i) => ({
+      id: `bas:surface:${a.id}`, object_name: a.objectName, selector: a, vertex_count: weights.length,
+      binding_sha256: i.toString(16).padStart(64, "0"), topology_sha256: "b".repeat(64), surface_weights: weights,
+    })),
+    scenes: args.frames.map(frame => ({
+      schema_version: "bas-scene-ir/0.1", source: "asset.blend", blender_version: "5.2.2", frame,
+      meters_per_unit: 1, limitations: [],
+      objects: anchors.map(a => ({ id: `bas:surface:${a.id}`, kind: "SURFACE_ANCHOR", parent: null,
+        semantic_role: "bas:evaluated_surface_anchor", bounds: null, mesh: null,
+        world_matrix: [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]],
+      })),
+    })),
+  };
+  const report = await assessAttachmentEvidence(evidence, args);
+  expect(report.status).toBe("review_required");
+  expect(Buffer.byteLength(JSON.stringify({ request: args, evidence, report, comparison: null }, null, 2)))
+    .toBeLessThan(16 * 1024 * 1024);
+});
+
 const blender = process.env.BLENDER_EXECUTABLE ?? Bun.which("blender");
 test.skipIf(!blender)("live armature attachment drift is detected and repaired with unchanged object transforms", async () => {
   const dir = await mkdtemp(join(tmpdir(), "bas-attachment-test-"));
@@ -59,6 +117,12 @@ for name in ["Leg","Sock"]:
     bpy.context.collection.objects.link(obj)
     vg=obj.vertex_groups.new(name="shin")
     vg.add([0,1,2,3],1.0,'REPLACE')
+    obj.vertex_groups.new(name="inspection_alias").add([0,1,2,3],0.5,'REPLACE')
+    obj.vertex_groups.new(name="inspection_distinct").add([2,3],1.0,'REPLACE')
+    for label, values in [("weighted", [.3,.6,.9]), ("scaled", [.1,.2,.3]), ("different", [.1,.2,.4])]:
+        group=obj.vertex_groups.new(name=label)
+        for index,weight in enumerate(values):
+            group.add([index],weight,'REPLACE')
     if name=="Leg":
         mod=obj.modifiers.new("Skin","ARMATURE")
         mod.object=rig
@@ -91,12 +155,53 @@ bpy.ops.wm.save_as_mainfile(filepath=str(out/"unsupported.blend"))
     expect(before.samples[0].checks[0].distance).toBeLessThan(1e-7);
     expect(before.connections[0].failingFrames).toEqual([13]);
     expect(before.connections[0].maximumDistance).toBeGreaterThan(0.7);
+    // Different group names and proportional weights still resolve to the same patch.
+    for (const selector of [{ vertexGroup: "inspection_alias" }, { vertexIndices: [3, 2, 1, 0] }]) {
+      await expect(inspectAttachments({
+        ...request, assetPath: asset, outputJson: join(dir, "aliased.json"), blenderPath: blender!,
+        anchors: [
+          { id: "leg", objectName: "Leg", vertexGroup: "shin" },
+          { id: "sock", objectName: "Leg", ...selector },
+        ],
+      })).rejects.toThrow("same surface patch");
+    }
+    const distinct = await inspectAttachments({
+      ...request, assetPath: asset, outputJson: join(dir, "distinct.json"), blenderPath: blender!,
+      anchors: [
+        { id: "leg", objectName: "Leg", vertexGroup: "shin" },
+        { id: "sock", objectName: "Leg", vertexGroup: "inspection_distinct" },
+      ],
+    });
+    expect(distinct.report.connections[0].maximumDistance).toBeGreaterThan(0.4);
+    const weightedRequest = {
+      ...request, assetPath: asset, blenderPath: blender!,
+      anchors: [
+        { id: "leg", objectName: "Leg", vertexGroup: "weighted" },
+        { id: "sock", objectName: "Leg", vertexGroup: "scaled" },
+      ],
+    };
+    await expect(inspectAttachments({ ...weightedRequest, outputJson: join(dir, "scaled.json") }))
+      .rejects.toThrow("same surface patch");
+    const differentWeights = await inspectAttachments({
+      ...weightedRequest, outputJson: join(dir, "different-weights.json"),
+      anchors: [weightedRequest.anchors[0], { ...weightedRequest.anchors[1], vertexGroup: "different" }],
+    });
+    expect(differentWeights.report.connections[0].maximumDistance).toBeGreaterThan(0.05);
     const after = (await inspect("after.blend", "after.json")).report;
     expect(after.status).toBe("review_required"); // never an aesthetic pass
     expect(after.connections[0].maximumDistance).toBeLessThan(1e-7);
     expect(after.anchorMotion.every(a => a.maximumDisplacementFromFirstFrame > 0.7)).toBe(true);
     expect(compareAttachmentReports(before, after).status).toBe("selected_constraints_improved");
     expect(compareAttachmentReports(after, before).status).toBe("constraints_regressed");
+    // Pre-alias-check baselines keep their original binding hash and remain usable.
+    const legacy = JSON.parse(await readFile(join(dir, "before.json"), "utf8"));
+    for (const binding of legacy.evidence.bindings) delete binding.surface_weights;
+    await writeFile(join(dir, "legacy.json"), JSON.stringify(legacy));
+    const legacyComparison = await inspectAttachments({
+      ...request, assetPath: join(dir, "after.blend"), outputJson: join(dir, "legacy-repair.json"),
+      baselineJson: join(dir, "legacy.json"), blenderPath: blender!,
+    });
+    expect(legacyComparison.comparison?.status).toBe("selected_constraints_improved");
     expect(compareAttachmentReports(before, { ...after, bindings: after.bindings.map((b: any) => ({ ...b, binding_sha256: "different" })) }).status).toBe("rebind_review_required");
     await expect(inspectAttachments({
       ...request, assetPath: asset, outputJson: join(dir, "changed-contract.json"), baselineJson: join(dir, "before.json"),

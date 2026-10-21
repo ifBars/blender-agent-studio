@@ -401,3 +401,88 @@ views (palm/edge, elbow bend/overhead) on one slender fixture using the unchange
 old hand to isolate the upper-body change. Its join remains continuous without
 the earlier thick-wrist bulge. Cropped distal fingertips and a partly occluded
 opposite hand limit those views to the wrist; they do not validate finger form.
+
+## Claude Sessions and Codex follow-up (2026-10-21)
+
+This follow-up starts from `7c2ff5d`. Claude Code Opus 5.5 reviewed the retained
+static-character trials and repaired one surface artifact on a copy of the
+retained source; Codex reproduced and
+fixed an attachment-inspection error and independently inspected the repair
+renders. This is a targeted repair and workflow revision, not a fresh generation
+comparison or a claim of reliable character quality.
+
+### Reject attachment checks against the same patch
+
+Different anchor IDs could select the same vertices on one mesh and produce a
+permanent zero gap. Both a reordered index list and two differently named
+vertex groups reproduced this problem before the fix. The live group fixture
+uses proportional weights (1.0 versus 0.5), which produce the same centroid.
+
+Request validation now rejects obvious selector aliases. Extracted bindings
+also include normalized vertex weights so group/index aliases and proportional
+weights are rejected before gap analysis, allowing for float32 roundoff with a
+`1e-6` relative weight tolerance. The original binding
+fingerprint is unchanged; a live regression verifies that preserved evidence
+without the new field still supports a repair comparison. Distinct patches on
+one mesh and coincident surfaces on separate meshes remain valid checks.
+Full selectors and resolved weights remain in the saved evidence; the report
+keeps compact binding metadata to avoid exceeding the 16 MiB baseline limit.
+The size regression exercises 32 patches of 4,096 vertices with large indices.
+
+The regression suite covers request rejection, saved evidence, resolved Blender
+selectors, drift/repair, fresh GLB inspection and the MCP path. These checks do
+not establish collision freedom or acceptance of unsampled motion. Nearly
+overlapping but distinct patches can still conceal gaps.
+
+### Diagnose face banding before smoothing
+
+The retained Mara Venn source had visible forehead and cheek bands. An initial
+eight-iteration Taubin smoothing trial reduced a local roughness statistic but
+left the bands visible. That rejected trial is retained. Increasing the source
+head ellipsoids from 24 by 14 to 64 by 32 segments, together with denser nose and
+neck tubes, reduced the banding in matching front, profile and perspective
+views of the native file and freshly imported GLB. The voxel-union settings
+were unchanged. This supports checking source faceting as a possible cause;
+these segment counts are not a universal modeling prescription.
+
+The complete asset changed from 401,124 to 401,648 triangles; mesh/material counts
+remained 47/14. A clean rebuild produced the same GLB hash:
+`af64e22a4d276079aa6c05f43ff416f57afb6002eb05100b26b64ef80e4bb108`.
+The original GLB remains
+`d59a8ef77b4485f4f7550d58606d1e2cba5938b4fa5ded19a5ea5aa878e8194c`.
+Per-object digests identify four changed meshes: `Head_Skin`, its derived `Hair`
+surface and the two brows projected onto it. The remaining 44 objects, all
+object transforms and all 14 material-node hashes are unchanged. Original
+source and asset hashes were rechecked after the trials and remain unchanged.
+Both versions report zero invalid vertices and degenerate faces. Native and
+imported topology counts must still be read separately; export splits are not
+proof of surface damage or of a clean weld.
+
+Evidence used Blender 5.2.2 LTS with two CPU threads, the same neutral preset,
+512-pixel views and `Head_Skin` framing. Files, source copies, rejected trials,
+logs and comparison images remain outside Git in
+`pr31-claude-face-banding-trial-20261021`.
+
+The face still lacks convincing anatomical planes and eyelids; hair, garment
+edges and footwear remain unfinished. No face reference was used in the original
+generation. The realism brief remains incomplete. Revised guidance therefore
+tracks references and acceptance by defining feature, revisits references during
+review, and checks material appearance after export. The effect of that guidance
+on future generations has not been measured.
+
+### Follow-up validation
+
+- Full Bun suite: 97 passed, three platform-specific skips. All six attachment
+  tests passed, including live Blender extraction, fresh GLB, MCP, legacy
+  baseline reuse, nonuniform proportional weights and maximum patch output size.
+- Both live construction wrappers passed, exercising the 12 Blender hand and
+  upper-body regressions.
+- Standalone Python: 26 passed, 12 bpy-only cases skipped there and exercised
+  by the live wrappers. Rust: 17 passed.
+- Repository validation, all 45 documentation tests and the 13-page build passed.
+  Initial docs testing lacked the pinned gallery assets in the new checkout;
+  the repository's asset-fetch step verified/restored them before the passing run.
+- Claude reviewed the final inspector changes; Codex reviewed the revised
+  guidance and opened the native/export face evidence. Generated assets and
+  transcripts are excluded from the commit. No new generation-quality or
+  performance claim follows from these checks.

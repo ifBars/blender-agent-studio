@@ -7,6 +7,9 @@ import { runBlender } from "./blender-process.ts";
 import { analyzeSceneIR, runtimeExecutable } from "./scene-analysis.ts";
 
 const name = z.string().min(1).max(256);
+const surfaceWeightsSchema = z.array(z.tuple([
+  z.number().int().min(0).max(499_999), z.number().positive().max(1),
+])).min(1).max(4096);
 export const attachmentSchema = z.object({
   assetPath: z.string(), outputJson: z.string().describe("New evidence JSON path in an existing directory."),
   baselineJson: z.string().optional().describe("Optional preserved output from this tool. Recomputes baseline checks and compares the same selectors, frames, units and tolerances; changed bindings require renewed review."),
@@ -37,6 +40,13 @@ export function validateAttachmentRequest(input: AttachmentRequest): AttachmentR
   if (new Set(args.connections.map(c => c.name)).size !== args.connections.length) throw new Error("Connection names must be unique");
   for (const c of args.connections) {
     if (!ids.has(c.anchorA) || !ids.has(c.anchorB) || c.anchorA === c.anchorB) throw new Error("Connections require two distinct declared anchors");
+    const a = args.anchors.find(a => a.id === c.anchorA)!;
+    const b = args.anchors.find(a => a.id === c.anchorB)!;
+    if (a.objectName === b.objectName && (
+      (a.vertexGroup !== undefined && a.vertexGroup === b.vertexGroup) ||
+      (a.vertexIndices !== undefined && b.vertexIndices !== undefined &&
+        JSON.stringify([...a.vertexIndices].sort((x, y) => x - y)) === JSON.stringify([...b.vertexIndices].sort((x, y) => x - y)))
+    )) throw new Error(`Connection ${c.name} selects the same surface patch on both sides`);
   }
   return args;
 }
@@ -48,7 +58,24 @@ export async function assessAttachmentEvidence(evidence: any, args: AttachmentRe
       !Array.isArray(evidence.bindings) || evidence.bindings.length !== args.anchors.length) throw new Error("Incomplete surface motion evidence");
   const ids = args.anchors.map(a => `bas:surface:${a.id}`).sort();
   if (JSON.stringify(evidence.bindings.map((b: any) => b.id).sort()) !== JSON.stringify(ids) ||
-      evidence.bindings.some((b: any) => !/^[a-f0-9]{64}$/.test(b.binding_sha256 ?? ""))) throw new Error("Missing surface bindings");
+      evidence.bindings.some((b: any) => !/^[a-f0-9]{64}$/.test(b.binding_sha256 ?? "") ||
+        (b.surface_weights !== undefined && !surfaceWeightsSchema.safeParse(b.surface_weights).success))) throw new Error("Missing surface bindings");
+  for (const c of args.connections) {
+    const a = evidence.bindings.find((b: any) => b.id === `bas:surface:${c.anchorA}`);
+    const b = evidence.bindings.find((b: any) => b.id === `bas:surface:${c.anchorB}`);
+    // Blender stores weights as float32. Compare normalized weights with a
+    // relative tolerance, rather than hashing floats or quantizing at boundaries.
+    // Keep the exact binding hash for repair comparisons and legacy evidence.
+    const samePatch = a.object_name === b.object_name && a.surface_weights && b.surface_weights &&
+      a.surface_weights.length === b.surface_weights.length &&
+      a.surface_weights.every(([index, weight]: number[], i: number) =>
+        index === b.surface_weights[i][0] &&
+        Math.abs(weight - b.surface_weights[i][1]) <= 1e-6 * Math.max(weight, b.surface_weights[i][1]));
+    if (a.binding_sha256 === b.binding_sha256 ||
+        samePatch) {
+      throw new Error(`Connection ${c.name} resolves to the same surface patch on both sides`);
+    }
+  }
   const samples = [];
   for (let i = 0; i < args.frames.length; i++) {
     const scene = evidence.scenes[i];
@@ -86,7 +113,10 @@ export async function assessAttachmentEvidence(evidence: any, args: AttachmentRe
   return {
     status: connections.some(c => c.failingFrames.length) ? "constraints_failed" : "review_required",
     sourceSha256: evidence.source_sha256, metersPerUnit: evidence.scenes[0].meters_per_unit,
-    bindings: evidence.bindings, connections, samples, anchorMotion,
+    // Keep full selectors and weights in the preserved evidence. Duplicating
+    // them in the report can exceed the baseline input limit for large patches.
+    bindings: evidence.bindings.map(({ surface_weights, selector, ...binding }: any) => binding),
+    connections, samples, anchorMotion,
     limitations: [
       "Only declared surface patches and sampled frames are measured; no aesthetic or animation-quality pass.",
       "Centroids can conceal rotation, penetration and local gaps. Review multiple boundary pairs and rendered closeups.",

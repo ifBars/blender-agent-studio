@@ -34,6 +34,14 @@ Inspect continuous garment/joint surfaces, fitted accessories and skin-texture
 consistency in neutral and moving poses. These are visual acceptance criteria;
 passing rig/export metrics alone does not satisfy them.
 
+For realistic, likeness or reference-based briefs, keep the guide's
+brief-defining feature table. Each row needs an acceptance basis (an opened
+reference, the brief or an approved design, or `unreferenced`), a matched model
+view, the concrete differences and a verdict. A failed download is not a
+reference. Reopen the reference when you review the
+feature, and check face construction, hair volume, the named footwear type and
+native/export pattern parity at delivery scale.
+
 For game characters, resolve silhouette, face identity and fitted garment
 surfaces before accessory detail. Inspect hands, boots, back and profile at
 the intended gameplay distance; adding seams to box-like anatomy does not
@@ -160,7 +168,9 @@ result still requires visual review of intersection, silhouette and deformation.
 
 Resolve or explicitly report the form/fit review findings. Include full-body
 and feature close-ups from the final revision, with affected poses rechecked
-after the last geometry/material edit.
+after the last geometry/material edit. Report the feature verdicts. Do not
+claim a realistic or likeness result unless the face and every other
+brief-defining feature is accepted.
 
 Deliver the editable source, requested export and fresh-import evidence. For a
 rigged/animated character, include the bone/control map and tested pose/action
