@@ -35,6 +35,13 @@ ground-truth calibration. The tool does not pose the character, infer landmarks
 or test occlusion. Improve the starting camera or correspondences when a solve
 is ill-conditioned or bound-limited; do not just enlarge bounds until it fits.
 
+Validate the evaluation pose itself. A rigid head turn must move skull, eyes,
+brows and hair together; confine blended rotation to the neck transition rather
+than shearing the side of the skull. Recompute anchors from the evaluated
+features. Do not refit head translation, camera or scale after each shape edit
+and attribute the resulting score change to geometry. Keep camera-uncertainty
+bands when several plausible setups yield similar fit errors.
+
 ## Body and face snapshots
 
 Keep body front, profile, back and three-quarter checks. Compare head/body size,
@@ -69,6 +76,11 @@ retain/reject decision. Check complementary views and independent landmarks.
 Keep failed candidates and the best accepted version. A validation view used
 to choose edits is no longer an unseen test. Reserve unused final evidence
 where available. Recheck full-body appearance and fresh export after head edits.
+Track pose-fit, shape-fit and validation membership separately: a landmark
+excluded from camera fitting but used to choose a sculpt is not independent
+validation of that sculpt. Near-duplicate frontal frames cannot validate profile
+depth. Report annotation noise relative to the chosen normalization length;
+do not claim precision finer than the reference can support.
 
 ## Review declared numerical targets
 

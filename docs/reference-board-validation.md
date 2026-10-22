@@ -85,3 +85,7 @@ Reference access, source topology and hands-on revision differ from earlier
 primitive-based generations. They cannot isolate a skill effect or establish
 reliable 1:1 character likeness. Local sources, revisions and image evidence
 are retained under campaign ID `pr31-likeness-multiview-20261021`.
+
+The subsequent [calibrated likeness refinement](likeness-refinement-validation.md)
+adds camera-pose and frozen-report checks, then records body/head comparison
+limits separately from the software validation.
