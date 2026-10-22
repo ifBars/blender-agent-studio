@@ -53,7 +53,7 @@ See the [capture guide](https://github.com/ifBars/blender-agent-studio/blob/main
 | Tool | What it does |
 | --- | --- |
 | `blender_compare_reference` | Renders geometry through a reference camera as a reference, silhouette, and overlay board. |
-| `blender_fit_reference_camera` | Fits focal length and lens shift from landmark correspondences. |
+| `blender_fit_reference_camera` | Fits framing or bounded camera pose from landmarks, with independent held-out errors. |
 
 See [Reference images](reference-images.md) for the workflow.
 

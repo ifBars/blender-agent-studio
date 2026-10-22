@@ -138,6 +138,20 @@ then freeze the camera for geometry comparisons. Lower landmark error measures
 framing fit, not improved geometry. Large residuals may mean incorrect pose or
 correspondences; do not distort the mesh simply to reduce them.
 
+For plausible but imperfect orientation, optional `mode: "pose"` fits bounded
+rigid camera rotation/position while keeping intrinsics fixed. It needs at
+least four well-spread landmarks and rejects unconstrained solves. Supply
+`heldoutLandmarks` for independent before/after errors in either mode; they do
+not steer the solve. Review bound, conditioning and held-out regression warnings.
+This moves the camera, not the character's pose. The default `framing` mode
+retains the behavior above. Freeze accepted alignment before a shape comparison.
+
+For retained character before/after evidence, `scripts/review_likeness.py`
+compares frozen reference reports, normalized landmark errors and projected
+proportion ratios. See the [likeness refinement protocol](../blender-character-workflow/references/likeness-refinement.md)
+for its manifest and head snapshot coverage. A numerical target pass is not
+facial identity, and missing evidence remains unverified.
+
 During a targeted repair, use `views: ["perspective", "front"]` (or two useful
 fixed angles) and `resolution: 256` for quick feedback. The CLI accepts
 `--views perspective,front`. The manifest labels this `partial_preview`;

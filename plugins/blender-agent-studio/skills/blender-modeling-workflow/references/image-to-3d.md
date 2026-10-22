@@ -95,9 +95,12 @@ the comparison steps below.
 1. Build primary masses and a named camera for each reference. Check crop,
    aspect, perspective versus orthographic projection, pose and orientation.
 2. Use separated, identifiable landmarks. With a plausible camera pose,
-   `blender_fit_reference_camera` fits focal length/scale and lens shift only;
-   it does not solve camera pose, geometry or occlusion. Reject degenerate or
-   uncertain correspondences rather than claiming calibrated reconstruction.
+   `blender_fit_reference_camera` defaults to focal length/scale and lens shift.
+   Its optional `pose` mode fits bounded rigid camera motion with fixed
+   intrinsics; supply independent `heldoutLandmarks` and review conditioning,
+   residuals and bound warnings. Neither mode solves character pose, geometry
+   or occlusion. Reject degenerate or uncertain correspondences rather than
+   claiming calibrated reconstruction.
 3. Review the candidate overlay and retain accepted camera parameters in source.
    Freeze image, crop, frame, pose, camera and any reviewed silhouette mask for
    geometry comparisons. If camera evidence changes, establish a new baseline.

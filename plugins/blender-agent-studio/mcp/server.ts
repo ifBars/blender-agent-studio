@@ -108,29 +108,44 @@ function errorResult(error: unknown) {
   };
 }
 
+const cameraLandmark = z.object({name: z.string().min(1), objectName: z.string().min(1),
+  referenceUv: z.array(z.number().min(0).max(1)).length(2),
+  localPoint: z.array(z.number()).length(3).default([0, 0, 0]),
+});
+
 server.registerTool(
   "blender_fit_reference_camera",
   {
-    title: "Fit reference camera framing",
-    description: "Fit scale/focal length and lens shift from 3-32 explicit 2D/3D correspondences. Fixed camera pose and geometry; saves a candidate .blend in a new directory. Review with blender_compare_reference before retaining parameters in durable source. This does not solve camera pose or prove model similarity.",
+    title: "Fit reference camera framing or pose",
+    description: "Fit a reference camera candidate from 3-32 explicit 2D/3D correspondences; saves a candidate .blend in a new directory and never changes the source or geometry. mode \"framing\" (default) fits scale/focal length and lens shift with the pose fixed. mode \"pose\" fits bounded rigid camera rotation/position with lens, shift and sensor fixed (needs >=4 non-collinear landmarks; rejects rank-deficient constraints; ortho depth stays fixed). heldoutLandmarks are never optimized and report independent before/after error. Review with blender_compare_reference before retaining parameters in durable source. A low residual does not prove model similarity.",
     inputSchema: z.object({
       assetPath: z.string(), outputDir: z.string(), cameraName: z.string().optional(),
       referenceWidth: z.number().int().min(1).max(8192),
       referenceHeight: z.number().int().min(1).max(8192),
-      landmarks: z.array(z.object({name: z.string(), objectName: z.string(),
-        referenceUv: z.array(z.number().min(0).max(1)).length(2),
-        localPoint: z.array(z.number()).length(3).default([0, 0, 0]),
-      })).min(3).max(32),
+      landmarks: z.array(cameraLandmark).min(3).max(32),
+      mode: z.enum(["framing", "pose"]).default("framing"),
+      heldoutLandmarks: z.array(cameraLandmark).max(32).optional()
+        .describe("Independent landmarks evaluated before/after but never used by the solver."),
+      poseBounds: z.object({
+        maxRotationDeg: z.number().min(0.1).max(45).default(15),
+        maxTranslationRatio: z.number().min(0.001).max(1).default(0.25)
+          .describe("Fraction of the starting camera-to-training-centroid distance (ortho: of ortho_scale)."),
+      }).optional().describe("Pose mode only. Limits on movement away from the starting camera."),
       blenderPath: z.string().optional(),
       timeoutMs: z.number().int().min(1000).max(300000).default(60000),
     }),
   },
-  async ({assetPath, outputDir, cameraName, referenceWidth, referenceHeight, landmarks, blenderPath, timeoutMs}) => {
+  async ({assetPath, outputDir, cameraName, referenceWidth, referenceHeight, landmarks, mode, heldoutLandmarks, poseBounds, blenderPath, timeoutMs}) => {
     try {
+      if (poseBounds && mode !== "pose") throw new Error("poseBounds apply only to mode \"pose\"");
+      if (mode === "pose" && landmarks.length < 4) throw new Error("Pose mode needs at least 4 training landmarks");
       const output = resolve(outputDir);
       const args = ["--input", resolve(assetPath), "--output-dir", output,
         "--width", String(referenceWidth), "--height", String(referenceHeight),
-        "--landmarks-json", JSON.stringify(landmarks)];
+        "--landmarks-json", JSON.stringify(landmarks), "--mode", mode];
+      if (heldoutLandmarks?.length) args.push("--heldout-json", JSON.stringify(heldoutLandmarks));
+      if (poseBounds) args.push("--max-rotation-deg", String(poseBounds.maxRotationDeg),
+        "--max-translation-ratio", String(poseBounds.maxTranslationRatio));
       if (cameraName) args.push("--camera", cameraName);
       const process = await runBlender({blenderPath, scriptPath: join(validationScripts, "fit_reference_camera.py"), scriptArgs: args, timeoutMs});
       if (process.exitCode !== 0 || process.timedOut) return {...result({process, report: null}), isError: true};

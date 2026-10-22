@@ -175,6 +175,7 @@ def main():
         in_frame = in_front and all(0 <= value <= 1 for value in model_uv)
         delta = [(model_uv[0] - uv[0]) * width, (model_uv[1] - uv[1]) * height] if in_front else None
         landmark_results.append({'name': item['name'], 'object': obj.name,
+            'local_point': local, 'world_point': list(point),
             'reference_uv': uv, 'model_uv': model_uv if in_front else None,
             'delta_pixels': delta, 'error_pixels': math.hypot(*delta) if delta else None,
             'in_front_of_camera': in_front, 'in_frame': in_frame,

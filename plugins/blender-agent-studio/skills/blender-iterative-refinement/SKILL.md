@@ -75,6 +75,13 @@ centroid distance can still conceal penetration or a visibly detached shoulder.
 
 ## Repair durable source
 
+For reference-based character revisions, use the character workflow's
+[likeness refinement protocol](../blender-character-workflow/references/likeness-refinement.md).
+Preserve calibrated body views and head-only snapshots before changing shape.
+The validation skill's `scripts/review_likeness.py` rejects changed comparison
+conditions and reports per-view landmark/proportion deltas; its numerical
+targets never replace the visual ledger or authorize retaining a regression.
+
 Identify the smallest source-level cause that can address the highest-priority
 failure. Make one targeted repair, or one tightly coupled repair group, in the
 durable Python or editable Blender source. Regenerate the authored and exported

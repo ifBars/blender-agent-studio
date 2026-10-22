@@ -42,6 +42,11 @@ reference. Reopen the reference when you review the
 feature, and check face construction, hair volume, the named footwear type and
 native/export pattern parity at delivery scale.
 
+For a requested likeness refinement, follow [calibrated proportions and facial
+likeness](references/likeness-refinement.md). Freeze camera/pose alignment before
+shape edits, preserve body and tightly framed face snapshots, and check
+independent views. Keep numerical projection targets separate from identity.
+
 For game characters, resolve silhouette, face identity and fitted garment
 surfaces before accessory detail. Inspect hands, boots, back and profile at
 the intended gameplay distance; adding seams to box-like anatomy does not
