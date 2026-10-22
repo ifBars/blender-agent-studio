@@ -69,7 +69,8 @@ native and freshly imported head views as well as calibrated overlays.
 
 ## Selected model checkpoint
 
-The selected revisions are Jonesy `p2_iter16` and Luna `p09`. The ledger keeps
+The selected revisions are Jonesy `p2_iter16` and Luna `p12s` (the p12 geometry
+with a corrected landmark extraction). The ledger keeps
 rejected and superseded passes. Jonesy changes include head/jaw proportions,
 nose shape, eye spacing, ear height, actual lid/lash placement, skin-conforming
 brows and broader hair sections. Luna changes include eye and lip contours,
@@ -81,19 +82,19 @@ Codex also freshly imported the selected exports through the asset inspector:
 | Character | Triangles | Mesh objects | Materials | Images |
 | --- | ---: | ---: | ---: | ---: |
 | Jonesy | 119,094 | 30 | 34 | 7 |
-| Luna Snow | 341,196 | 73 | 23 | 1 |
+| Luna Snow | 397,828 | 74 | 23 | 1 |
 
 Both report zero invalid vertices, degenerate faces, zero-length edges and
 missing material faces. Both are static, without armatures or actions. Open
 boundaries and separate surfaces remain; this is not a watertight or rigging
 validation. The inspected GLB hashes are
 `5f9bed1a2cb8fb0de12448efc66811e1ac32c7e90984a8a4bda260bf612e11a5`
-and `31b843776f51888769177111ffb4724f5e0a2542cfa5d0fbc75135940b8a35c0`.
+and `e4d9d593cfe729514d9dbb339db3d54dfc3f937cc775e9a1fd780f81cabbc96a`.
 
 The 95-percent overlap and face-proportion goals are **not met**. Jonesy's
 relative view elevation and head pose remain uncertain, and his face planes,
 lip placement and hairline still differ. Luna's fringe coverage improves the
-mask but her hair sections remain too regular and facial identity is incomplete.
+mask but her hair still reads as a layered shell and facial identity is incomplete.
 Body/outfit geometry was held fixed during these head passes. Changes in a
 full-body mask from head edits are not body-proportion improvements.
 

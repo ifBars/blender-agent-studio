@@ -62,6 +62,13 @@ Treat gaze and expression separately from identity. A silhouette point moves
 over the surface as the camera turns; one vertex is not necessarily the same
 visible contour feature in every view.
 
+Record landmark extraction rules and their version. A rule such as the deepest
+point below the nose can jump onto the lip after a sculpt; inspect its actual
+surface attachment before treating the residual as anatomical error. If the
+rule changes, re-extract both baseline and candidate under the same rule or
+exclude that point and disclose the comparison change. Painted lip borders,
+geometric lip edges and mouth closure are different measurements.
+
 ## Repair and retain evidence
 
 Use connected head topology and semantic sculpt layers, shape keys or bounded
