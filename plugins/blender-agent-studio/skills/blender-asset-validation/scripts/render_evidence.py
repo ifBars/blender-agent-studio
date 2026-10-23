@@ -36,10 +36,27 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args(script_args())
 
 
+def renderable_mesh_objects():
+    """Respect render-hidden ancestors and view-layer exclusion, including rig helpers."""
+    seen = set()
+
+    def visit(layer):
+        if layer.exclude or layer.collection.hide_render:
+            return
+        for obj in layer.collection.objects:
+            if obj.type == "MESH" and not obj.hide_render and obj.name not in seen:
+                seen.add(obj.name)
+                yield obj
+        for child in layer.children:
+            yield from visit(child)
+
+    yield from visit(bpy.context.view_layer.layer_collection)
+
+
 def scene_bounds(names: set[str] | None = None) -> tuple[Vector, Vector]:
     points: list[Vector] = []
-    for obj in bpy.context.scene.objects:
-        if obj.type != "MESH" or obj.hide_render or (names and obj.name not in names):
+    for obj in renderable_mesh_objects():
+        if names and obj.name not in names:
             continue
         points.extend(obj.matrix_world @ Vector(corner) for corner in obj.bound_box)
     if not points:
@@ -125,9 +142,7 @@ def subject_luminance() -> float | None:
     """
     total = weight = 0.0
     depsgraph = bpy.context.evaluated_depsgraph_get()
-    for obj in bpy.context.scene.objects:
-        if obj.type != "MESH" or obj.hide_render:
-            continue
+    for obj in renderable_mesh_objects():
         evaluated = obj.evaluated_get(depsgraph)
         mesh = evaluated.to_mesh()
         try:
@@ -340,7 +355,7 @@ def main() -> None:
     if not isinstance(focus_list, list) or not all(isinstance(name, str) and name for name in focus_list):
         raise ValueError("focus-objects must be a JSON array of exact mesh names")
     focus_names = set(focus_list)
-    visible_meshes = {obj.name for obj in bpy.context.scene.objects if obj.type == "MESH" and not obj.hide_render}
+    visible_meshes = {obj.name for obj in renderable_mesh_objects()}
     if focus_names - visible_meshes:
         raise ValueError(f"Unknown or hidden focus meshes: {sorted(focus_names - visible_meshes)}")
     mins, maxs = scene_bounds()

@@ -83,19 +83,26 @@ See the [capture guide](https://github.com/ifBars/blender-agent-studio/blob/main
 | Tool | What it does |
 | --- | --- |
 | `blender_compare_reference` | Renders geometry through a reference camera as a reference, silhouette, and overlay board. |
-| `blender_fit_reference_camera` | Fits focal length and lens shift from landmark correspondences. |
+| `blender_fit_reference_camera` | Fits framing or bounded camera pose from landmarks, with independent held-out errors. |
 
 See [Reference images](reference-images.md) for the workflow.
 
 ## Analyze the scene
 
-These three need the optional Rust runtime. See [Scene analysis](scene-analysis.md).
+These tools need the optional Rust runtime. See [Scene analysis](scene-analysis.md).
 
 | Tool | What it does |
 | --- | --- |
 | `blender_describe_scene` | Lists hierarchy, evaluated bounds, authored roles, and spatial candidates. |
 | `blender_quality_report` | Checks explicit triangle, closed-mesh, ground, and contact constraints. |
 | `blender_compare_scenes` | Diffs a repaired scene against its baseline. |
+| `blender_inspect_attachments` | Measures explicit evaluated surface-patch gaps across poses; compares repairs against preserved evidence. Requires stable topology. |
+
+Attachment connections must bind different surface patches. The inspector
+rejects aliases of the same patch on one mesh, even when the anchor or vertex
+group names differ or all group weights were scaled together. Coincident
+patches on separate objects remain valid. A measured gap within tolerance
+still requires visual review of the seam and sampled poses.
 
 ## Assets
 

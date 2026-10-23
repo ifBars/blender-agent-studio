@@ -8,6 +8,15 @@ Keep these suites separate from the historical `full` tasks.
 | `scenes` | `night_market_courtyard` | Complete exportable low-poly environment, native scene and fresh GLB import. |
 | `game_characters` | `game_ranger_character`, `game_badger_merchant_holdout` | Static polished characters with form, fit, material and export review. |
 | `game_characters` | `game_scout_deformation` | Continuous skinned body and native/fresh-export bend, reach and twist evidence. |
+| `game_characters` | `cartoon_outfit_motion` | Large-headed cartoon style, socks/shoes and accessories in a two-second walk, native/fresh-export pose samples. |
+
+The cartoon outfit task preserves deliberately simplified hands and proportions.
+Its visual criteria separately check ankle continuity, shoe form, accessory
+support and joint deformation. Watch the required `walk.mp4` as well as the
+sampled views; video metadata and changing skin geometry do not prove good
+foot contact or attachment. Both old and revised skill conditions must receive
+the same fixture. This new task does not rewrite historical task prompts or
+establish realistic-human performance.
 
 Scene tasks require `SceneHero`, `SceneReverse` and `SceneDetail` cameras.
 Evaluation renders their authored lighting/world/color management at a 512px

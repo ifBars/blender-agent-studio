@@ -138,6 +138,20 @@ then freeze the camera for geometry comparisons. Lower landmark error measures
 framing fit, not improved geometry. Large residuals may mean incorrect pose or
 correspondences; do not distort the mesh simply to reduce them.
 
+For plausible but imperfect orientation, optional `mode: "pose"` fits bounded
+rigid camera rotation/position while keeping intrinsics fixed. It needs at
+least four well-spread landmarks and rejects unconstrained solves. Supply
+`heldoutLandmarks` for independent before/after errors in either mode; they do
+not steer the solve. Review bound, conditioning and held-out regression warnings.
+This moves the camera, not the character's pose. The default `framing` mode
+retains the behavior above. Freeze accepted alignment before a shape comparison.
+
+For retained character before/after evidence, `scripts/review_likeness.py`
+compares frozen reference reports, normalized landmark errors and projected
+proportion ratios. See the [likeness refinement protocol](../blender-character-workflow/references/likeness-refinement.md)
+for its manifest and head snapshot coverage. A numerical target pass is not
+facial identity, and missing evidence remains unverified.
+
 During a targeted repair, use `views: ["perspective", "front"]` (or two useful
 fixed angles) and `resolution: 256` for quick feedback. The CLI accepts
 `--views perspective,front`. The manifest labels this `partial_preview`;
@@ -204,6 +218,20 @@ as visual defects when inconsistent with the brief, not as successful low-poly
 optimization. Use reference-relative judgments rather than universal ratios.
 
 ## Verify the exported artifact
+
+For deforming attachments, `blender_inspect_attachments` measures fixed small
+vertex patches across explicit poses using SceneIR. It requires the Rust
+runtime and topology-preserving meshes. Use several boundary pairs, record
+thresholds in scene units, and inspect the reported worst frame. Preserve
+bindings and tolerances across repairs; rebind and visually verify after
+topology changes. Object-local connection points and whole-object motion
+hashes cannot establish skinned attachment fit. Numeric compliance remains
+`review_required`, not an aesthetic pass. Check native and fresh export
+separately with selectors verified against each mesh.
+Each connection must use different surface patches. Different anchor IDs or
+group names do not make a check independent: the tool rejects both ends bound
+to the same weighted patch on one object, including proportional group weights.
+Distinct coincident surfaces on separate objects remain valid contact checks.
 
 Use this gate when an export is requested or supplied. For a `.blend`-only task,
 reopen and inspect that scene instead.

@@ -33,8 +33,11 @@ compatibility or retargeting workflow.
 - Use linear interpolation for mechanically constant motion and clamped Bezier handles for eased human-visible motion.
 - Key location and rotation together when an ejected or falling object changes orientation.
 - Keep moving components constrained by visible rails, sleeves, hinges, or guides.
-- Compute every moving attachment from a local anchor transformed by the owning
-  assembly's evaluated `matrix_world`. Never rotate a world-space point around
+- Compute rigid moving attachments from a local anchor transformed by the owning
+  assembly's evaluated `matrix_world`. For skinned clothing and accessories,
+  follow the evaluated deforming surface with appropriate weights or surface
+  binding; an object transform alone cannot track skin deformation.
+  Never rotate a world-space point around
   the origin as a substitute for a hinge transform.
 - Rebuild or key dynamic connectors such as cables, hoses, pistons, and link
   rods from their two evaluated endpoints at every required critical frame.
@@ -61,3 +64,9 @@ compatibility or retargeting workflow.
    critical frames and inspect both endpoints in the rendered frames.
 
 Do not accept an animation solely because keyframes and actions survived export.
+
+For character socks, cuffs, ankles and flexible straps, use the character
+workflow's surface-attachment loop and `blender_inspect_attachments` where
+available. Check neutral, contact, passing and lifted-foot poses from side
+and rear, repair the failed binding, then rerun the same sampled frames and
+closeups. Preserve deliberately stylized proportions and mitten hands.

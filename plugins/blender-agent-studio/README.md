@@ -120,6 +120,14 @@ world space and return the gap plus correction direction, even when object
 bounding boxes overlap. They preserve whole-assembly selection and pagination.
 Anchor agreement requires visual verification and does not prove surface contact.
 
+For skinned socks, cuffs and accessory supports, use
+`blender_inspect_attachments`. It evaluates fixed small mesh patches at explicit
+poses and projects their centroids into compatible SceneIR anchor objects.
+It reports per-frame gaps and the worst pose; `baselineJson` compares a repair
+without allowing changed selectors or tolerances. Topology changes require
+rebinding and renewed visual review. This closes a measurement/repair loop,
+not an anatomy or aesthetics evaluator.
+
 ## Reference framing and repair diagnostics
 
 The [image-to-3D workflow](skills/blender-modeling-workflow/references/image-to-3d.md)
@@ -141,7 +149,8 @@ Open boundaries are not automatically classified as defects.
 ## Scene understanding
 
 The optional Rust runtime powers `blender_describe_scene`,
-`blender_quality_report`, and `blender_compare_scenes`. With Rust installed, run
+`blender_quality_report`, `blender_compare_scenes`, and
+`blender_inspect_attachments`. With Rust installed, run
 `bun run setup:runtime` from this directory, then start a new Codex task or
 Claude Code session. Rebuild
 after plugin updates, or set `BAS_RUNTIME_EXECUTABLE` to a compatible compiled

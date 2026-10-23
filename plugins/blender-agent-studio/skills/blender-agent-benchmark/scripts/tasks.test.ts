@@ -6,14 +6,25 @@ describe("benchmark task coverage", () => {
     const scenes = BENCHMARK_TASKS.filter(t=>t.suites.includes('scenes'));
     const characters = BENCHMARK_TASKS.filter(t=>t.suites.includes('game_characters'));
     expect(scenes).toHaveLength(3);
-    expect(characters).toHaveLength(3);
+    expect(characters).toHaveLength(4);
     expect(scenes.filter(t=>t.renderOnly)).toHaveLength(2);
     expect(scenes.every(t=>t.authoredCameras?.length === 3 && t.visualCriteria.length >= 6)).toBe(true);
-    expect(characters.filter(t=>t.motionRequirement?.inspectExport)).toHaveLength(1);
+    expect(characters.filter(t=>t.motionRequirement?.inspectExport)).toHaveLength(2);
     expect(characters.filter(t=>!t.rubric.requireAnimation)).toHaveLength(2);
     expect([...scenes,...characters].every(t=>t.suites.length===1 && !t.suites.includes('full'))).toBe(true);
     expect(scenes.some(t=>t.id.endsWith('holdout'))).toBe(true);
     expect(characters.some(t=>t.id.endsWith('holdout'))).toBe(true);
+  });
+  test("cartoon outfit regression requires motion, export and style-preserving attachment evidence", () => {
+    const task = BENCHMARK_TASKS.find(t => t.id === "cartoon_outfit_motion")!;
+    expect(task.motionRequirement?.inspectExport).toBe(true);
+    expect(task.motionRequirement?.frames).toEqual(task.animationFrames);
+    expect(task.requiredVideo).toEqual({filename:"walk.mp4",durationSeconds:2,fps:24,toleranceSeconds:0.1});
+    expect(task.rubric.requiredNameGroups).not.toContainEqual(["head"]);
+    for (const id of ["cartoon_style", "cartoon_ankles", "cartoon_accessories", "cartoon_joints"]) {
+      expect(task.visualCriteria.find(c => c.id === id)?.critical).toBe(true);
+    }
+    expect(task.suites).not.toContain("full");
   });
   test("separates quality and reference suites from historical tasks", () => {
     const quality=BENCHMARK_TASKS.filter(task=>task.suites.includes("quality"));

@@ -106,7 +106,12 @@ synonyms for visibly low-poly.
   budget when the result still reads as a blockout.
 
 For characters, also use `$blender-agent-studio:blender-character-workflow`
-and its form/fit review. Low-poly style is not an exception to plausible torso
+and its construction and form/fit review. Resolve hands, footwear and connected
+shoulder/pelvis surfaces before accessory detail. Preserve a source checkpoint,
+inspect the required closeups and poses, repair the failing region, and reopen
+the same evidence before advancing. This is part of normal character creation.
+For skinned layers, use the character workflow's evaluated surface-attachment
+checks where available. Low-poly style is not an exception to plausible torso
 and shoe proportions, connected garment surfaces, or fitted accessories. A
 beveled box and detailed texture do not by themselves resolve a blocky form.
 

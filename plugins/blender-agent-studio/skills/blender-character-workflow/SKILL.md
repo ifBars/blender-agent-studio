@@ -18,7 +18,10 @@ rigged delivery if the request and context leave that consequential choice open.
 Record intended platform and export format, body/face scope, scale and axis,
 triangle/material/texture budgets, bone naming and hierarchy requirements,
 required controls, facial shape keys, poses/actions, and engine/avatar
-constraints. For a requested rig, identify the minimum acceptance poses: neutral, extreme bend for
+constraints. Record the intended body type and a coherent proportion reference
+set. Male and female variants need separately reviewed body proportions when
+requested; a head or clothing swap does not validate another body type.
+For a requested rig, identify the minimum acceptance poses: neutral, extreme bend for
 each major joint, reach, twist, locomotion/contact, and any required facial
 expression.
 
@@ -31,6 +34,19 @@ Inspect continuous garment/joint surfaces, fitted accessories and skin-texture
 consistency in neutral and moving poses. These are visual acceptance criteria;
 passing rig/export metrics alone does not satisfy them.
 
+For realistic, likeness or reference-based briefs, keep the guide's
+brief-defining feature table. Each row needs an acceptance basis (an opened
+reference, the brief or an approved design, or `unreferenced`), a matched model
+view, the concrete differences and a verdict. A failed download is not a
+reference. Reopen the reference when you review the
+feature, and check face construction, hair volume, the named footwear type and
+native/export pattern parity at delivery scale.
+
+For a requested likeness refinement, follow [calibrated proportions and facial
+likeness](references/likeness-refinement.md). Freeze camera/pose alignment before
+shape edits, preserve body and tightly framed face snapshots, and check
+independent views. Keep numerical projection targets separate from identity.
+
 For game characters, resolve silhouette, face identity and fitted garment
 surfaces before accessory detail. Inspect hands, boots, back and profile at
 the intended gameplay distance; adding seams to box-like anatomy does not
@@ -40,6 +56,33 @@ time for this review and fresh-export deformation rather than spending the
 whole budget on a neutral hero pose. Static briefs need no invented rig.
 
 ## Build and rig deliberately
+
+Read [connected character construction](references/character-construction.md)
+before creating humanoid hands, footwear or joint surfaces. It describes
+palm-to-digit construction, footprint/profile shoe lofting, continuous
+shoulder/pelvis transitions and localized weight bands. Use these construction
+methods alongside the form review; naming the right parts is not enough.
+
+For a procedural stylized humanoid, the optional Blender-Python starting cages
+in `scripts/build_upper_body.py` and `scripts/build_hand.py` implement these
+shared boundaries directly. Use them when appropriate instead of rebuilding
+shoulders from capped tubes or fingers from intersecting primitives. Read
+[the helper contract](references/character-construction.md#editable-starting-cages)
+before importing them. Adapt proportions and inspect the actual result; they
+are blockouts, not finished anatomy, clothing, or rigs.
+
+Build a complete simple character before finishing regions. Preserve shared
+boundaries and whole-body landmarks during local refinement. Review hand
+palm/dorsal/edge views and shoe top/profile views before adding small details.
+For rigged work, test the simple joint surfaces in bend and reach before
+clothing detail, then verify the same poses after export. Keep an accepted
+source checkpoint so a local improvement cannot silently damage the whole.
+
+Preserve requested cartoon proportions and simplified hands. For animated
+outfits, use the construction guide's rigid/flexible attachment rules: socks
+and cuffs must follow the local leg surface, soles the feet, and straps their
+actual supports. Check ankle flexion, foot lift and passing poses from side
+and rear before replicating an outfit across a character family.
 
 For static character requests, build and review the form without inventing a
 rigging requirement. The rigging and motion steps below apply when requested.
@@ -97,9 +140,42 @@ setup is not proof that Unity/VRChat expression-menu toggles were authored.
 
 ## Completion gate
 
+Close the loop on each failed region: preserve the current asset and evidence,
+name the defect, change its construction or binding, regenerate, and reopen
+the same views and poses. Do not compensate for weak joints with unrequested
+pads, or hide poor forms with textures. Recheck neighboring surfaces after
+a regional repair. Stop only when the required checks and visual review agree,
+or explicitly deliver the remaining defect and evidence as incomplete.
+
+For skinned attachments, use `blender_inspect_attachments` when available.
+Bind small, explicit vertex patches on both sides of a seam before posing:
+sock/shin, cuff/leg, shoe/ankle, strap/support. Use multiple pairs around the
+boundary; a single centroid can miss rotation. Fix the frame set and permitted
+gap from the brief/scale before testing. Verify the intended active action/NLA
+state in the saved inspection copy; the tool samples that state and does not
+select animation clips. SceneIR object-local points alone
+do not follow skin deformation. The surface inspector projects evaluated
+patches into SceneIR and reports the worst frame and per-frame gap.
+Record selectors in an inspection manifest once topology is stable. Inspection
+groups are metadata, not additional deform weights; exclude them from bone
+weight normalization and influence-count audits, or use explicit vertex indices.
+Repair weights, ownership or geometry, then repeat with unchanged bindings
+and thresholds. Pass the preserved output as `baselineJson` on the repair
+run to detect newly failing frames and changed bindings. Topology changes
+require rebinding and renewed visual review;
+never move a marker or widen tolerance just to pass.
+
+This tool requires stable topology and the Rust runtime. If unavailable or
+unsupported, retain the same pose/close-up review and report the numeric check
+as unverified. Repeat on the fresh export with explicitly verified export
+selectors; indices and custom groups may not survive export. A within-tolerance
+result still requires visual review of intersection, silhouette and deformation.
+
 Resolve or explicitly report the form/fit review findings. Include full-body
 and feature close-ups from the final revision, with affected poses rechecked
-after the last geometry/material edit.
+after the last geometry/material edit. Report the feature verdicts. Do not
+claim a realistic or likeness result unless the face and every other
+brief-defining feature is accepted.
 
 Deliver the editable source, requested export and fresh-import evidence. For a
 rigged/animated character, include the bone/control map and tested pose/action

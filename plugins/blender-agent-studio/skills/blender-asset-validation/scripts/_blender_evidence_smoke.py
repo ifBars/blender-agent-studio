@@ -28,6 +28,31 @@ for extent, contaminated in ((0.05, False), (5.0, True)):
         scene.render.pixel_aspect_x = 2
     hint = renderer.subject_luminance()
     assert hint is not None and 0.15 < hint < 0.25, hint
+    # glTF imports can create rig helpers in a render-hidden collection.
+    # A hidden ancestor must exclude its meshes from framing and auto contrast.
+    hidden = bpy.data.collections.new("glTF_not_exported")
+    scene.collection.children.link(hidden)
+    nested = bpy.data.collections.new("NestedHelpers")
+    hidden.children.link(nested)
+    helper = bpy.data.objects.new("RigHelper", subject.data.copy())
+    nested.objects.link(helper)
+    helper.data.materials.clear()
+    helper.data.materials.append(renderer.diagnostic_material("HelperWhite", (1, 1, 1, 1)))
+    helper.location = (100, 100, -100)
+    hidden.hide_render = True
+    bpy.context.view_layer.update()
+    low, high = renderer.scene_bounds()
+    assert abs(low.z) < extent * .01 and abs(high.z - extent) < extent * .01, (low, high)
+    assert abs(renderer.subject_luminance() - hint) < 1e-6
+    # Multiple collection links must retain a genuinely renderable instance.
+    scene.collection.objects.link(helper)
+    assert helper in list(renderer.renderable_mesh_objects())
+    scene.collection.objects.unlink(helper)
+    hidden.hide_render = False
+    bpy.context.view_layer.layer_collection.children[hidden.name].exclude = True
+    assert helper not in list(renderer.renderable_mesh_objects())
+    bpy.context.view_layer.layer_collection.children[hidden.name].exclude = False
+    hidden.hide_render = True
     center = Vector((0, 0, extent / 2))
     renderer.configure_scene(center, extent, 0, False)
     assert len([obj for obj in scene.objects if obj.type == 'LIGHT']) == 3

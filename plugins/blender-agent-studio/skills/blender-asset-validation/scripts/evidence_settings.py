@@ -5,7 +5,7 @@ power to scale by s squared to preserve illumination on similar geometry.
 """
 import math
 
-EVIDENCE_SETTINGS_VERSION = 2
+EVIDENCE_SETTINGS_VERSION = 3
 
 
 def resolve_presentation(requested: str, subject_luminance: float | None = None) -> str:
