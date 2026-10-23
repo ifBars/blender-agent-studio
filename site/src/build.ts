@@ -55,9 +55,10 @@ export function checkCoverage(pages: SourcePage[]): void {
   const skills = readdirSync(join(pluginRoot, "skills"), { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name);
-  const server = readFileSync(join(pluginRoot, "mcp", "server.ts"), "utf8");
+  const server = ["server.ts", "viewer.ts", "live-viewport.ts"]
+    .map((file) => readFileSync(join(pluginRoot, "mcp", file), "utf8")).join("\n");
   const tools = [
-    ...server.matchAll(/registerTool\(\s*"(blender_\w+)"/g),
+    ...server.matchAll(/registerTool\(\s*["'](blender_\w+)["']/g),
     ...(server.match(/for \(const name of \[([^\]]+)\]/)?.[1].matchAll(/"(blender_\w+)"/g) ?? []),
   ].map((match) => match[1]);
   if (!skills.length || tools.length < 10) throw new Error("Could not read plugin skills or MCP tools");

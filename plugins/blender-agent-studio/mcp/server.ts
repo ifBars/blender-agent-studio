@@ -1,4 +1,5 @@
 import {registerViewer, viewerToolMeta, sceneGallery, evidenceGallery, comparisonGallery, timelapseGallery, withPreview} from "./viewer.ts";
+import {registerLiveViewport} from "./live-viewport.ts";
 import { existsSync } from "node:fs";
 import { mkdir, readFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
@@ -35,6 +36,7 @@ const server = new McpServer({
 });
 
 registerViewer(server);
+registerLiveViewport(server);
 
 server.registerTool("blender_render_modeling_timelapse", {
   _meta: viewerToolMeta,

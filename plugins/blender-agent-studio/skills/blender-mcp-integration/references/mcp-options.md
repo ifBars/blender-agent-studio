@@ -51,7 +51,7 @@ The site's GitHub link resolves to `ahujasid/blender-mcp`; treat it as a guide/l
 
 ## Blender Agent Studio MCP
 
-Use only for high-level, deterministic evaluation:
+Use for high-level, deterministic evaluation:
 
 - exact Blender build fingerprint;
 - asset metrics in a clean background process;
@@ -60,7 +60,12 @@ Use only for high-level, deterministic evaluation:
 - render preflight, bounded device/sample/resolution controls and inline PNG review;
 - benchmark result preparation.
 
-It intentionally does not replace general live scene control or duplicate arbitrary-code execution.
+The optional bundled **Agent Studio Live** addon also provides an inline
+viewport, refreshed captures, bounded axis/orbit/zoom navigation, and
+surface/object-list selection for the user's next prompt. Use
+`blender_open_viewport` after connecting in Blender's Agent Studio sidebar.
+The addon does not author geometry or execute arbitrary code. Batch tools stay
+independent, and a live capture does not replace final validation.
 
 ## Broader agent capability comparison
 
@@ -69,6 +74,7 @@ server to install everywhere:
 
 | Layer | Representative implementation | Useful coverage | Studio decision |
 | --- | --- | --- | --- |
+| Live observation and navigation | Blender Agent Studio Live | inline viewport, selected-object context, refresh and view controls | Prefer for Studio's integrated viewport experience; install the bundled addon only when needed. |
 | Official live control | Blender Lab MCP | scene/file inspection, docs, screenshots, navigation, rendering, Python | Prefer for an open Blender session on supported Blender versions. |
 | Community live/external bridge | ahujasid/blender-mcp | object/material control, screenshots, arbitrary Python, remote hosts, Poly Haven, Sketchfab, external mesh generation | Opt in only for its unique external capability and explicitly accept its credentials, downloads, telemetry, and socket surface. |
 | Broad headless automation | sandraschi/blender-mcp | mesh/sculpt, Geometry Nodes, compositor, VSE, Grease Pencil, physics, export, optional live bridge | Treat as a workflow reference or task-specific integration; do not duplicate its broad mutable tool catalog in this plugin. |
