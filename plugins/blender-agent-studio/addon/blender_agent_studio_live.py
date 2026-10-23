@@ -15,6 +15,7 @@ import os
 from pathlib import Path
 import secrets
 import socket
+import stat
 import struct
 import tempfile
 import time
@@ -77,18 +78,28 @@ class Bridge:
         self.server.bind(("127.0.0.1", 0))
         self.server.listen(4)
         self.server.setblocking(False)
-        self.path.parent.mkdir(parents=True, exist_ok=True)
         descriptor = {"protocol": PROTOCOL, "port": self.server.getsockname()[1],
                       "token": self.token, "sessionId": self.session, "pid": os.getpid()}
-        temporary = self.path.with_name(self.path.name + "." + self.session + ".tmp")
+        temporary = None
         try:
+            default_path = not os.environ.get("BAS_VIEWPORT_CONNECTION")
+            self.path.parent.mkdir(mode=0o700 if default_path else 0o777, parents=True, exist_ok=True)
+            if default_path and hasattr(os, "getuid"):
+                status = self.path.parent.lstat()
+                if (not stat.S_ISDIR(status.st_mode) or status.st_uid != os.getuid()
+                        or status.st_mode & 0o022):
+                    raise PermissionError("The default connection directory must be owned by the current user "
+                                          "and must not be writable by others or be a symlink. "
+                                          "Set BAS_VIEWPORT_CONNECTION to use another path.")
+            temporary = self.path.with_name(self.path.name + "." + self.session + ".tmp")
             with temporary.open("x", encoding="utf8") as stream:
                 os.chmod(temporary, 0o600)
                 json.dump(descriptor, stream)
             os.replace(temporary, self.path)
         except Exception:
             self.server.close()
-            temporary.unlink(missing_ok=True)
+            if temporary is not None:
+                temporary.unlink(missing_ok=True)
             raise
 
     def close(self):
@@ -273,10 +284,10 @@ class Bridge:
                     if b"\n" in client["input"]:
                         try:
                             request = json.loads(client["input"].split(b"\n", 1)[0])
-                            reply = {"ok": True, "result": self.dispatch(request)}
+                            payload = json.dumps({"ok": True, "result": self.dispatch(request)}, allow_nan=False)
                         except Exception as error:
-                            reply = {"ok": False, "error": str(error)}
-                        client["output"] = (json.dumps(reply, allow_nan=False) + "\n").encode()
+                            payload = json.dumps({"ok": False, "error": str(error)})
+                        client["output"] = (payload + "\n").encode()
                 if client["output"] is not None:
                     sent = sock.send(client["output"])
                     client["output"] = client["output"][sent:]
