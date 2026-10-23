@@ -3,7 +3,7 @@ title: How it works
 description: Skills plan the work, Blender builds it in the background, and evidence decides when it's done.
 ---
 
-The plugin has two parts. **Skills** tell the agent how to approach Blender work. A local **MCP server** gives it bounded tools for inspection, rendering, and asset downloads. Blender runs on your machine without its interface open.
+The plugin has two parts. **Skills** tell the agent how to approach Blender work. A local **MCP server** gives it bounded tools for inspection, rendering, and asset downloads. Batch work runs without Blender's interface open. The optional **Agent Studio Live** addon connects an open Blender session to an [inline viewport](mcp-tools.md#live-viewport), with view controls and object references for your next prompt.
 
 ## The workflow
 

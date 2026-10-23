@@ -58,6 +58,7 @@ your own requests.
 
 ## What you can do
 
+- View an open Blender session inline, orbit and zoom, and attach a clicked object to your next message with the optional [Studio Live addon](docs/live-viewport.md).
 - Build props, environments, characters, and Geometry Nodes setups.
 - Design readable signs, labels and graphic panels as editable 2D artwork, then integrate their materials and supports and review them at the intended distance. See the [signage workflow](plugins/blender-agent-studio/skills/blender-signage-workflow/SKILL.md).
 - Optionally record real modeling milestones and deliver a timelapse from the empty/default scene to the completed render. Ask before modeling starts; [capture guide](plugins/blender-agent-studio/skills/blender-rendering-workflow/references/modeling-timelapse.md).

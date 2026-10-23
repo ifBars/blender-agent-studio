@@ -12,6 +12,11 @@ Blender Foundation.
 
 ## Runtime dependencies
 
+The live viewport addon's offscreen capture and camera-ray picking approach
+is adapted from [MCP for Blender](https://github.com/ahujasid/mcp-for-blender),
+Copyright (c) 2025 Siddharth Ahuja, under the MIT license. The full notice ships
+in `plugins/blender-agent-studio/addon/LICENSE.txt`.
+
 The plugin uses the Model Context Protocol TypeScript SDK and Zod under their
 respective licenses. See `plugins/blender-agent-studio/package.json` and the
 dependency packages for details.
