@@ -52,7 +52,7 @@ For a larger scene brief and a review across three camera views, see the
 
 - **Change it.** Ask for edits. The agent updates the Python and rebuilds.
 - **Bring your own file.** Point the agent at an existing `.blend` and ask it to inspect or refine the scene.
-- **Ask for a second pass.** Request a critique and repair. The refinement skill fixes the highest-impact defect, then checks that nothing else regressed.
+- **Refinement is part of creation.** Weak props and assemblies get individual close/context review against accepted references, source repairs and regression checks. You can also request a focused critique of an existing asset.
 
 ## Call a skill directly
 

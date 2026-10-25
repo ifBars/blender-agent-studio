@@ -57,6 +57,17 @@ before the first modeling operation. Keep capture disabled for ordinary jobs.
 
 ## Default to a finished-quality asset
 
+Use `$blender-agent-studio:blender-iterative-refinement` during normal creation
+when a prop or assembly falls short of the accepted concept, references or
+existing asset quality. Its [focused review loop](../blender-iterative-refinement/SKILL.md)
+works before the whole scene is complete; do not wait for the user to request
+another pass. Review distinct families individually in close and context views,
+repair the important defects and recheck before accepting or replicating them.
+If that skill is unavailable, apply this loop directly: preserve the candidate,
+compare to the finish reference, fix the highest-impact source defect, reopen
+the same views and carry unresolved defects forward. Respect requested blockout
+scope and approval gates.
+
 For new subjects, follow the shared guidance's reference-gathering step before
 the graybox. Write down the proportions and relationships the references imply,
 then compare matching graybox views against them. A folder of images without
@@ -209,6 +220,9 @@ Do not call the model complete until:
 - technical gates appropriate to the task pass;
 - every required stage reached its exit criteria or was explicitly excluded by
   the user;
+- every distinct promised asset family meets its accepted finish target in
+  opened close and context evidence for the current source; no important
+  fail/unclear item is hidden by a whole-scene pass;
 - the asset no longer reads as a blockout from any required view unless a
   blockout was the requested deliverable;
 - curves and broad surfaces are smooth enough for the intended view distance,

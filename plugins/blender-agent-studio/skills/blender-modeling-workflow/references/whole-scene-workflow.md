@@ -30,6 +30,9 @@ only a short list; do not inventory every screw or create another tracking syste
 2. Finish representative hero and secondary families before replication. Review
    their silhouette, thickness, supports, joints and functional features in
    close/context views. Replace visible placeholder shapes, not just materials.
+   Use the iterative-refinement skill's focused loop for each weak family;
+   finish one semantic prop or assembly at a time rather than approving a batch
+   from a wide shot. Compare against accepted concepts and existing asset quality.
 3. Integrate materials and lighting, then inspect all promised zones, including
    reverse surfaces. Finish weak families before adding hero microdetail.
 4. Open inexpensive multiview renders after each coherent batch. Name the
@@ -80,6 +83,13 @@ interior render does not need an invented exterior, while an inspectable game
 scene needs finished promised reverse surfaces.
 
 ## Build good pieces before multiplying them
+
+Track unresolved family defects through subsequent scene edits. A family stays
+fail/unclear until fresh close and context evidence clears its specific defect;
+export success, additional clutter and a better hero render cannot clear it.
+After placement, inspect scale, supports, clearances and functional access in
+context. A well-modeled counter still fails integration if furniture blocks
+the ordering approach. Reopen only evidence affected by a later source change.
 
 Keep a compact coverage list: family, intended identity/finish, instances,
 support, and remaining defect. Build architecture and supports first, then a

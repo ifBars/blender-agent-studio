@@ -13,7 +13,7 @@ The router skill, `blender-agent-studio`, reads the request and picks the smalle
 | [`blender-modeling-workflow`](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-modeling-workflow/SKILL.md) | Building or substantially refining a model from Python. |
 | [`blender-signage-workflow`](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-signage-workflow/SKILL.md) | Editable sign and label artwork, physical carriers, materials and distance readability. |
 | [`blender-asset-validation`](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-asset-validation/SKILL.md) | Geometry and export checks, fresh imports, and six-view evidence. |
-| [`blender-iterative-refinement`](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-iterative-refinement/SKILL.md) | An opt-in critique, targeted repair, and regression check. |
+| [`blender-iterative-refinement`](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-iterative-refinement/SKILL.md) | Focused prop/assembly critique, source repair and regression checks during creation or requested refinement. |
 | [`blender-procedural-workflow`](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-procedural-workflow/SKILL.md) | Geometry Nodes, scattering, terrain, and parametric generators. |
 | [`blender-rendering-workflow`](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-rendering-workflow/SKILL.md) | Lighting, cameras, color management, stills, turntables, and sequences. |
 | [`blender-animation-workflow`](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-animation-workflow/SKILL.md) | Articulated and mechanical motion, pivots, and critical-frame review. |
@@ -102,4 +102,24 @@ a primitive pile, decorative noise or a polished single camera is insufficient.
 User time limits and requested blockout/low-poly styles still apply. The skill
 cannot guarantee a host session's duration or automatically judge aesthetics;
 unfinished work is reported as partial with a specific next action. This loop is
-part of normal scene creation, not the opt-in second-pass refinement workflow.
+part of normal scene creation and uses focused refinement whenever a family
+falls short of the accepted finish.
+
+## Focused refinement during creation
+
+The refinement skill reviews one semantic prop or assembly at a time, before
+the whole scene is complete. Accepted concepts, references and approved existing
+assets establish the finish target; recognizable identity alone does not.
+An isolated close view reveals construction defects, while a context view at
+the intended distance checks scale, material readability and functional access.
+Repeated families use a representative before replication, followed by checks
+of placement and variation in the scene.
+
+The agent preserves a candidate, repairs its most important source defect and
+compares the same views. It retains improvements without clearing unrelated
+defects, carrying fail/unclear items in the existing work record until current
+evidence resolves them. Ordinary creation does not require a separate JSON
+report; formal benchmark iteration records still do. User time limits,
+read-only requests, blockout scope and approval gates remain authoritative.
+These instructions guide review; they do not automatically score aesthetics
+or establish a measured quality improvement.
