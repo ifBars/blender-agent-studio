@@ -12,6 +12,25 @@ Use the narrowest MCP layer that improves the task.
 
 ## Choose the layer
 
+When the task needs a live viewport, check for a connected Blender session.
+If none is available, offer to open Blender and ask the user before launching
+it, unless they have already authorized opening it in the current conversation.
+After authorization, open a separate session with the requested asset, connect
+Agent Studio Live, and retry `blender_open_viewport`. Preserve existing Blender
+sessions and unsaved work; a missing connection is a setup step, not a reason
+to abandon the viewport handoff.
+
+For an inline viewport, use the bundled **Agent Studio Live** addon and
+`blender_open_viewport`. It supports refresh, axis/orbit/zoom navigation and
+clicking a surface or object-list entry to attach exact scene context to the
+user's next message. Install `addon/blender_agent_studio_live.py` from the
+plugin root in Blender, enable it, and press **Connect Agent Studio** in the
+3D View sidebar. It requires an interactive Blender session and GPU context;
+the ordinary file tools remain independent. See the
+[live viewport guide](https://github.com/ifBars/blender-agent-studio/blob/main/docs/live-viewport.md).
+The bridge does not execute arbitrary Python or mutate geometry. General live
+authoring can still use a separate integration as described below.
+
 1. Use the bundled tools and Blender CLI for ordinary scripted builds, inspection, and rendering. Add Blender's official Lab MCP only when the task needs live interaction with an open Blender session on a supported version.
 2. Use Blender Agent Studio's MCP for deterministic batch inspection, standardized geometry evidence, and bounded authored-scene renders. `blender_render_scene` preserves cameras, lights, volumes and color management and returns the first image inline; `inspectOnly` discovers scene settings before rendering. The bundled Poly Haven search/download tools also acquire verified CC0 textures and HDRIs without another add-on or API key; see the rendering workflow for material setup and standalone CLI use.
 3. Consider `ahujasid/blender-mcp` only when the request needs its additional remote-host, Poly Haven, Sketchfab, or external 3D-generation integrations and accepts the extra installation, network, credential, and telemetry surface.

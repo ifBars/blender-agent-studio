@@ -1,9 +1,39 @@
 ---
 title: MCP tools
-description: Eighteen bounded tools for checking setup, inspecting, rendering, comparing, and sourcing assets. None of them runs arbitrary Python.
+description: Bounded tools for live viewport interaction, checking setup, inspecting, rendering, comparing, and sourcing assets. None runs arbitrary Python.
 ---
 
-The plugin runs the same local MCP server with Bun in Codex and Claude Code. Tools that inspect or render files start Blender in the background for one bounded job and return structured results. Asset searches, downloads, and browser handoffs do not need to launch Blender. For live control of an open Blender session, pair it with Blender's official Lab MCP; the [MCP integration skill](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-mcp-integration/SKILL.md) explains when to use which.
+The plugin runs the same local MCP server with Bun in Codex and Claude Code. Tools that inspect or render files start Blender in the background for one bounded job and return structured results. Asset searches, downloads, and browser handoffs do not need to launch Blender. The optional Studio Live addon connects an open Blender viewport to the same MCP server.
+
+## Live viewport
+
+Install `addon/blender_agent_studio_live.py` from the plugin folder through
+Blender's **Preferences → Add-ons → Install from Disk**, enable it, and press
+**Connect Agent Studio** in the 3D Viewport's **Agent Studio** sidebar. Ask your
+agent to open the live viewport. See the [connection guide](https://github.com/ifBars/blender-agent-studio/blob/main/docs/live-viewport.md).
+
+| Tool | What it does |
+| --- | --- |
+| `blender_open_viewport` | Opens an interactive viewport in MCP Apps hosts; returns a current PNG and scene details to other hosts. |
+| `blender_viewport_snapshot` | App-only refresh, with unchanged-image reuse. |
+| `blender_viewport_pick` | App-only surface or object-list identification, rejecting stale captures. |
+| `blender_viewport_navigate` | App-only axis views, orbit, pan, zoom and scene framing for Blender's viewport. |
+| `blender_get_preview` | App-only reload of a completed batch-render gallery. |
+
+The panel refreshes changed views every two seconds while visible. Click a
+surface or a listed object to attach its identity and view to your next
+message; it does not send a message or modify Blender selection. The attached
+snapshot stays fixed while the live view continues updating. Remove reference
+or Esc clears that context.
+Image attachments and fullscreen depend on host capabilities; exact names and
+scene details remain available. Geometry and camera objects are unchanged.
+
+Requires Blender 4.5 or newer with a GPU and an open 3D Viewport. Use Solid or
+Material Preview. Captures are viewport evidence, not final renders. Mesh
+surface picking does not resolve editable face indices or individual procedural
+instances; use the object list for lights and empties. Temporary disconnects
+retry automatically. The bridge is local,
+authenticated and has no arbitrary-code command. Batch workflows need no addon.
 
 ## Check setup
 

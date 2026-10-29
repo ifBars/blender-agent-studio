@@ -42,6 +42,7 @@ describe("Blender Agent Studio MCP", () => {
         "blender_inspect_asset",
         "blender_inspect_attachments",
         "blender_inspect_motion",
+        "blender_open_viewport",
         "blender_prepare_mixamo_search",
         "blender_prepare_pixabay_sound_search",
         "blender_quality_report",
@@ -50,6 +51,9 @@ describe("Blender Agent Studio MCP", () => {
         "blender_render_scene",
         "blender_search_polyhaven_assets",
         "blender_version",
+        "blender_viewport_navigate",
+        "blender_viewport_pick",
+        "blender_viewport_snapshot",
       ]);
       const renderSchema = listed.tools.find((tool) => tool.name === "blender_render_evidence")!.inputSchema;
       // Codex's tool schema parser requires homogeneous array items, not tuple-schema arrays.
