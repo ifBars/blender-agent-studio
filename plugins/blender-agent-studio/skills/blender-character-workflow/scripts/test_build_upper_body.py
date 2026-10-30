@@ -6,9 +6,13 @@ sys.path.insert(0, str(Path(__file__).parent))
 try:
     import bpy
     import bmesh
-    from build_upper_body import create_upper_body
-except ImportError:
+except ModuleNotFoundError as error:
+    if error.name not in {"bpy", "bmesh"}:
+        raise
     bpy = None
+
+if bpy is not None:
+    from build_upper_body import create_upper_body
 
 
 @unittest.skipIf(bpy is None, "requires Blender Python")

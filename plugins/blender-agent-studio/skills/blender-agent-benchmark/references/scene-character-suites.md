@@ -49,3 +49,19 @@ and judging the actual outputs.
 Optional modeling timelapses are outside ordinary benchmark generation. If a
 campaign requests them, give every condition the same capture requirements and
 budget and report overhead separately.
+
+## Motion evidence revision
+
+Motion tasks now render perspective, left and back samples from the native
+asset. Tasks with `motionRequirement.inspectExport` also render those samples
+from a fresh GLB import. The judge receives the side/rear sheets and the export
+sheets with explicit A/B, format, view and frame labels. Missing sheets or
+incomplete frame sets exclude the pair from judging rather than allowing a
+native-only result to imply export quality.
+
+Renderer settings version 4 includes evaluated collection-instance bounds.
+The cartoon outfit rubric accepts an integrated body/outfit mesh; only the
+explicit `CartoonBody` object name is required. Clothing and accessory presence
+and continuity remain visual requirements. These changes alter task/evaluator
+fingerprints. Historical generations and scores are not relabeled; regenerate
+or rerender and rescore under matching controls before making a new comparison.

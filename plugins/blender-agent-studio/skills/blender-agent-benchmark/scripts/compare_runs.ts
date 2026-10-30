@@ -1,4 +1,5 @@
 import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
+import { motionRenderErrors, MOTION_VIEWS, type MotionRenderEvidence } from "./motion-render-evidence.ts";
 import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import {
@@ -18,6 +19,8 @@ type RunResult = {
   score: { hardGatePass: boolean; score: number };
   evidenceContactSheet: string | null;
   animationContactSheet?: string | null;
+  nativeMotionRenders?: MotionRenderEvidence | null;
+  exportedMotionRenders?: MotionRenderEvidence | null;
   referenceImages?: string[];
   gameSceneEvidence?: { assetEvidence?: Array<{ root: string; contactSheet: string | null; contextSheet?: string | null }> };
 };
@@ -479,6 +482,17 @@ async function main(): Promise<void> {
     if (!task) {
       throw new Error(`Unknown benchmark task: ${baselineResult.taskId}`);
     }
+    if (task.motionRequirement) {
+      const errors = [baselineResult, candidateResult].flatMap((result, index) => [
+        ...motionRenderErrors(result.nativeMotionRenders).map(error => `${index ? "candidate" : "baseline"} native: ${error}`),
+        ...(task.motionRequirement!.inspectExport ? motionRenderErrors(result.exportedMotionRenders)
+          .map(error => `${index ? "candidate" : "baseline"} export: ${error}`) : []),
+      ]);
+      if (errors.length) {
+        missingComparisons.push({ taskId: task.id, repetition: baselineResult.repetition, reason: errors.join("; ") });
+        continue;
+      }
+    }
     const baselineAnimation =
       baselineResult.animationContactSheet ??
       join(
@@ -531,6 +545,22 @@ async function main(): Promise<void> {
         attachedImages.push(animationA, animationB);
         animationPrompt =
           " The third image shows candidate A at the requested critical animation frames; the fourth shows candidate B at those frames. Evaluate visible poses, contacts and state changes. Still frames cannot establish continuous timing, loop smoothness, absence of flicker or between-frame collision: mark those claims unclear unless directly supported. Do not invent video review.";
+      }
+      if (task.motionRequirement) {
+        for (const scope of ["native", ...(task.motionRequirement.inspectExport ? ["exported"] : [])]) {
+          for (const view of MOTION_VIEWS) {
+            // Preserve the existing perspective sheets above, adding every missing scope/view.
+            if (scope === "native" && view === "perspective" && hasAnimation) continue;
+            for (const [label, result] of [["a", reverse ? candidateResult : baselineResult],
+                                          ["b", reverse ? baselineResult : candidateResult]] as const) {
+              const evidence = scope === "native" ? result.nativeMotionRenders! : result.exportedMotionRenders!;
+              const path = join(judgeDir, `candidate-${label}-${scope}-${view}-motion.png`);
+              await copyFile(evidence.sheets[view], path);
+              attachedImages.push(path);
+            }
+            animationPrompt += ` Images ${attachedImages.length - 1} and ${attachedImages.length} show A and B respectively: ${scope === "exported" ? "fresh-import GLB" : "native"} ${view} view at sampled frames ${task.animationFrames.join(", ")}. Review outfit and accessory continuity as well as body motion; do not infer export quality from native views.`;
+          }
+        }
       }
       if(task.referenceFiles?.length) {
         for(const file of task.referenceFiles) {

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { BENCHMARK_TASKS } from "./tasks.ts";
+import { scoreSubmission } from "./score.ts";
 
 describe("benchmark task coverage", () => {
   test("adds complete scenes and static/rigged game characters with independent holdouts", () => {
@@ -20,11 +21,25 @@ describe("benchmark task coverage", () => {
     expect(task.motionRequirement?.inspectExport).toBe(true);
     expect(task.motionRequirement?.frames).toEqual(task.animationFrames);
     expect(task.requiredVideo).toEqual({filename:"walk.mp4",durationSeconds:2,fps:24,toleranceSeconds:0.1});
-    expect(task.rubric.requiredNameGroups).not.toContainEqual(["head"]);
+    expect(task.rubric.requiredNameGroups).toEqual([["CartoonBody"]]);
+    expect(task.rubric.minimumMeshObjects).toBe(1);
     for (const id of ["cartoon_style", "cartoon_ankles", "cartoon_accessories", "cartoon_joints"]) {
       expect(task.visualCriteria.find(c => c.id === id)?.critical).toBe(true);
     }
     expect(task.suites).not.toContain("full");
+  });
+  test("an integrated cartoon outfit does not fail object-name or mesh-count gates", () => {
+    const task = BENCHMARK_TASKS.find(t => t.id === "cartoon_outfit_motion")!;
+    const options = { task, agentExitCode: 0, sourceExists: true, reproductionPass: true,
+      blendExists: true, glbExists: true, blendMetrics: {
+        objects: [{ name: "CartoonBody" }], totals: { mesh_objects: 1 },
+      } };
+    const result = scoreSubmission(options);
+    for (const id of ["semantic_part_coverage", "mesh_object_count"]) {
+      expect(result.checks.find(check => check.id === id)?.passed).toBe(true);
+    }
+    const missingBody = scoreSubmission({ ...options, blendMetrics: { objects: [{ name: "Other" }] } });
+    expect(missingBody.checks.find(check => check.id === "semantic_part_coverage")?.passed).toBe(false);
   });
   test("separates quality and reference suites from historical tasks", () => {
     const quality=BENCHMARK_TASKS.filter(task=>task.suites.includes("quality"));

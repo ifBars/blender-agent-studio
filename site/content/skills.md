@@ -134,8 +134,8 @@ Numeric checks and visual review remain separate; a connected mesh or a
 within-tolerance patch distance does not prove good character form.
 
 The [form review guide](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-character-workflow/references/character-form-review.md)
-lists the features that decide a brief: a realistic face, hair and named
-footwear, or a known character's identifying features. Each feature records
+lists the features that decide a brief: a realistic face, hair, hands and named
+clothing or footwear, or a known character's identifying features. Each feature records
 its acceptance basis: an opened reference, the brief or an approved design for
 original work, or `unreferenced`. It then gives a matched model view, the
 concrete differences and a verdict. A failed download does not count
@@ -146,6 +146,14 @@ not guarantee better generations.
 
 ## Humanoid motion and interaction IK
 
+The benchmark's motion evidence includes perspective, side and rear sampled
+poses. Export-inspected motion tasks add matching fresh-import GLB sheets to
+the blinded judge input. Incomplete motion evidence prevents judging; numeric
+body deformation alone cannot approve the exported outfit. Renderer version 4
+also frames evaluated collection instances, including visible instances whose
+source collections are excluded from the view layer. Historical results retain
+their original task and renderer versions.
+
 The animation workflow now includes a
 [humanoid motion guide](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-animation-workflow/references/humanoid-motion.md)
 and a [manual motion review record](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-animation-workflow/references/motion-review-template.md).
@@ -154,8 +162,8 @@ phases, bounded IK reach correction, grip orientation, first-person camera
 checks, seat entry/exit and readable interaction gestures.
 
 Contact measurements use independent anchors and report cumulative drift,
-support-normal gaps and transition boundaries. Naturalness still needs opened
-normal-speed motion evidence. First-person hands and gestures visible to other
+support-normal gaps and transition boundaries. Assessing naturalness still requires
+opening and watching the motion at normal speed. First-person hands and gestures visible to other
 players are separate requirements; a working private viewmodel cannot prove
 the latter. Explicitly requested seat snaps are validated as gameplay choices.
 

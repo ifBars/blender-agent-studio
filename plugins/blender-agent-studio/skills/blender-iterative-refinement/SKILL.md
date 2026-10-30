@@ -69,7 +69,10 @@ shoe footprint/profile, shoulder/underarm continuity, joint deformation, and
 clothing/accessory attachment. A single connected body or exported action
 cannot pass these rows. Preserve intended cartoon proportions and simplified
 hands. Use `blender_inspect_attachments` for explicit deforming surface pairs
-where supported, with unchanged selectors, thresholds and frames. Review the
+where supported. Preserve selectors when topology is unchanged; after topology
+changes, rebind and visually verify the new patches before rechecking. Keep
+thresholds and frames fixed, and report that changed bindings require review
+rather than claiming an identical numerical comparison. Review the
 worst frame and surrounding views after the weight/geometry repair; a passing
 centroid distance can still conceal penetration or a visibly detached shoulder.
 

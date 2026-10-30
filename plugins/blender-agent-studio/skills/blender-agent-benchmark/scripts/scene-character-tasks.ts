@@ -39,9 +39,9 @@ ${game}`,
     animationFrames:[1,7,13,19,25,31,37,43,49],
     motionRequirement:{frames:[1,7,13,19,25,31,37,43,49],targets:[{object:'CartoonBody',change:'deformation',modifier:'ARMATURE'}],inspectExport:true},
     requiredVideo:{filename:'walk.mp4',durationSeconds:2,fps:24,toleranceSeconds:0.1},
-    // A continuous CartoonBody may include the head; object names cannot prove
-    // that anatomical region exists. Its visible form belongs to cartoon_style.
-    rubric:{...characterRubric,requiredNameGroups:[['CartoonBody'],['sock'],['shoe'],['glasses'],['backpack']],
+    // The body may include the head and outfit. Only its explicitly requested
+    // name is a gate; accessory presence/fit belongs to the visual criteria.
+    rubric:{...characterRubric,requiredNameGroups:[['CartoonBody']],minimumMeshObjects:1,
       triangleRange:[3000,45000],maximumExtent:2,requireAnimation:true,minimumActionSpan:48,
       categorySignals:[{metric:'weighted_meshes',minimum:1,label:'skinned cartoon body'},{metric:'bones',minimum:16,label:'deform skeleton'}]},
   },

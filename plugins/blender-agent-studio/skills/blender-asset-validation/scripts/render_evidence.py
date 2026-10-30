@@ -28,6 +28,8 @@ def parse_args() -> argparse.Namespace:
                         help="Comma-separated fixed views; use perspective,front for a quick repair preview.")
     parser.add_argument("--focus-objects", default="[]", help="JSON array of exact mesh names used only for framing; all geometry remains visible.")
     parser.add_argument("--frames", default="")
+    parser.add_argument("--animation-views", default="perspective",
+                        help="Fixed views for every sampled frame; benchmark motion uses perspective,left,back.")
     parser.add_argument("--material-mode", choices=("source", "vrchat-fit"), default="source")
     parser.add_argument("--hide-objects", default="")
     parser.add_argument("--hide-objects-json", default="[]", help="JSON array of names for explicitly isolated asset evidence.")
@@ -36,15 +38,15 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args(script_args())
 
 
-def renderable_mesh_objects():
-    """Respect render-hidden ancestors and view-layer exclusion, including rig helpers."""
+def renderable_objects():
+    """Find directly linked render-visible objects, including collection instancers."""
     seen = set()
 
     def visit(layer):
         if layer.exclude or layer.collection.hide_render:
             return
         for obj in layer.collection.objects:
-            if obj.type == "MESH" and not obj.hide_render and obj.name not in seen:
+            if not obj.hide_render and obj.name not in seen:
                 seen.add(obj.name)
                 yield obj
         for child in layer.children:
@@ -53,12 +55,33 @@ def renderable_mesh_objects():
     yield from visit(bpy.context.view_layer.layer_collection)
 
 
+def renderable_mesh_instances():
+    """Include evaluated meshes under visible instancers even if their source layer is excluded."""
+    visible = {obj.name for obj in renderable_objects()}
+    graph = bpy.context.evaluated_depsgraph_get()
+    for instance in graph.object_instances:
+        obj = instance.object
+        owner = instance.parent if instance.is_instance else obj
+        if (obj.type == "MESH" and not obj.hide_render and instance.show_self
+                and owner is not None and owner.original.name in visible):
+            yield obj, instance.matrix_world.copy()
+
+
+def renderable_mesh_objects():
+    """Yield unique original mesh sources for material and focus checks."""
+    seen = set()
+    for obj, _ in renderable_mesh_instances():
+        if obj.name not in seen:
+            seen.add(obj.name)
+            yield obj.original
+
+
 def scene_bounds(names: set[str] | None = None) -> tuple[Vector, Vector]:
     points: list[Vector] = []
-    for obj in renderable_mesh_objects():
+    for obj, matrix in renderable_mesh_instances():
         if names and obj.name not in names:
             continue
-        points.extend(obj.matrix_world @ Vector(corner) for corner in obj.bound_box)
+        points.extend(matrix @ Vector(corner) for corner in obj.bound_box)
     if not points:
         raise RuntimeError("No renderable mesh bounds found")
     mins = Vector(tuple(min(point[axis] for point in points) for axis in range(3)))
@@ -329,10 +352,13 @@ def main() -> None:
     resolution = max(128, min(int(args.resolution), 1024))
     frames = [int(value) for value in args.frames.split(",") if value.strip()]
     requested_views = [value.strip() for value in args.views.split(",") if value.strip()]
+    animation_views = [value.strip() for value in args.animation_views.split(",") if value.strip()]
     legacy_views = {"perspective", "front", "back", "left", "right", "top"}
     allowed_views = legacy_views | {"bottom"}
     if not requested_views or len(set(requested_views)) != len(requested_views) or not set(requested_views) <= allowed_views:
         raise ValueError("Views must be unique fixed names: perspective,front,back,left,right,top,bottom")
+    if not animation_views or len(set(animation_views)) != len(animation_views) or not set(animation_views) <= legacy_views:
+        raise ValueError("Animation views must be unique fixed names: perspective,front,back,left,right,top")
 
     if not input_path.is_file():
         raise FileNotFoundError(input_path)
@@ -400,26 +426,31 @@ def main() -> None:
     contact_sheet = output_dir / "contact_sheet.png"
     create_contact_sheet(paths, contact_sheet, resolution)
 
-    animation_paths: list[Path] = []
+    animation_paths_by_view = {name: [] for name in animation_views}
     for frame in frames:
         bpy.context.scene.frame_set(frame)
-        animation_paths.append(
-            render_view(
+        for view in animation_views:
+            _, direction, orthographic = view_by_name[view]
+            animation_paths_by_view[view].append(render_view(
                 camera,
-                f"frame_{frame:04d}",
-                Vector((1.4, -1.7, 1.2)),
+                f"frame_{frame:04d}" if view == "perspective" else f"{view}_frame_{frame:04d}",
+                direction,
                 target,
                 extent,
                 output_dir,
                 resolution,
-                False,
-            )
-        )
+                orthographic,
+            ))
 
-    animation_contact_sheet: Path | None = None
-    if animation_paths:
-        animation_contact_sheet = output_dir / "animation_contact_sheet.png"
-        create_contact_sheet(animation_paths, animation_contact_sheet, resolution)
+    animation_sheets = {}
+    for view, view_paths in animation_paths_by_view.items():
+        if view_paths:
+            filename = "animation_contact_sheet.png" if view == "perspective" else f"animation_{view}_contact_sheet.png"
+            sheet = output_dir / filename
+            create_contact_sheet(view_paths, sheet, resolution)
+            animation_sheets[view] = str(sheet)
+    animation_paths = animation_paths_by_view.get("perspective", [])
+    animation_contact_sheet = animation_sheets.get("perspective")
 
     manifest: dict[str, Any] = {
         "schema_version": 2,
@@ -450,11 +481,17 @@ def main() -> None:
         "contact_sheet": str(contact_sheet),
         "animation_frames": [
             {"frame": frame, "path": str(path)}
-            for frame, path in zip(frames, animation_paths, strict=True)
+            for frame, path in zip(frames if animation_paths else [], animation_paths, strict=True)
         ],
         "animation_contact_sheet": (
             str(animation_contact_sheet) if animation_contact_sheet else None
         ),
+        "animation_views": {
+            view: {"frames": [{"frame": frame, "path": str(path)}
+                              for frame, path in zip(frames, view_paths, strict=True)],
+                   "contact_sheet": animation_sheets.get(view)}
+            for view, view_paths in animation_paths_by_view.items()
+        },
     }
     manifest_path = output_dir / "evidence.json"
     manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")

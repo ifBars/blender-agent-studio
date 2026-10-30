@@ -135,7 +135,10 @@ source. Freezing their local coordinates would be wrong when the feature itself
 moves. The helper cannot certify semantic correspondence. For an independent head silhouette, author a head reference
 and matching scene visibility with unclipped margins. Normalization length is
 derived from the two named reference landmarks at report resolution. Optional
-`pixels` must agree within half a pixel; an inflated denominator is rejected.
+`pixels` must agree within half a pixel with the selected pair. This rejects
+a mismatched numeric override, not a semantically inappropriate or deliberately
+distant landmark pair. The reviewer must verify that the anchors measure the
+named body/head dimension; the helper cannot certify that semantic choice.
 `alignmentEvidence` is a reviewer-supplied provenance note/path; the helper does
 not certify its contents. Report uncertainty rather than marking it reviewed
 merely to obtain a pass.
@@ -143,8 +146,9 @@ merely to obtain a pass.
 Example targets mean >=0.95 silhouette IoU in each declared view, <=2% normalized
 error for every declared landmark, and <=3% relative error for each declared
 proportion. These are proposed operational targets, not a validated definition
-of 95% likeness. Missing masks, sufficient visible landmarks, reviewed alignment,
-valid framing or any validation view produce `unverified`. Invalid contracts
+of 95% likeness. The following produce `unverified`: no reviewed silhouette
+mask, insufficient visible landmarks, unreviewed alignment, cropped or unknown
+framing, an unmeasurable projected proportion, or no validation view. Invalid contracts
 (including missing normalization anchors) are rejected. Duplicate reference
 images cannot count twice as independent coverage, even if the camera is renamed.
 Proportions are optional; omission

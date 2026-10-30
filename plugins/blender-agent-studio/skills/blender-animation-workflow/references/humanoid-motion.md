@@ -155,7 +155,8 @@ independent expected anchors in the same space and units. Report:
 - sample times, worst sample and the contact phase, including blend entry and
   release as separately named intervals.
 
-Use `max(length(actual[i] - expected[i]))` for anchor error. For a moving
+Use `max(length(actual[i] - expected[i]) for i in samples)` over a nonempty
+sample set for anchor error. For a moving
 support, evaluate `expected[i]` from the same fixed support-local anchor and
 that sample's support transform. Report any excluded intervals and why; never
 present a stable middle interval as proof that the whole transition passes.

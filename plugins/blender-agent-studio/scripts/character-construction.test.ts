@@ -12,5 +12,6 @@ for (const region of ["hand", "upper_body"]) {
     });
     expect(result.exitCode, result.stdout + result.stderr).toBe(0);
     expect(result.stderr).toContain("OK");
+    expect(result.stderr).not.toContain("skipped=");
   }, 40_000);
 }

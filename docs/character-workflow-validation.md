@@ -257,8 +257,8 @@ This repair is additional to, not silently included in, the 15-minute comparison
 ### Follow-up technical checks
 
 Eight new Blender-Python construction regressions pass, including connected
-hand/torso topology, mirrored winding, five digit caps, unequal wrist-loop
-joining and strict parameter validation. They are also invoked by two live Bun
+hand/torso topology, mirrored winding, five digit caps, joining unequal wrist
+loops and strict parameter validation. They are also invoked by two live Bun
 tests. The 17 Rust tests pass; repository validation, 44 documentation tests
 (with one platform-specific skip) and the documentation build pass.
 
@@ -398,7 +398,7 @@ need work. No run in this pass establishes production-ready characters.
 
 The final wrist-envelope adjustment was also inspected in eight native/imported
 views (palm/edge, elbow bend/overhead) on one slender fixture using the unchanged
-old hand to isolate the upper-body change. Its join remains continuous without
+old hand to isolate the upper-body change. The hand-to-forearm junction remains continuous without
 the earlier thick-wrist bulge. Cropped distal fingertips and a partly occluded
 opposite hand limit those views to the wrist; they do not validate finger form.
 
@@ -493,3 +493,35 @@ The later Jonesy, Luna Snow and generated original-human exercise is documented
 in [reference-board validation](reference-board-validation.md). It adds a
 bounded helper for packed orthographic image guides and records actual modeling
 failures separately from software checks and character likeness.
+
+## PR review follow-up (2026-10-30)
+
+Motion evaluation now produces perspective, left and back sampled-pose sheets.
+Export-inspected tasks also render the fresh GLB import; comparison attaches
+those sheets with explicit candidate, format, view and frame labels. Missing
+or incomplete motion sheets prevent judging. Renderer version 4 accounts for
+evaluated collection-instance transforms, including instances of excluded
+source collections. Historical scores and renders retain their original
+versions; this follow-up is not a new character-generation campaign.
+
+The cartoon rubric now accepts a single integrated `CartoonBody` mesh. Its
+clothing/accessories remain required visual features rather than undocumented
+object names. Attachment extraction shares source topology hashes within a
+request and evaluates each object once per frame. Builder import failures can
+no longer silently skip a live construction test suite. Guidance now states
+the limits of semantic normalization and requires rebinding after topology
+changes; wording fixes preserve the original evidence limits.
+
+Validation: repository checks passed; 109 Bun tests passed with three platform
+skips; the standalone Python runner passed 54 tests with 15 Blender-only skips;
+45 documentation tests and the 13-page documentation build passed. The Bun
+wrappers exercise the 12 construction tests and three new Blender regressions.
+New live checks cover native/fresh-GLB motion images, excluded-source instance
+framing, hidden helper exclusion, shared topology evaluation and rejection of
+changed topology. Contract tests reject missing views and wrong frame sets and
+exercise the integrated-body name/count gates. These test plumbing and
+measurement behavior, not subjective animation quality or new agent output.
+
+The first full Bun run failed two attachment tests because this new worktree
+had no compiled Rust runtime. After the repository's `setup:runtime` build,
+the complete suite above passed. Generated fixtures and logs remain outside Git.

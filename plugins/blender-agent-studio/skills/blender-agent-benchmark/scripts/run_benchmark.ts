@@ -1,4 +1,5 @@
 import { evaluateGameScene } from "./scene-evidence.ts";
+import { collectMotionRenders, MOTION_VIEWS } from "./motion-render-evidence.ts";
 import { buildClaudeArgs, summarizeClaudeEvents } from "./claude-agent.ts";
 import { sha256 } from "./provenance.ts";
 import { existsSync } from "node:fs";
@@ -270,12 +271,14 @@ async function inspectAsset(
     : null;
 }
 
-async function renderEvidence(options: {
+export async function renderEvidence(options: {
   assetPath: string;
   outputDir: string;
   frames: number[];
   spatial?: boolean;
   blenderPath: string;
+  motionViews?: boolean;
+  resolution?: number;
 }): Promise<void> {
   if (!existsSync(options.assetPath)) {
     return;
@@ -287,11 +290,12 @@ async function renderEvidence(options: {
     "--output-dir",
     options.outputDir,
     "--resolution",
-    "384",
+    String(options.resolution ?? 384),
     "--presentation",
     "neutral",
   ];
   if (options.spatial) scriptArgs.push("--views", "perspective,front,back,left,right,top,bottom");
+  if (options.motionViews) scriptArgs.push("--animation-views", MOTION_VIEWS.join(","));
   if (options.frames.length) {
     scriptArgs.push("--frames", options.frames.join(","));
   }
@@ -564,7 +568,7 @@ async function main(): Promise<void> {
     scorerVersion: SCORER_VERSION,
     motionEvidenceVersion: 1,
     inspectorSchemaVersion: 3,
-    evidenceSettingsVersion: 3,
+    evidenceSettingsVersion: 4,
     evidencePresentation: selected.some(task=>task.authoredCameras) ? "authored_per_task" : "neutral",
     startedAt: new Date().toISOString(),
     mode: options.conditionLabel,
@@ -691,6 +695,7 @@ async function main(): Promise<void> {
         assetPath: blendPath,
         outputDir: evidenceDirectory,
         frames: task.animationFrames,
+        motionViews: Boolean(task.motionRequirement),
         spatial: task.suites.includes("spatial"),
         blenderPath: options.blenderPath,
       });
@@ -705,6 +710,16 @@ async function main(): Promise<void> {
       const motionEvidence = await inspectMotion(blendPath, join(workdir, "motion-blend.json"), task, options.blenderPath);
       const exportedMotionEvidence = task.motionRequirement?.inspectExport
         ? await inspectMotion(glbPath, join(workdir, "motion-glb.json"), task, options.blenderPath) : null;
+      const nativeMotionRenders = task.motionRequirement
+        ? await collectMotionRenders(evidenceDirectory, task.animationFrames) : null;
+      const exportEvidenceDirectory = task.motionRequirement?.inspectExport
+        ? await mkdtemp(join(workdir, "evaluator-export-evidence-")) : null;
+      if (exportEvidenceDirectory) await renderEvidence({
+        assetPath: glbPath, outputDir: exportEvidenceDirectory, frames: task.animationFrames,
+        motionViews: true, blenderPath: options.blenderPath,
+      });
+      const exportedMotionRenders = exportEvidenceDirectory
+        ? await collectMotionRenders(exportEvidenceDirectory, task.animationFrames) : null;
 
       const gameSceneEvidence = task.wholeScene ? await evaluateGameScene(workdir, options.blenderPath, { reproductionDirectory: reproduction.directory }) : null;
       const sceneManifestReproduced = !task.wholeScene || Boolean(reproduction.directory && existsSync(join(reproduction.directory, "scene_manifest.json")));
@@ -725,6 +740,9 @@ async function main(): Promise<void> {
         glbMetrics: glbMetrics as never,
       });
       const result = {
+        nativeMotionRenders,
+        exportedMotionRenders,
+        exportEvidenceDirectory,
         evidenceDirectory,
         reproductionEvidenceDirectory: reproduction.evidenceDirectory ?? null,
         authoredRenderEvidence,
