@@ -70,6 +70,11 @@ or indistinguishable from a different requested substance.
 Exit when the asset reads as intentionally finished from every required view,
 not merely acceptable from the hero camera.
 
+Judge each distinct prop family against the accepted concept, references or
+approved existing assets in both close and context views. If it falls short,
+use the iterative-refinement loop before advancing. Retaining an improved
+revision does not close its remaining defects or establish scene completion.
+
 ## 7. Export and fresh-import validation
 
 - Save the authored `.blend`, export the requested runtime format, and import it
