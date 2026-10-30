@@ -46,6 +46,16 @@ Render and inspect the default, minimum, maximum, and at least one seeded
 variation. Test empty/small and dense/large inputs where meaningful. A graph
 that looks good at a single seed or density is not reusable.
 
+For procedural character families, apply the character workflow before
+replication. Validate one complete representative in neutral and motion,
+including socks/cuffs/shoes and accessory supports. Proportion changes require
+refitting and rebinding affected layers, not just scaling independent parts.
+Test the shortest/longest limb and narrowest/widest body settings with the same
+pose checks. Preserve stable surface selectors where topology is unchanged;
+if regeneration changes topology, explicitly rebind inspection anchors and
+visually verify them. Do not propagate an unreviewed base ankle or shoulder
+defect across every outfit.
+
 Use `$blender-agent-studio:blender-asset-validation` to inspect evaluated
 output, transforms, materials, and exported geometry. For final art-directed
 images, use `$blender-agent-studio:blender-rendering-workflow`.

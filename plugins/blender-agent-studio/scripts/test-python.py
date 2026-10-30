@@ -6,7 +6,7 @@ import unittest
 root = Path(__file__).resolve().parents[1]
 suite = unittest.TestSuite()
 suite.addTests(unittest.TestLoader().discover(str(root / 'scripts'), pattern='test_*.py'))
-for skill in ('blender-asset-validation', 'blender-rendering-workflow', 'blender-modeling-workflow'):
+for skill in ('blender-asset-validation', 'blender-rendering-workflow', 'blender-modeling-workflow', 'blender-character-workflow'):
     directory = root / 'skills' / skill / 'scripts'
     suite.addTests(unittest.TestLoader().discover(str(directory), pattern='test_*.py'))
 sys.exit(not unittest.TextTestRunner(verbosity=2).run(suite).wasSuccessful())

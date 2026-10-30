@@ -99,7 +99,34 @@ Keep numeric findings and factual diffs separate from the visual ledger:
 intersection. Compare actual evidence before retaining a repair; no aesthetic
 score or automatic checkpoint tool is implied.
 
+For character repairs, keep separate ledger rows for hand/thumb construction,
+shoe footprint/profile, shoulder/underarm continuity, joint deformation, and
+clothing/accessory attachment. A single connected body or exported action
+cannot pass these rows. Preserve intended cartoon proportions and simplified
+hands. Use `blender_inspect_attachments` for explicit deforming surface pairs
+where supported. Preserve selectors when topology is unchanged; after topology
+changes, rebind and visually verify the new patches before rechecking. Keep
+thresholds and frames fixed, and report that changed bindings require review
+rather than claiming an identical numerical comparison. Review the
+worst frame and surrounding views after the weight/geometry repair; a passing
+centroid distance can still conceal penetration or a visibly detached shoulder.
+
 ## Repair durable source
+
+For humanoid motion, use the animation workflow's
+[motion review record](../blender-animation-workflow/references/motion-review-template.md).
+Keep contact accuracy, naturalness, first-person framing and third-person
+readability in separate rows. Preserve the requested action when repairing
+robotic motion: removing steps and returning to a stiff swivel is not a fix.
+Compare the same full-speed sequence, contact intervals and blend boundaries;
+reject a visually worse revision even when its contact residuals improve.
+
+For reference-based character revisions, use the character workflow's
+[likeness refinement protocol](../blender-character-workflow/references/likeness-refinement.md).
+Preserve calibrated body views and head-only snapshots before changing shape.
+The validation skill's `scripts/review_likeness.py` rejects changed comparison
+conditions and reports per-view landmark/proportion deltas; its numerical
+targets never replace the visual ledger or authorize retaining a regression.
 
 Identify the smallest source-level cause that can address the highest-priority
 failure. Make one targeted repair, or one tightly coupled repair group, in the

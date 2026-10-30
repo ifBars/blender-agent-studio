@@ -113,6 +113,8 @@ test.skipIf(!blender)("MCP reference comparison renders the authored camera, sco
     expect(noMaskReport.landmarks[0].delta_pixels[1]).toBeCloseTo(0, 3);
     expect(noMaskReport.landmarks[0].error_pixels).toBeCloseTo(16, 3);
     expect(noMaskReport.landmarks[0].visibility).toBe('not_tested_for_occlusion');
+    expect(noMaskReport.landmarks[0].local_point).toEqual([0, 0, 0]);
+    expect(noMaskReport.landmarks[0].world_point).toEqual([0, 0, 0]);
 
     const occupied = await compare(matchingAsset, matchingDir);
     expect(occupied.isError).toBe(true);

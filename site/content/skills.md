@@ -46,6 +46,22 @@ evaluate modifiers and inspect a representative before repeating it through
 a scene. Full-scene guidance also reviews focal-zone scale, upholstery and
 broad floor reflections alongside architectural trim and material detail.
 
+For image-based modeling, the [reference board helper](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-modeling-workflow/scripts/setup_reference_board.py)
+reads a JSON manifest of up to eight front, back, left or right PNG views, each
+with an optional pixel crop. It writes a new `.blend` with semi-transparent image
+guides that are hidden from renders, plus a matching orthographic camera for
+each view. Each guide's size comes from its declared height and the crop's
+aspect ratio. View names give the camera position; for a subject facing -Y, a
+profile with the nose pointing left is `right`. The helper checks every input
+before it changes anything. It never overwrites the input file, the output or
+the reference images, and it leaves render settings and the active camera
+unchanged. Crops are copied exactly into a new evidence folder and packed into
+the output `.blend`, so the guides stay with the file when it is moved. A report
+records hashes and the meters assumption. It does not infer orientation, scale
+or proportions, and the guides do not prove that the shape matches. The
+[image-to-3D guide](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-modeling-workflow/references/image-to-3d.md)
+gives the manifest format and view conventions.
+
 The repository's comparison queue runs one generation at a time. On Windows it
 caps the modeling process tree at 20% CPU with Below Normal priority and requests
 two Blender threads, preferring a verified GPU backend for rendering. Shared
@@ -78,6 +94,84 @@ readable from two meters. Save editable artwork, the Blender source and a
 context render.” Copy and symbols remain editable; static display textures
 are not presented as live data. The skill includes a compact face specification
 and an integration guide, rather than a fixed sign generator or new MCP tool.
+
+## Character construction
+
+The character workflow includes a
+[connected-surface construction guide](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-character-workflow/references/character-construction.md).
+It develops the palm into finger roots and an opposing thumb, builds footwear
+from a shared footprint and side profile, and tests joint loops and localized
+weight transitions before garment detail. Local refinements preserve shared
+boundaries and whole-body proportions.
+
+Review uses palm/dorsal/edge hand views, top/profile shoe views, and bend/reach
+poses when rigging is requested. The same poses are checked after export;
+native volume-preserving skinning alone is not proof of portable deformation.
+Optional Blender-Python upper-body and hand helpers provide editable shared-edge
+starting cages, rather than intersecting shoulder caps or finger tubes. They
+require proportion adaptation, intentional wrist joining, local skin weights,
+garment fitting and visual pose/export review; they are not finished characters
+or a guarantee of anatomical quality. Low-poly and realistic work retain their own
+form and topology requirements.
+
+The helper regressions also sample nonadjacent surface intersections, including
+short thumbs and steep underarms that pass closed-manifold checks. The workflow
+preserves semantic limb membership through rest subdivision, checks that an
+arm raise cannot pull the waist, and verifies bone roll before posing footwear.
+A grounded foot must also remain planted horizontally during stance; world-floor
+and fresh-export checks stay separate from garment-clearance review.
+
+Animated outfits distinguish rigid accessories from flexible layers. Socks,
+cuffs and straps follow the appropriate local surface, while soles and rigid
+details follow their intended bones. Side/rear ankle checks during foot lift,
+passing and toe-off catch separation hidden in an idle pose. Intentional
+cartoon proportions and mitten hands remain valid style choices.
+
+The loop now also uses [surface attachment inspection](scene-analysis.md#deforming-character-attachments):
+declare small surface patches and pose frames, measure the gaps, repair the
+binding or geometry, and compare against preserved baseline evidence.
+Numeric checks and visual review remain separate; a connected mesh or a
+within-tolerance patch distance does not prove good character form.
+
+The [form review guide](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-character-workflow/references/character-form-review.md)
+lists the features that decide a brief: a realistic face, hair, hands and named
+clothing or footwear, or a known character's identifying features. Each feature records
+its acceptance basis: an opened reference, the brief or an approved design for
+original work, or `unreferenced`. It then gives a matched model view, the
+concrete differences and a verdict. A failed download does not count
+as a reference. A realistic or likeness claim needs an accepted face. Raking
+light reveals skin banding, and comparing native with fresh-export renders shows
+procedural patterns that glTF drops. These gates make missing evidence visible. They do
+not guarantee better generations.
+
+## Humanoid motion and interaction IK
+
+The benchmark's motion evidence includes perspective, side and rear sampled
+poses. Export-inspected motion tasks add matching fresh-import GLB sheets to
+the blinded judge input. Incomplete motion evidence prevents judging; numeric
+body deformation alone cannot approve the exported outfit. Renderer version 4
+also frames evaluated collection instances, including visible instances whose
+source collections are excluded from the view layer. Historical results retain
+their original task and renderer versions.
+
+The animation workflow now includes a
+[humanoid motion guide](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-animation-workflow/references/humanoid-motion.md)
+and a [manual motion review record](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-animation-workflow/references/motion-review-template.md).
+They cover weight transfer during turns, planted forefoot and heel-pivot
+phases, bounded IK reach correction, grip orientation, first-person camera
+checks, seat entry/exit and readable interaction gestures.
+
+Contact measurements use independent anchors and report cumulative drift,
+support-normal gaps and transition boundaries. Assessing naturalness still requires
+opening and watching the motion at normal speed. First-person hands and gestures visible to other
+players are separate requirements; a working private viewmodel cannot prove
+the latter. Explicitly requested seat snaps are validated as gameplay choices.
+
+Character creation, refinement and validation route into the same guide.
+Native rig checks, baked exports, engine playback and multiplayer observation
+remain separate evidence stages. This adds workflow guidance, not an automatic
+IK solver, motion score or new MCP tool. It does not establish improvements
+to a game's runtime animation without testing that game.
 
 ## Shared guidance
 

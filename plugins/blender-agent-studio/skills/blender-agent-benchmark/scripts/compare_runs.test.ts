@@ -2,10 +2,11 @@ import { describe, expect, test } from "bun:test";
 import { assessNonRegression, evidenceConfigurationMismatches } from "./compare_runs.ts";
 
 test("rejects mixed renderer generations or studio presets", () => {
-  const current = { evidenceSettingsVersion: 2, evidencePresentation: "neutral" };
+  const current = { evidenceSettingsVersion: 4, evidencePresentation: "neutral" };
   expect(evidenceConfigurationMismatches(current, current)).toEqual([]);
   expect(evidenceConfigurationMismatches({}, {})).toEqual([]);
   expect(evidenceConfigurationMismatches({}, current)).toHaveLength(2);
+  expect(evidenceConfigurationMismatches(current, { ...current, evidenceSettingsVersion: 3 })).toHaveLength(1);
   expect(evidenceConfigurationMismatches(current, { ...current, evidencePresentation: "dark" })).toHaveLength(1);
 });
 
