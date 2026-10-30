@@ -124,7 +124,7 @@ Start a new task or session afterwards. If you built the scene analysis runtime,
 
 ## Scene analysis runtime
 
-Three tools use a small Rust executable for [scene analysis](scene-analysis.md). Build it once from the **installed plugin directory**, the one containing `mcp`, `runtime`, and `package.json`:
+Four tools use a small Rust executable for [scene analysis](scene-analysis.md), including surface attachment inspection. Build it once from the **installed plugin directory**, the one containing `mcp`, `runtime`, and `package.json`:
 
 ```bash
 bun run setup:runtime

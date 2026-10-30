@@ -40,6 +40,7 @@ describe("Blender Agent Studio MCP", () => {
         "blender_get_preview",
         "blender_import_mixamo_animation",
         "blender_inspect_asset",
+        "blender_inspect_attachments",
         "blender_inspect_motion",
         "blender_open_viewport",
         "blender_prepare_mixamo_search",

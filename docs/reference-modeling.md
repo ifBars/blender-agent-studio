@@ -91,3 +91,27 @@ have no pixel error. Projection is not an occlusion test: a hidden point can
 still project inside the image. Up to 32 landmarks are supported, with or without
 a silhouette mask. Use only correspondences you can identify; the tool neither
 detects landmarks nor fits the camera automatically.
+
+## Calibrate and retain likeness revisions
+
+`blender_fit_reference_camera` is a separate explicit alignment stage. Its
+default `framing` mode fits lens/orthographic scale and shift with camera pose
+fixed. Optional `pose` mode fits bounded rigid camera motion with intrinsics
+fixed, using at least four well-spread 2D/3D correspondences. Independent
+`heldoutLandmarks` report error without steering either solve. Read the bounds,
+conditioning and held-out regression warnings, then inspect the candidate.
+The fitter cannot separate incorrect model landmarks from incorrect camera
+alignment, and does not change the character's pose.
+
+For characters, use one coherent primary reference series and preserve matched
+body views plus tightly framed head snapshots. Record clay, base-colour and
+shaded views to distinguish geometry from surface appearance. Keep expression,
+camera and framing fixed during a shape revision, and inspect complementary
+views before retaining it.
+
+The [likeness refinement protocol](../plugins/blender-agent-studio/skills/blender-character-workflow/references/likeness-refinement.md)
+documents `review_likeness.py`, a standard-library report reviewer. It rejects
+changed reference/camera conditions and reports per-view overlap, normalized
+landmark errors and declared projected ratios. Its 0.95/2%/3% example targets
+are operational thresholds, never an overall likeness score. Keep facial
+identity, unseen surfaces and technical/export acceptance as separate reviews.

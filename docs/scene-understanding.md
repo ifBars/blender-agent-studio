@@ -13,11 +13,31 @@ This first implementation makes hierarchy, dimensions, topology and explicit
 constraints queryable. It does not measure aesthetic quality or establish that
 the agent creates better assets. That needs repeated, controlled benchmarks.
 
+## Evaluated surface attachments
+
+`blender_inspect_attachments` adds a compatible SceneIR projection for skinned
+attachments. The fixed extractor binds explicit small vertex patches, evaluates
+them at each requested pose, and emits translation-only `SURFACE_ANCHOR` objects.
+The existing Rust connection-point analyzer receives zero local offsets and
+therefore measures the evaluated world-space centroids. These anchor-only
+projections do not replace whole-scene geometry inspection.
+
+The wrapper retains source hashes, selector/binding hashes and each sampled
+SceneIR. It rejects unsupported modifiers and topology changes during sampling.
+Optional `baselineJson` recomputes preserved checks under the same selectors,
+frames and tolerances, reports newly failing/repaired frames, and requires
+rebinding review when mesh topology or group membership changed.
+
+This catches gaps that object-transform checks miss. It cannot establish
+anatomy, absence of penetration, orientation or unsampled-frame continuity.
+See the [surface inspection contract](../site/content/scene-analysis.md#deforming-character-attachments)
+for limits, inputs and the measure–repair–review loop.
+
 ## Setup
 
 The existing inspection, rendering and download tools still work without Rust.
-For `blender_describe_scene`, `blender_quality_report` and
-`blender_compare_scenes`, install a stable Rust
+For `blender_describe_scene`, `blender_quality_report`,
+`blender_compare_scenes` and `blender_inspect_attachments`, install a stable Rust
 toolchain and run this **from the installed plugin directory** (the directory
 containing `mcp`, `runtime` and `package.json`):
 

@@ -1,19 +1,45 @@
 import { describe, expect, test } from "bun:test";
 import { BENCHMARK_TASKS } from "./tasks.ts";
+import { scoreSubmission } from "./score.ts";
 
 describe("benchmark task coverage", () => {
   test("adds complete scenes and static/rigged game characters with independent holdouts", () => {
     const scenes = BENCHMARK_TASKS.filter(t=>t.suites.includes('scenes'));
     const characters = BENCHMARK_TASKS.filter(t=>t.suites.includes('game_characters'));
     expect(scenes).toHaveLength(3);
-    expect(characters).toHaveLength(3);
+    expect(characters).toHaveLength(4);
     expect(scenes.filter(t=>t.renderOnly)).toHaveLength(2);
     expect(scenes.every(t=>t.authoredCameras?.length === 3 && t.visualCriteria.length >= 6)).toBe(true);
-    expect(characters.filter(t=>t.motionRequirement?.inspectExport)).toHaveLength(1);
+    expect(characters.filter(t=>t.motionRequirement?.inspectExport)).toHaveLength(2);
     expect(characters.filter(t=>!t.rubric.requireAnimation)).toHaveLength(2);
     expect([...scenes,...characters].every(t=>t.suites.length===1 && !t.suites.includes('full'))).toBe(true);
     expect(scenes.some(t=>t.id.endsWith('holdout'))).toBe(true);
     expect(characters.some(t=>t.id.endsWith('holdout'))).toBe(true);
+  });
+  test("cartoon outfit regression requires motion, export and style-preserving attachment evidence", () => {
+    const task = BENCHMARK_TASKS.find(t => t.id === "cartoon_outfit_motion")!;
+    expect(task.motionRequirement?.inspectExport).toBe(true);
+    expect(task.motionRequirement?.frames).toEqual(task.animationFrames);
+    expect(task.requiredVideo).toEqual({filename:"walk.mp4",durationSeconds:2,fps:24,toleranceSeconds:0.1});
+    expect(task.rubric.requiredNameGroups).toEqual([["CartoonBody"]]);
+    expect(task.rubric.minimumMeshObjects).toBe(1);
+    for (const id of ["cartoon_style", "cartoon_ankles", "cartoon_accessories", "cartoon_joints"]) {
+      expect(task.visualCriteria.find(c => c.id === id)?.critical).toBe(true);
+    }
+    expect(task.suites).not.toContain("full");
+  });
+  test("an integrated cartoon outfit does not fail object-name or mesh-count gates", () => {
+    const task = BENCHMARK_TASKS.find(t => t.id === "cartoon_outfit_motion")!;
+    const options = { task, agentExitCode: 0, sourceExists: true, reproductionPass: true,
+      blendExists: true, glbExists: true, blendMetrics: {
+        objects: [{ name: "CartoonBody" }], totals: { mesh_objects: 1 },
+      } };
+    const result = scoreSubmission(options);
+    for (const id of ["semantic_part_coverage", "mesh_object_count"]) {
+      expect(result.checks.find(check => check.id === id)?.passed).toBe(true);
+    }
+    const missingBody = scoreSubmission({ ...options, blendMetrics: { objects: [{ name: "Other" }] } });
+    expect(missingBody.checks.find(check => check.id === "semantic_part_coverage")?.passed).toBe(false);
   });
   test("separates quality and reference suites from historical tasks", () => {
     const quality=BENCHMARK_TASKS.filter(task=>task.suites.includes("quality"));

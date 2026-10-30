@@ -22,6 +22,30 @@ const game = `${source}\nAlso deliver asset.glb, with meters, Z-up in Blender an
 
 export const SCENE_AND_CHARACTER_TASKS: BenchmarkTask[] = [
   {
+    id:'cartoon_outfit_motion', title:'Cartoon outfit attachment motion', category:'character_creation', suites:['game_characters'],
+    capabilities:['geometry','materials','rigging','deformation','animation','spatial_relations','instruction_following'],
+    prompt:`Create an original playful cartoon traveler game character, 1.2 meters tall, with an oversized rounded head, expressive simple eyes, short limbs and intentionally simplified mitten hands. Preserve this goofy style instead of realistic adult proportions. Give it a short-sleeved shirt, shorts, visible calf-length socks, shaped low shoes with soles, round glasses and a small backpack with shoulder straps. Use a coherent palette and portable materials, below 45,000 evaluated triangles and 8 materials. Keep the soles, socks and legs visually connected through motion, and the glasses and backpack supported.
+Author a continuous skinned body mesh named CartoonBody and a meaningful rig. Separate garments and accessories are allowed. At 24 fps animate a two-second in-place walk, frames 1-49 with frame 49 repeating frame 1. Show alternating stance and swing, bent knees and ankle flexion, foot lift and toe-off, and opposing arm swing. Keep the root centered, with a readable weight shift and stable planted feet. Deliver walk.mp4 of frames 1-48 at 24 fps. Preserve actual body and outfit motion in asset.glb, retaining the exact CartoonBody name. Save the .blend at frame 1.
+${game}`,
+    visualBrief:'A playful large-headed traveler with intentional mitten hands, shirt, shorts, visible socks, shaped shoes, glasses and an attached backpack. Preserve the cartoon design. Review side/rear ankle and sock continuity across walk samples, footwear shape and support, and accessory attachment. Still poses alone do not prove smooth timing.',
+    visualCriteria:[
+      criterion('cartoon_style','style','Does the character retain a coherent playful large-headed style and intentional mitten hands rather than unwanted realistic anatomy?'),
+      criterion('cartoon_ankles','deformation','Do socks stay wrapped around the moving shins and meet the shoe openings without detached upright cuffs, gaps or major clipping across poses?'),
+      criterion('cartoon_shoes','attribute','Do the shoes have a deliberate heel, instep and toe silhouette rather than block-like or inflated forms?'),
+      criterion('cartoon_support','motion','Do sampled stance and swing poses show credible foot support, lift and ankle flexion without floating planted feet?'),
+      criterion('cartoon_accessories','spatial_relation','Do glasses and backpack straps visibly meet their supports and remain fitted across the sampled movement?'),
+      criterion('cartoon_joints','deformation','Do shoulders, hips and knees remain coherent without collapsing or visibly disconnected joint surfaces?'),
+    ],
+    animationFrames:[1,7,13,19,25,31,37,43,49],
+    motionRequirement:{frames:[1,7,13,19,25,31,37,43,49],targets:[{object:'CartoonBody',change:'deformation',modifier:'ARMATURE'}],inspectExport:true},
+    requiredVideo:{filename:'walk.mp4',durationSeconds:2,fps:24,toleranceSeconds:0.1},
+    // The body may include the head and outfit. Only its explicitly requested
+    // name is a gate; accessory presence/fit belongs to the visual criteria.
+    rubric:{...characterRubric,requiredNameGroups:[['CartoonBody']],minimumMeshObjects:1,
+      triangleRange:[3000,45000],maximumExtent:2,requireAnimation:true,minimumActionSpan:48,
+      categorySignals:[{metric:'weighted_meshes',minimum:1,label:'skinned cartoon body'},{metric:'bones',minimum:16,label:'deform skeleton'}]},
+  },
+  {
     id:'decorated_reading_room', title:'Complete decorated reading room', category:'environment_creation', suites:['scenes'],
     capabilities:['geometry','materials','lighting','placement','composition','camera','spatial_relations','instruction_following'],
     renderOnly:true, authoredCameras:sceneCameras,
