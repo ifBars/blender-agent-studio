@@ -144,6 +144,27 @@ light reveals skin banding, and comparing native with fresh-export renders shows
 procedural patterns that glTF drops. These gates make missing evidence visible. They do
 not guarantee better generations.
 
+## Humanoid motion and interaction IK
+
+The animation workflow now includes a
+[humanoid motion guide](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-animation-workflow/references/humanoid-motion.md)
+and a [manual motion review record](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/skills/blender-animation-workflow/references/motion-review-template.md).
+They cover weight transfer during turns, planted forefoot and heel-pivot
+phases, bounded IK reach correction, grip orientation, first-person camera
+checks, seat entry/exit and readable interaction gestures.
+
+Contact measurements use independent anchors and report cumulative drift,
+support-normal gaps and transition boundaries. Naturalness still needs opened
+normal-speed motion evidence. First-person hands and gestures visible to other
+players are separate requirements; a working private viewmodel cannot prove
+the latter. Explicitly requested seat snaps are validated as gameplay choices.
+
+Character creation, refinement and validation route into the same guide.
+Native rig checks, baked exports, engine playback and multiplayer observation
+remain separate evidence stages. This adds workflow guidance, not an automatic
+IK solver, motion score or new MCP tool. It does not establish improvements
+to a game's runtime animation without testing that game.
+
 ## Shared guidance
 
 Every specialist bundles the same [execution guidance](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/references/astra-workflow.md), so behavior stays consistent:

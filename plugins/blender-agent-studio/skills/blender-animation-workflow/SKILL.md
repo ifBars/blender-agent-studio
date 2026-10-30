@@ -1,6 +1,6 @@
 ---
 name: blender-animation-workflow
-description: Author, diagnose, and refine Blender animation for articulated props, mechanical assemblies, material-transfer sequences, and game-ready actions. Use when motion timing, pivots, physical connections, critical poses, trajectories, visibility states, or exported GLB actions must be created or reviewed.
+description: Author, diagnose, and refine Blender animation for humanoid locomotion, grounded turns, interaction IK, first-person hands, articulated props, mechanical assemblies, and game-ready actions. Use when motion timing, contacts, pivots, critical poses, trajectories, visibility states, or exported actions must be created or reviewed.
 ---
 
 # Blender Animation Workflow
@@ -9,6 +9,16 @@ Read [the shared execution guidance](references/astra-workflow.md) once per task
 for autonomous decisions, evidence cadence, and long-task continuity.
 
 Make the mechanism understandable in still critical frames before polishing curves.
+
+## Humanoid motion and interaction
+
+For characters, read [humanoid motion and contact IK](references/humanoid-motion.md)
+and use its [review record](references/motion-review-template.md). Establish
+weight transfer, support phases and target-relative gestures before adding IK.
+Preserve the motion intent when repairing stiffness; neither repeated foot
+lifts nor an idle body swivel establishes a natural turn. Check full-speed
+motion separately from contact accuracy, then compare native and fresh-import
+evidence. Engine and remote-observer checks apply when integration is requested.
 
 ## Find humanoid motion with Mixamo
 
@@ -24,7 +34,7 @@ compatibility or retargeting workflow.
 1. Name the start, anticipation, contact, transfer, release, landing, rebound, and settle frames that apply.
 2. Specify which assemblies move and which stay fixed.
 3. Identify guides, pivots, contact surfaces, and material-state transitions.
-4. Read [references/mechanical-animation.md](references/mechanical-animation.md) for the review contract.
+4. For mechanical assemblies, read [references/mechanical-animation.md](references/mechanical-animation.md) for the review contract. For humanoids, use the contact and interaction contract above.
 
 ## Author motion
 
@@ -44,7 +54,9 @@ compatibility or retargeting workflow.
 - Assert connector endpoint error numerically before rendering. A connector is
   not valid merely because its object has keyframes.
 - Animate separate material states when transfer must be legible.
-- Avoid teleporting visibility changes unless the mechanism visibly occludes the transition.
+- Avoid unexplained teleporting visibility changes in mechanisms. Explicitly
+  requested gameplay snaps, such as instant seat entry/exit, follow the
+  humanoid guide's seat-anchor and recovery checks.
 
 ## Validate
 

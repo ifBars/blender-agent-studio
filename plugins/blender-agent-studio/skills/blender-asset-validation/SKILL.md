@@ -219,6 +219,15 @@ optimization. Use reference-relative judgments rather than universal ratios.
 
 ## Verify the exported artifact
 
+For humanoid motion, use the animation workflow's
+[contact and interaction review](../blender-animation-workflow/references/humanoid-motion.md)
+and [evidence record](../blender-animation-workflow/references/motion-review-template.md).
+Measure cumulative drift against independent plant anchors, including separate
+entry/release checks; consecutive-frame deltas alone can hide sliding. Review
+normal-speed timing, grip orientation and the intended gameplay viewpoints.
+Keep native, fresh-import, engine and remote-observer evidence distinct.
+Attachment gap checks below do not validate gait or ground contact.
+
 For deforming attachments, `blender_inspect_attachments` measures fixed small
 vertex patches across explicit poses using SceneIR. It requires the Rust
 runtime and topology-preserving meshes. Use several boundary pairs, record

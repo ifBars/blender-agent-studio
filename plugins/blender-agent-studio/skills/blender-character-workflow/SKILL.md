@@ -110,6 +110,14 @@ or infer all four legs from one occluded photograph.
 
 ## Validate export and motion
 
+For locomotion, grounded turns, sitting, carrying and first-person interaction,
+follow the animation workflow's [humanoid motion guide](../blender-animation-workflow/references/humanoid-motion.md).
+Declare root-motion ownership, support/grip anchors and reach limits. Separate
+base motion quality from IK accuracy, inspect weight transfer and transitions
+at normal speed, and verify grip orientation as well as hand position. Use the
+real seat, prop and gameplay camera when they are part of the brief. Native
+constraint success does not establish baked-export or runtime IK behavior.
+
 1. Render the neutral and every contract pose from front, profile, back, and
    close-up deformation views. Open the evidence.
 2. Check volume preservation, joint collapse, candy-wrapper twisting, clipping,

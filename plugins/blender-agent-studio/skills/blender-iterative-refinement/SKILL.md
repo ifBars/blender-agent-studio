@@ -75,6 +75,14 @@ centroid distance can still conceal penetration or a visibly detached shoulder.
 
 ## Repair durable source
 
+For humanoid motion, use the animation workflow's
+[motion review record](../blender-animation-workflow/references/motion-review-template.md).
+Keep contact accuracy, naturalness, first-person framing and third-person
+readability in separate rows. Preserve the requested action when repairing
+robotic motion: removing steps and returning to a stiff swivel is not a fix.
+Compare the same full-speed sequence, contact intervals and blend boundaries;
+reject a visually worse revision even when its contact residuals improve.
+
 For reference-based character revisions, use the character workflow's
 [likeness refinement protocol](../blender-character-workflow/references/likeness-refinement.md).
 Preserve calibrated body views and head-only snapshots before changing shape.
