@@ -1,23 +1,35 @@
-"""Blender Agent Studio's bounded local viewport bridge.
+"""Blender Agent Studio's viewport bridge and in-Blender agent panel.
 
-Capture/picking approach inspired by MCP for Blender (MIT); see LICENSE.txt.
-No script execution, file loading, saving, or geometry mutation commands.
+The bridge is a bounded local protocol: no script execution, file loading,
+saving, or geometry mutation commands. Capture/picking approach inspired by
+MCP for Blender (MIT); see LICENSE.txt.
+
+The agent panel runs the user's own Claude Code or Codex CLI as a child
+process. The open session is never scripted by the agent: it reads a saved
+copy of the scene and delivers .blend files, whose objects the panel appends.
 """
 bl_info = {"name": "Blender Agent Studio Live", "author": "Bars",
-           "version": (0, 1, 0), "blender": (4, 5, 0),
+           "version": (0, 2, 0), "blender": (4, 5, 0),
            "location": "3D View > Sidebar > Agent Studio", "category": "Interface"}
 
+import atexit
 import base64
 import hashlib
 import json
 import math
 import os
 from pathlib import Path
+import queue
 import secrets
+import shutil
+import signal
 import socket
 import stat
 import struct
+import subprocess
 import tempfile
+import textwrap
+import threading
 import time
 import zlib
 
@@ -329,6 +341,430 @@ def stop():
         _bridge = None
 
 
+# --- Agent panel -----------------------------------------------------------
+
+PLUGIN = "blender-agent-studio"
+AGENTS = {"CLAUDE": ("Claude Code", "claude"), "CODEX": ("Codex", "codex")}
+MAX_MESSAGES = 200
+_session = None
+
+
+def cli_directories():
+    """Where agent CLIs and Bun usually live; Blender started from a desktop
+    launcher often inherits a PATH without them."""
+    home = Path.home()
+    found = [home / ".local" / "bin", home / ".claude" / "local", home / ".bun" / "bin",
+             home / ".npm-global" / "bin", home / ".volta" / "bin", home / ".cargo" / "bin",
+             Path("/opt/homebrew/bin"), Path("/usr/local/bin")]
+    if os.environ.get("APPDATA"):
+        found.append(Path(os.environ["APPDATA"]) / "npm")
+    try:
+        found += sorted((home / ".nvm" / "versions" / "node").glob("*/bin"), reverse=True)
+    except OSError:
+        pass
+    return [str(path) for path in found if path.is_dir()]
+
+
+def search_path():
+    current = [entry for entry in os.environ.get("PATH", "").split(os.pathsep) if entry]
+    return os.pathsep.join(current + [entry for entry in cli_directories() if entry not in current])
+
+
+def find_cli(name, override=""):
+    if override:
+        path = Path(override).expanduser()
+        return str(path) if path.is_file() else None
+    return shutil.which(name, path=search_path())
+
+
+def find_plugin(override=""):
+    """The plugin folder to load for the agent, when the addon can see one.
+    Otherwise the agent uses whatever plugin the user installed in the CLI."""
+    candidates = [Path(override).expanduser()] if override else []
+    candidates.append(Path(os.path.realpath(__file__)).parent.parent)
+    for candidate in candidates:
+        if (candidate / ".claude-plugin" / "plugin.json").is_file() and (candidate / "mcp" / "server.ts").is_file():
+            return str(candidate)
+    return None
+
+
+def build_command(agent, executable, session_id=None, access="WORKSPACE", model="", plugin=None, blender=""):
+    """Arguments for one headless turn. The prompt is always sent on stdin."""
+    if agent == "CLAUDE":
+        command = [executable, "-p", "--output-format", "stream-json", "--verbose"]
+        if plugin:
+            command += ["--plugin-dir", plugin]
+        if session_id:
+            command += ["--resume", session_id]
+        if model:
+            command += ["--model", model]
+        if access == "FULL":
+            return command + ["--dangerously-skip-permissions"]
+        # Not a sandbox: this limits which commands start, and a Blender
+        # script can still do anything Python can.
+        rules = ["mcp__plugin_%s_%s" % (PLUGIN, PLUGIN), "Bash(blender *)"]
+        if blender:
+            rules += ["Bash(%s *)" % blender, 'Bash("%s" *)' % blender]
+        return command + ["--permission-mode", "acceptEdits", "--allowedTools"] + rules
+    if agent == "CODEX":
+        command = [executable, "exec"] + (["resume", session_id] if session_id else [])
+        command += ["--json", "--skip-git-repo-check"]
+        if model:
+            command += ["--model", model]
+        if access == "FULL":
+            command.append("--dangerously-bypass-approvals-and-sandbox")
+        else:
+            command += ["-c", 'sandbox_mode="workspace-write"', "-c", 'approval_policy="never"']
+        if plugin:
+            server = str(Path(plugin) / "mcp" / "server.ts")
+            command += ["-c", 'mcp_servers.%s.command="bun"' % PLUGIN,
+                        "-c", "mcp_servers.%s.args=%s" % (PLUGIN, json.dumps([server]))]
+        return command + ["-"]
+    raise ValueError("Unsupported agent.")
+
+
+def turn_prompt(text, facts):
+    """Wrap the user's words with what the agent needs to know about this
+    Blender window. Sent every turn because the scene copy is refreshed."""
+    lines = ["<blender_agent_studio_panel>",
+             "You are running inside the Agent Studio panel of the user's open Blender %s window. "
+             "Replies appear in a narrow sidebar: keep them short and plain. Nobody can answer a question "
+             "mid-task, so make a reasonable choice and say what you chose." % facts.get("version", ""),
+             "- Working folder: %s. Keep sources, renders and scratch files here." % facts["workspace"]]
+    if facts.get("blender"):
+        lines.append("- Blender executable: %s. Use it for every Blender command; BLENDER_EXECUTABLE is set to it."
+                     % facts["blender"])
+    if facts.get("snapshot"):
+        lines.append("- Open scene: a copy of the user's current file was just saved to %s (scene \"%s\", frame %s). "
+                     "Read it for context and never write to it. Selected objects: %s. Active object: %s."
+                     % (facts["snapshot"], facts.get("scene", ""), facts.get("frame", ""),
+                        ", ".join(facts.get("selected") or []) or "none", facts.get("active") or "none"))
+    else:
+        lines.append("- Open scene: not shared for this message.")
+    lines.append("- Deliver by saving a .blend in %s. The panel appends that file's objects to the user's open "
+                 "scene, so include only new or replacement objects, never a copy of objects they already have. "
+                 "You cannot edit the open scene in place: to change an existing object, deliver a replacement "
+                 "and name the original the user should hide or delete. When revising something you already "
+                 "delivered, overwrite the same file so the panel swaps out the earlier version." % facts["results"])
+    lines.append("- Live viewport: %s." % ("connected; blender_open_viewport returns the current viewport image"
+                                          if facts.get("viewport") else "not connected"))
+    return "\n".join(lines + ["</blender_agent_studio_panel>", "", text])
+
+
+def short(value, limit=90):
+    text = " ".join(str(value).split())
+    return text if len(text) <= limit else text[:limit - 1] + "…"
+
+
+def describe_tool(name, arguments):
+    arguments = arguments if isinstance(arguments, dict) else {}
+    if name.startswith("mcp__"):
+        return name.rsplit("__", 1)[-1]
+    detail = (arguments.get("description") or arguments.get("command") or arguments.get("file_path")
+              or arguments.get("path") or arguments.get("pattern") or arguments.get("skill") or "")
+    return short("%s: %s" % (name, detail) if detail else name)
+
+
+def parse_event(agent, event):
+    """Translate one line of CLI output into (kind, text) updates. Kinds:
+    session, agent, tool, error and done. Unknown events are ignored so newer
+    CLI versions degrade to a quieter transcript, not a crash."""
+    if not isinstance(event, dict):
+        return []
+    kind, updates = event.get("type"), []
+    if agent == "CLAUDE":
+        if kind == "system" and event.get("subtype") == "init" and event.get("session_id"):
+            updates.append(("session", event["session_id"]))
+        elif kind == "assistant":
+            for block in (event.get("message") or {}).get("content") or []:
+                if block.get("type") == "text" and block.get("text", "").strip():
+                    updates.append(("agent", block["text"].strip()))
+                elif block.get("type") == "tool_use":
+                    updates.append(("tool", describe_tool(block.get("name", "tool"), block.get("input"))))
+        elif kind == "result":
+            if event.get("session_id"):
+                updates.append(("session", event["session_id"]))
+            denied = len(event.get("permission_denials") or [])
+            if denied:
+                updates.append(("error", "%d command%s refused by the access setting. Choose Full access in the "
+                                "addon preferences to allow them." % (denied, "" if denied == 1 else "s were")))
+            if event.get("is_error"):
+                updates.append(("error", short(event.get("result") or event.get("subtype") or "The agent failed.", 400)))
+            updates.append(("done", ""))
+    elif agent == "CODEX":
+        item = event.get("item") or {}
+        if kind == "thread.started" and event.get("thread_id"):
+            updates.append(("session", event["thread_id"]))
+        elif kind == "item.started" and item.get("type") == "command_execution":
+            updates.append(("tool", short("Shell: %s" % item.get("command", ""))))
+        elif kind == "item.started" and item.get("type") == "mcp_tool_call":
+            updates.append(("tool", item.get("tool") or "MCP tool"))
+        elif kind == "item.completed" and item.get("type") == "agent_message" and item.get("text", "").strip():
+            updates.append(("agent", item["text"].strip()))
+        elif kind == "item.completed" and item.get("type") == "file_change":
+            paths = [Path(change.get("path", "")).name for change in item.get("changes") or []]
+            updates.append(("tool", short("Edit: %s" % ", ".join(paths))))
+        elif kind == "item.completed" and item.get("type") == "error":
+            updates.append(("error", short(item.get("message", "Error"), 400)))
+        elif kind in ("turn.failed", "error"):
+            message = (event.get("error") or {}).get("message") if kind == "turn.failed" else event.get("message")
+            updates.append(("error", short(message or "The agent failed.", 400)))
+        elif kind == "turn.completed":
+            updates.append(("done", ""))
+    return updates
+
+
+class AgentSession:
+    """One conversation. Threads only move bytes; state changes in poll(),
+    which the caller runs on Blender's main thread."""
+
+    def __init__(self, agent, workspace):
+        self.agent = agent
+        self.workspace = Path(workspace)
+        self.results_dir = self.workspace / "results"
+        self.results_dir.mkdir(parents=True, exist_ok=True)
+        self.messages = []
+        self.session_id = None
+        self.process = None
+        self.events = queue.Queue()
+        self.activity = ""
+        self.started = 0.0
+        self.results = []
+        self.stderr = []
+        self.stopped = False
+
+    @property
+    def running(self):
+        return self.process is not None
+
+    def add(self, role, text):
+        self.messages.append({"role": role, "text": text})
+        del self.messages[:-MAX_MESSAGES]
+        try:
+            with (self.workspace / "transcript.md").open("a", encoding="utf8") as stream:
+                stream.write("**%s**\n\n%s\n\n" % (role, text))
+        except OSError:
+            pass
+
+    def send(self, command, prompt, shown, environment=None):
+        if self.running:
+            raise RuntimeError("The agent is still working.")
+        options = {"start_new_session": True} if os.name == "posix" else {"creationflags": 0x08000000}
+        process = subprocess.Popen(command, cwd=str(self.workspace), env=environment, stdin=subprocess.PIPE,
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE, **options)
+        self.process, self.started, self.activity, self.stderr = process, time.time(), "Starting", []
+        self.stopped = False
+        self.add("you", shown)
+
+        def read_output():
+            try:
+                process.stdin.write(prompt.encode("utf8"))
+                process.stdin.close()
+            except OSError:
+                pass
+            for line in process.stdout:
+                self.events.put(("line", line))
+            self.events.put(("exit", process.wait()))
+
+        def read_errors():
+            for line in process.stderr:
+                self.stderr = (self.stderr + [line.decode("utf8", "replace").strip()])[-5:]
+
+        for target in (read_output, read_errors):
+            threading.Thread(target=target, daemon=True).start()
+
+    def poll(self):
+        """Apply queued output. Returns True when a turn has just finished."""
+        while True:
+            try:
+                kind, value = self.events.get_nowait()
+            except queue.Empty:
+                return False
+            if kind == "exit":
+                if self.stopped:
+                    self.add("info", "Stopped.")
+                elif value != 0 and not any(m["role"] == "error" for m in self.messages[-3:]):
+                    detail = " ".join(line for line in self.stderr if line)
+                    self.add("error", short("The agent stopped (exit code %s). %s" % (value, detail), 400))
+                self.process, self.activity = None, ""
+                self.results = self.find_results()
+                return True
+            try:
+                event = json.loads(value)
+            except ValueError:
+                continue
+            for update, text in parse_event(self.agent, event):
+                if update == "session":
+                    self.session_id = text
+                elif update == "tool":
+                    self.activity = text
+                    self.add("tool", text)
+                elif update in ("agent", "error"):
+                    self.activity = "Writing" if update == "agent" else self.activity
+                    self.add(update, text)
+
+    def find_results(self):
+        """Deliverables written during the turn that just ended, newest first."""
+        found = []
+        for path in self.results_dir.rglob("*.blend"):
+            try:
+                modified = path.stat().st_mtime
+            except OSError:
+                continue
+            if modified >= self.started - 1:
+                found.append((modified, str(path)))
+        return [path for _, path in sorted(found, reverse=True)[:5]]
+
+    def stop(self):
+        process = self.process
+        if process is None or process.poll() is not None:
+            return
+        self.stopped = True
+        try:
+            # End the whole tree: the CLI may have a Blender job running.
+            if os.name == "posix":
+                os.killpg(process.pid, signal.SIGTERM)
+            else:
+                subprocess.run(["taskkill", "/PID", str(process.pid), "/T", "/F"],
+                               capture_output=True, creationflags=0x08000000)
+        except OSError:
+            process.terminate()
+
+
+def preference(name, default=""):
+    addon = bpy.context.preferences.addons.get(BAS_Preferences.bl_idname)
+    return getattr(addon.preferences, name, default) if addon else default
+
+
+def first_window():
+    """The window whose scene the panel works on; None in background Blender."""
+    windows = bpy.context.window_manager.windows
+    return windows[0] if windows else None
+
+
+def save_scene_copy(path):
+    """Write the open session to path without changing the user's file,
+    filepath or unsaved-changes state."""
+    window = first_window()
+    with bpy.context.temp_override(**({"window": window} if window else {})):
+        bpy.ops.wm.save_as_mainfile(filepath=str(path), copy=True, check_existing=False)
+
+
+def import_result(path, scene):
+    """Append every object in an agent deliverable into a new collection.
+    Earlier imports of the same file are hidden, not deleted, so a revision
+    never destroys the user's edits to a previous version."""
+    path = str(path)
+    with bpy.data.libraries.load(path, link=False) as (source, target):
+        target.objects = list(source.objects)
+    objects = [obj for obj in target.objects if obj is not None]
+    if not objects:
+        raise ValueError("That file contains no objects.")
+    for earlier in bpy.data.collections:
+        if earlier.get("bas_agent_source") == path:
+            earlier.hide_viewport = earlier.hide_render = True
+    collection = bpy.data.collections.new("Agent: " + Path(path).stem)
+    collection["bas_agent_source"] = path
+    scene.collection.children.link(collection)
+    for obj in objects:
+        collection.objects.link(obj)
+    return collection, len(objects)
+
+
+def redraw():
+    for window in bpy.context.window_manager.windows:
+        for area in window.screen.areas:
+            if area.type == "VIEW_3D":
+                area.tag_redraw()
+
+
+def new_workspace():
+    root = Path(preference("workspace_root") or Path.home() / "blender-agent-studio").expanduser()
+    workspace = root / time.strftime("session-%Y%m%d-%H%M%S")
+    workspace.mkdir(parents=True, exist_ok=True)
+    return workspace
+
+
+def send_prompt(text, agent, share_scene):
+    """Start one agent turn from the panel. Raises with a user-facing message."""
+    global _session
+    label, name = AGENTS[agent]
+    executable = find_cli(name, preference(name + "_path"))
+    if not executable:
+        raise RuntimeError("%s was not found. Install the %s CLI, or set its path in the addon preferences."
+                           % (label, name))
+    if _session is None or _session.agent != agent:
+        _session = AgentSession(agent, new_workspace())
+    session = _session
+    window = first_window() or bpy.context
+    facts = {"version": bpy.app.version_string, "workspace": str(session.workspace),
+             "results": str(session.results_dir), "blender": bpy.app.binary_path, "viewport": _bridge is not None}
+    if share_scene:
+        snapshot = session.workspace / "scene" / "current.blend"
+        snapshot.parent.mkdir(exist_ok=True)
+        save_scene_copy(snapshot)
+        layer = window.view_layer
+        facts.update(snapshot=str(snapshot), scene=window.scene.name_full, frame=window.scene.frame_current,
+                     selected=[obj.name_full for obj in layer.objects if obj.select_get(view_layer=layer)][:50],
+                     active=layer.objects.active.name_full if layer.objects.active else None)
+    environment = dict(os.environ, PATH=search_path())
+    if bpy.app.binary_path:
+        environment["BLENDER_EXECUTABLE"] = bpy.app.binary_path
+    command = build_command(agent, executable, session.session_id, preference("access", "WORKSPACE"),
+                            preference(name + "_model"), find_plugin(preference("plugin_root")), bpy.app.binary_path)
+    session.send(command, turn_prompt(text, facts), text, environment)
+    if not bpy.app.timers.is_registered(agent_tick):
+        bpy.app.timers.register(agent_tick, first_interval=0.1, persistent=True)
+
+
+def agent_tick():
+    session = _session
+    if session is None:
+        return None
+    finished = session.poll()
+    if finished and session.results and bpy.context.window_manager.bas_auto_import:
+        try:
+            window = first_window()
+            _, count = import_result(session.results[0], (window or bpy.context).scene)
+            session.add("info", "Added %d object%s from %s to the scene."
+                        % (count, "" if count == 1 else "s", Path(session.results[0]).name))
+            if window:
+                with bpy.context.temp_override(window=window):
+                    bpy.ops.ed.undo_push(message="Add agent result")
+        except Exception as error:
+            session.add("error", "Could not add the result: %s" % error)
+    redraw()
+    return 0.2 if session.running else None
+
+
+class BAS_Preferences(bpy.types.AddonPreferences):
+    bl_idname = __package__ or __name__
+    access: bpy.props.EnumProperty(name="Agent access", default="WORKSPACE", items=[
+        ("WORKSPACE", "Session folder", "The agent edits files in its session folder and runs Blender and the "
+         "plugin's tools. Claude Code refuses other shell commands; Codex uses its workspace sandbox"),
+        ("FULL", "Full access", "The agent runs any command without asking and without a sandbox. "
+         "Use only for prompts and files you trust")])
+    claude_path: bpy.props.StringProperty(name="Claude Code CLI", subtype="FILE_PATH",
+                                          description="Leave empty to find claude automatically")
+    claude_model: bpy.props.StringProperty(name="Claude model", description="Leave empty for the CLI's default")
+    codex_path: bpy.props.StringProperty(name="Codex CLI", subtype="FILE_PATH",
+                                         description="Leave empty to find codex automatically")
+    codex_model: bpy.props.StringProperty(name="Codex model", description="Leave empty for the CLI's default")
+    plugin_root: bpy.props.StringProperty(
+        name="Plugin folder", subtype="DIR_PATH",
+        description="plugins/blender-agent-studio in a checkout. Leave empty to use the plugin installed in the CLI")
+    workspace_root: bpy.props.StringProperty(
+        name="Sessions folder", subtype="DIR_PATH",
+        description="Where each chat keeps its sources, renders and results. Empty uses ~/blender-agent-studio")
+
+    def draw(self, context):
+        column = self.layout.column()
+        column.use_property_split = True
+        for name in ("access", "claude_path", "claude_model", "codex_path", "codex_model",
+                     "plugin_root", "workspace_root"):
+            column.prop(self, name)
+
+
 class BAS_OT_live_start(bpy.types.Operator):
     bl_idname = "bas.live_start"
     bl_label = "Connect Agent Studio"
@@ -349,8 +785,121 @@ class BAS_OT_live_stop(bpy.types.Operator):
         return {"FINISHED"}
 
 
+class BAS_OT_agent_send(bpy.types.Operator):
+    bl_idname = "bas.agent_send"
+    bl_label = "Send"
+    bl_description = "Send the prompt to the agent"
+    def execute(self, context):
+        manager = context.window_manager
+        text = manager.bas_prompt.strip()
+        if not text:
+            self.report({"WARNING"}, "Type a request first.")
+            return {"CANCELLED"}
+        try:
+            send_prompt(text, manager.bas_agent, manager.bas_share_scene)
+        except Exception as error:
+            self.report({"ERROR"}, str(error))
+            return {"CANCELLED"}
+        manager.bas_prompt = ""
+        return {"FINISHED"}
+
+
+class BAS_OT_agent_stop(bpy.types.Operator):
+    bl_idname = "bas.agent_stop"
+    bl_label = "Stop"
+    bl_description = "Stop the agent and any Blender job it started"
+    def execute(self, context):
+        if _session:
+            _session.stop()
+        return {"FINISHED"}
+
+
+class BAS_OT_agent_reset(bpy.types.Operator):
+    bl_idname = "bas.agent_reset"
+    bl_label = "New Chat"
+    bl_description = "Start a new conversation in a new session folder. Earlier folders are kept"
+    def execute(self, context):
+        global _session
+        if _session:
+            _session.stop()
+        _session = None
+        return {"FINISHED"}
+
+
+class BAS_OT_agent_import(bpy.types.Operator):
+    bl_idname = "bas.agent_import"
+    bl_label = "Add to Scene"
+    bl_description = "Append this result's objects to the scene in a new collection"
+    bl_options = {"UNDO"}
+    filepath: bpy.props.StringProperty(options={"HIDDEN", "SKIP_SAVE"})
+    def execute(self, context):
+        try:
+            _, count = import_result(self.filepath, context.scene)
+        except Exception as error:
+            self.report({"ERROR"}, str(error))
+            return {"CANCELLED"}
+        self.report({"INFO"}, "Added %d object%s." % (count, "" if count == 1 else "s"))
+        return {"FINISHED"}
+
+
+class BAS_OT_agent_folder(bpy.types.Operator):
+    bl_idname = "bas.agent_folder"
+    bl_label = "Open Session Folder"
+    bl_description = "Show this chat's sources, renders, results and transcript"
+    def execute(self, context):
+        if _session:
+            bpy.ops.wm.path_open(filepath=str(_session.workspace))
+        return {"FINISHED"}
+
+
+class BAS_PT_agent(bpy.types.Panel):
+    bl_label = "Agent"
+    bl_idname = "BAS_PT_agent"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "Agent Studio"
+
+    def draw(self, context):
+        layout, manager, session = self.layout, context.window_manager, _session
+        running = bool(session and session.running)
+        row = layout.row()
+        row.enabled = not running
+        row.prop(manager, "bas_agent", text="")
+        if session and session.messages:
+            width = max(24, int(context.region.width / (6.5 * context.preferences.system.ui_scale)) - 4)
+            prefixes = {"you": "You: ", "tool": "• ", "error": "Error: ", "info": ""}
+            lines = []
+            for message in session.messages[-30:]:
+                text = prefixes.get(message["role"], "") + message["text"]
+                for paragraph in text.splitlines():
+                    lines += textwrap.wrap(paragraph, width) or [""]
+                lines.append("")
+            column = layout.box().column(align=True)
+            column.scale_y = 0.75
+            for line in lines[-45:-1]:
+                column.label(text=line)
+        if running:
+            row = layout.row()
+            row.label(text="%s (%ds)" % (short(session.activity or "Working", 40), time.time() - session.started))
+            row.operator("bas.agent_stop", text="", icon="CANCEL")
+        else:
+            layout.prop(manager, "bas_prompt", text="")
+            row = layout.row(align=True)
+            row.operator("bas.agent_send", icon="PLAY")
+            if session:
+                row.operator("bas.agent_reset", text="", icon="FILE_NEW")
+        column = layout.column(align=True)
+        column.prop(manager, "bas_share_scene")
+        column.prop(manager, "bas_auto_import")
+        if session and not running:
+            for path in session.results:
+                layout.operator("bas.agent_import", text="Add %s" % Path(path).name, icon="APPEND_BLEND").filepath = path
+        if session:
+            layout.operator("bas.agent_folder", icon="FILE_FOLDER")
+
+
 class BAS_PT_live(bpy.types.Panel):
-    bl_label = "Blender Agent Studio"
+    bl_label = "Viewport Sharing"
     bl_idname = "BAS_PT_live"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -360,23 +909,57 @@ class BAS_PT_live(bpy.types.Panel):
         self.layout.operator("bas.live_stop" if _bridge else "bas.live_start")
 
 
-_classes = (BAS_OT_live_start, BAS_OT_live_stop, BAS_PT_live)
+_classes = (BAS_Preferences, BAS_OT_live_start, BAS_OT_live_stop, BAS_OT_agent_send, BAS_OT_agent_stop,
+            BAS_OT_agent_reset, BAS_OT_agent_import, BAS_OT_agent_folder, BAS_PT_agent, BAS_PT_live)
 _handlers = (bpy.app.handlers.depsgraph_update_post, bpy.app.handlers.load_post,
              bpy.app.handlers.undo_post, bpy.app.handlers.redo_post)
+_properties = {
+    "bas_agent": lambda: bpy.props.EnumProperty(
+        name="Agent", description="Which installed agent CLI answers. Switching starts a new chat",
+        items=[(key, label, "Use the %s CLI" % name) for key, (label, name) in AGENTS.items()]),
+    "bas_prompt": lambda: bpy.props.StringProperty(
+        name="Request", description="What to build or change", options={"SKIP_SAVE"}),
+    "bas_share_scene": lambda: bpy.props.BoolProperty(
+        name="Share Open Scene", default=True,
+        description="Save a copy of the open file to the session folder with each message, so the agent can "
+                    "read your scene and selection. Your file is not modified"),
+    "bas_auto_import": lambda: bpy.props.BoolProperty(
+        name="Add Results to Scene", default=True,
+        description="When the agent finishes, append its result to the scene in a new collection. An earlier "
+                    "version of the same result is hidden, not deleted"),
+}
+
+
+def stop_agent():
+    # Also runs at exit: a quitting Blender must not leave an agent building.
+    if _session:
+        _session.stop()
 
 
 def register():
+    atexit.register(stop_agent)
     for cls in _classes:
         bpy.utils.register_class(cls)
+    for name, make in _properties.items():
+        setattr(bpy.types.WindowManager, name, make())
     for handlers in _handlers:
         handlers.append(changed)
 
 
 def unregister():
+    global _session
     stop()
+    stop_agent()
+    atexit.unregister(stop_agent)
+    _session = None
+    if bpy.app.timers.is_registered(agent_tick):
+        bpy.app.timers.unregister(agent_tick)
     for handlers in _handlers:
         if changed in handlers:
             handlers.remove(changed)
+    for name in _properties:
+        if hasattr(bpy.types.WindowManager, name):
+            delattr(bpy.types.WindowManager, name)
     for cls in reversed(_classes):
         bpy.utils.unregister_class(cls)
 

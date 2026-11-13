@@ -16,7 +16,9 @@ from unittest.mock import patch
 def load_addon():
     handlers = SimpleNamespace(persistent=lambda fn: fn, depsgraph_update_post=[],
                                load_post=[], undo_post=[], redo_post=[])
-    bpy = SimpleNamespace(types=SimpleNamespace(Operator=object, Panel=object),
+    prop = lambda **_: None
+    bpy = SimpleNamespace(types=SimpleNamespace(Operator=object, Panel=object, AddonPreferences=object),
+                          props=SimpleNamespace(StringProperty=prop, EnumProperty=prop, BoolProperty=prop),
                           app=SimpleNamespace(handlers=handlers))
     source = Path(__file__).resolve().parents[1] / 'addon' / 'blender_agent_studio_live.py'
     spec = importlib.util.spec_from_file_location('bas_protocol_test', source)

@@ -108,3 +108,13 @@ test.skipIf(!(process.env.BLENDER_EXECUTABLE??Bun.which('blender')))('real Blend
     expect(await Bun.file(join(root,'contract.json')).json()).toEqual({protocol:true,png:true,lifecycle:true});
   }finally{await rm(root,{recursive:true,force:true});}
 },35000);
+
+test.skipIf(!(process.env.BLENDER_EXECUTABLE??Bun.which('blender')))('real Blender agent panel registers, copies the scene without adopting it, and appends results',async()=>{
+  const root=await mkdtemp(join(tmpdir(),'bas-agent-contract-'));
+  try{
+    const run=await runBlender({scriptPath:join(import.meta.dir,'../scripts/_agent_panel_contract.py'),scriptArgs:[root],timeoutMs:30000});
+    expect(run.timedOut).toBe(false);
+    if(run.exitCode!==0)throw Error(run.stderr+'\n'+run.stdout);
+    expect(await Bun.file(join(root,'agent-contract.json')).json()).toEqual({registration:true,sceneCopy:true,import:true});
+  }finally{await rm(root,{recursive:true,force:true});}
+},35000);

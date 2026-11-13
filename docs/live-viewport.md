@@ -22,6 +22,10 @@ current PNG and scene details, without interactive controls. The Codex and
 Claude Code packages use the same MCP server; inline rendering depends on the
 host, not on which package was installed.
 
+The same addon adds an **Agent** panel to the sidebar tab for chatting with
+Claude Code or Codex from inside Blender. It does not need the viewport
+connection. See the [agent panel guide](../site/content/blender-panel.md).
+
 ## Use the panel
 
 - Drag on the canvas to orbit; middle-drag also works. Hold **Shift** while

@@ -31,6 +31,11 @@ bun run test
 bun run test:python
 ```
 
+`scripts/test_agent_panel.py` covers the addon's agent panel with a stand-in CLI:
+command lines for both hosts, event parsing, stopping, and result discovery.
+`scripts/_agent_panel_contract.py` checks registration, the scene copy and the
+result import in a real Blender.
+
 Set `BLENDER_EXECUTABLE` or put Blender on `PATH` to run the live Blender tests.
 Without Blender, the Python suite skips those tests and runs the settings tests.
 Build the runtime before `bun run test` to include the Rust protocol tests.
