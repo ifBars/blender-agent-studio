@@ -88,4 +88,4 @@ their respective capability is required.
    limitations alongside improvements.
 
 Prefer the bundled bounded inspection and evidence tools when installed as a
-Codex or Claude Code plugin. Do not add generic arbitrary-Python MCP execution.
+Codex or Claude Code plugin. Do not add generic arbitrary-Python MCP execution beyond `blender_live_run_python`, which runs only after the user allows live edits in the Blender addon.

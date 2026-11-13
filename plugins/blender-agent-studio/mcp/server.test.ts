@@ -42,6 +42,7 @@ describe("Blender Agent Studio MCP", () => {
         "blender_inspect_asset",
         "blender_inspect_attachments",
         "blender_inspect_motion",
+        "blender_live_run_python",
         "blender_open_viewport",
         "blender_prepare_mixamo_search",
         "blender_prepare_pixabay_sound_search",

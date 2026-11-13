@@ -79,7 +79,8 @@ Measure skill changes on one fixed model before comparing different models.
   previewing Pixabay sound effects; live search and downloads require host
   browser tools. The public Pixabay API does not document audio search.
 - A local MCP with exact Blender version, asset inspection, and evidence render
-  tools. It deliberately does not expose generic arbitrary Python execution.
+  tools. Its one arbitrary-Python tool, `blender_live_run_python`, edits an open
+  scene and is refused until the user allows live edits in the Blender addon.
 
 ## Inline render viewer
 

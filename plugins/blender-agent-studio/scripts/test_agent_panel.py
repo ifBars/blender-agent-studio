@@ -78,6 +78,16 @@ class CommandTests(unittest.TestCase):
         unshared = self.addon.turn_prompt('x', {'workspace': '/w', 'results': '/w/results'})
         self.assertIn('Open scene: not shared', unshared)
 
+    def test_live_prompt_edits_in_place_and_drops_the_copy_contract(self):
+        facts = {'version': '5.2', 'workspace': '/w', 'results': '/w/results', 'live': True, 'scene': 'Scene',
+                 'frame': 4, 'selected': ['Cube'], 'active': 'Cube', 'viewport': True}
+        prompt = self.addon.turn_prompt('bevel the cube', facts)
+        self.assertTrue(prompt.endswith('\n\nbevel the cube'))
+        for expected in ('blender_live_run_python', 'Selected objects: Cube', 'one undo step', 'never save, open'):
+            self.assertIn(expected, prompt)
+        for unexpected in ('current.blend', 'You cannot edit the open scene'):
+            self.assertNotIn(unexpected, prompt)
+
     def test_find_cli_honors_override_and_reports_missing(self):
         with tempfile.TemporaryDirectory() as root:
             tool = Path(root) / 'claude'

@@ -65,6 +65,6 @@ Generated assets are built by deterministic Python. The `.blend` is the editable
 
 ## Boundaries
 
-- Every Blender call has a timeout, and renders have resolution, sample, and time caps. There is **no generic arbitrary-Python MCP tool**.
+- Every Blender call has a timeout, and renders have resolution, sample, and time caps. The only MCP tool that runs arbitrary Python is `blender_live_run_python`, which edits an open scene and is refused until you [allow live edits](blender-panel.md#edit-the-open-scene) in Blender.
 - Automated metrics are gates and measurements. They don't replace visual review or checking the result against the request.
 - Scripts run inside Blender. Review unfamiliar scripts, and don't open untrusted `.blend` files with automatic script execution on. See the [security notes](https://github.com/ifBars/blender-agent-studio/blob/main/SECURITY.md).

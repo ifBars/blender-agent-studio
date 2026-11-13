@@ -1,9 +1,9 @@
 import {readFile} from 'node:fs/promises';
-import {join} from 'node:path';
+import {isAbsolute,join} from 'node:path';
 import type {McpServer} from '@modelcontextprotocol/server';
 import {registerAppResource,RESOURCE_MIME_TYPE} from '@modelcontextprotocol/ext-apps/server';
 import {z} from 'zod';
-import {ViewportService,navigationSchema,type ViewportSnapshot} from '../scripts/live-viewport';
+import {ViewportService,navigationSchema,runSchema,type ViewportSnapshot} from '../scripts/live-viewport';
 
 export const LIVE_VIEWPORT_URI='ui://blender-agent-studio/live-viewport-v1.html';
 const service=new ViewportService();
@@ -54,6 +54,21 @@ export function registerLiveViewport(server:McpServer) {
     inputSchema:navigationSchema.safeExtend({sessionId:session,seq:sequence}),
     annotations:{readOnlyHint:false,destructiveHint:false,openWorldHint:false},_meta:appMeta,
   },async params=>{try{return appResult(await service.call('navigate',params));}catch(error){return errorResult(error);}});
+  server.registerTool('blender_live_run_python',{
+    title:'Run Python in the open Blender scene',
+    description:'Run a Python script file in the user\'s open Blender session to edit the live scene. Refused unless the user has ticked Allow Live Edits in Blender\'s Agent Studio sidebar; never ask them to enable it for a task that batch tools can do. Returns what the script printed, any traceback, and a viewport image taken afterwards. Each run is one undo step; a failed run keeps its partial changes. The script blocks Blender while it runs, so keep runs short. Do not save, open or revert files, quit Blender, or change preferences.',
+    inputSchema:z.object({scriptPath:z.string().max(4096).refine(p=>isAbsolute(p)&&p.endsWith('.py'),'scriptPath must be an absolute path to a .py file.'),
+      timeoutMs:z.number().int().min(1000).max(600000).default(120000)}),
+    annotations:{readOnlyHint:false,destructiveHint:true,openWorldHint:false},
+  },async({scriptPath,timeoutMs})=>{
+    try {
+      const run=await service.call('run_python',{scriptPath},{timeoutMs}) as z.infer<typeof runSchema>;
+      // The image is a convenience; a viewport that cannot be captured must not hide the run's result.
+      const capture=await service.call('snapshot',{force:true}).catch(()=>undefined) as ViewportSnapshot|undefined;
+      return {isError:!run.ok,content:[{type:'text' as const,text:JSON.stringify(run)},
+        ...(capture?.png?[{type:'image' as const,mimeType:'image/png',data:capture.png}]:[])],structuredContent:run};
+    }catch(error){return errorResult(error);}
+  });
   registerAppResource(server,'Blender live viewport',LIVE_VIEWPORT_URI,{mimeType:RESOURCE_MIME_TYPE},async()=>({contents:[{
     uri:LIVE_VIEWPORT_URI,mimeType:RESOURCE_MIME_TYPE,text:await liveViewportHtml(),
     _meta:{ui:{prefersBorder:true,csp:{connectDomains:[],resourceDomains:[]}}},

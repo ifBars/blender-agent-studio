@@ -63,7 +63,7 @@ The build fails if a skill or MCP tool is missing from these pages, or if a link
 ## Ground rules
 
 - Don't commit generated models, exports, renders, benchmark runs, or agent traces.
-- Keep Blender execution bounded. Don't add a generic arbitrary-Python MCP tool.
+- Keep Blender execution bounded. Don't add a generic arbitrary-Python MCP tool. The one exception, `blender_live_run_python`, must stay refused unless the user ticks **Allow Live Edits** in the Blender addon.
 - Treat one benchmark generation per condition as directional evidence, not a capability claim.
 
 The [development guide](https://github.com/ifBars/blender-agent-studio/blob/main/docs/development.md) covers benchmarks and more setup detail.

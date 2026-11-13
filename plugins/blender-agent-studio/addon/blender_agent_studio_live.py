@@ -1,12 +1,14 @@
 """Blender Agent Studio's viewport bridge and in-Blender agent panel.
 
-The bridge is a bounded local protocol: no script execution, file loading,
-saving, or geometry mutation commands. Capture/picking approach inspired by
-MCP for Blender (MIT); see LICENSE.txt.
+The bridge is a local, authenticated protocol for viewport capture, picking
+and navigation. Capture/picking approach inspired by MCP for Blender (MIT);
+see LICENSE.txt. One command, run_python, executes a script in the open
+session. It is refused unless the user ticks Allow Live Edits in the panel.
 
 The agent panel runs the user's own Claude Code or Codex CLI as a child
-process. The open session is never scripted by the agent: it reads a saved
-copy of the scene and delivers .blend files, whose objects the panel appends.
+process. By default the agent reads a saved copy of the scene and delivers
+.blend files, whose objects the panel appends. With live edits allowed, it
+edits the open scene through run_python instead.
 """
 bl_info = {"name": "Blender Agent Studio Live", "author": "Bars",
            "version": (0, 2, 0), "blender": (4, 5, 0),
@@ -14,7 +16,9 @@ bl_info = {"name": "Blender Agent Studio Live", "author": "Bars",
 
 import atexit
 import base64
+import contextlib
 import hashlib
+import io
 import json
 import math
 import os
@@ -31,6 +35,7 @@ import tempfile
 import textwrap
 import threading
 import time
+import traceback
 import zlib
 
 import bpy
@@ -39,7 +44,13 @@ from mathutils import Vector
 
 PROTOCOL = 1
 MAX_REQUEST = 16384
+MAX_SCRIPT = 1_000_000
 _bridge = None
+
+
+def live_edits_allowed():
+    """Read at every request, so unticking the box takes effect at once."""
+    return bool(getattr(bpy.context.window_manager, "bas_live_edits", False))
 
 
 def connection_path():
@@ -253,6 +264,39 @@ class Bridge:
             area.tag_redraw()
         return self.snapshot({"force": True})
 
+    def run_python(self, params):
+        """Run a script file in the open session. The only command that can
+        change the scene; everything else in this protocol is read or view only."""
+        if not live_edits_allowed():
+            raise ValueError("Live edits are off. In Blender's Agent Studio sidebar, tick Allow Live Edits.")
+        path = params.get("scriptPath")
+        if not isinstance(path, str) or not os.path.isabs(path) or not path.endswith(".py"):
+            raise ValueError("scriptPath must be an absolute path to a .py file.")
+        if os.path.getsize(path) > MAX_SCRIPT:
+            raise ValueError("The script is larger than 1 MB.")
+        source = Path(path).read_text(encoding="utf8")
+        try:
+            window, area, region, _ = viewport()
+            override = {"window": window, "area": area, "region": region}
+        except ValueError:
+            windows = bpy.context.window_manager.windows
+            override = {"window": windows[0]} if windows else {}
+        output, error = io.StringIO(), None
+        with bpy.context.temp_override(**override), contextlib.redirect_stdout(output):
+            try:
+                exec(compile(source, path, "exec"), {"__name__": "__main__", "__file__": path})
+            except (Exception, SystemExit):
+                error = traceback.format_exc()
+            try:
+                # One undo step per run, including a failed run's partial changes.
+                bpy.ops.ed.undo_push(message="Agent edit: " + Path(path).name)
+            except RuntimeError:
+                pass
+            mode = bpy.context.mode
+        self.revision += 1
+        return {"sessionId": self.session, "ok": error is None, "output": output.getvalue()[-8000:],
+                "error": error[-4000:] if error else None, "mode": mode}
+
     def dispatch(self, request):
         if not isinstance(request, dict) or request.get("protocol") != PROTOCOL or not secrets.compare_digest(str(request.get("token", "")), self.token):
             raise ValueError("Viewport bridge authentication failed.")
@@ -268,6 +312,8 @@ class Bridge:
             return self.pick(params)
         if command == "navigate":
             return self.navigate(params)
+        if command == "run_python":
+            return self.run_python(params)
         raise ValueError("Unsupported viewport command.")
 
     def tick(self):
@@ -300,6 +346,8 @@ class Bridge:
                         except Exception as error:
                             payload = json.dumps({"ok": False, "error": str(error)})
                         client["output"] = (payload + "\n").encode()
+                        # A long script must not expire its own reply.
+                        client["deadline"] = time.monotonic() + 15
                 if client["output"] is not None:
                     sent = sock.send(client["output"])
                     client["output"] = client["output"][sent:]
@@ -434,11 +482,22 @@ def turn_prompt(text, facts):
     if facts.get("blender"):
         lines.append("- Blender executable: %s. Use it for every Blender command; BLENDER_EXECUTABLE is set to it."
                      % facts["blender"])
+    selection = "Selected objects: %s. Active object: %s." % (
+        ", ".join(facts.get("selected") or []) or "none", facts.get("active") or "none")
+    if facts.get("live"):
+        lines.append("- Live edits are allowed. Edit the user's open scene (\"%s\", frame %s) directly: write a "
+                     "Python script in the working folder and run it with blender_live_run_python, which returns "
+                     "what the script printed and a viewport image. Print what you need to learn about the scene. "
+                     "%s Work in small steps and look at the image after each. Every run is one undo step, and a "
+                     "failed run keeps its partial changes. The script blocks Blender while it runs: keep runs "
+                     "short, and never save, open or revert files, quit, change preferences, or delete objects the "
+                     "user did not ask you to change. Do not also save a .blend in %s unless asked."
+                     % (facts.get("scene", ""), facts.get("frame", ""), selection, facts["results"]))
+        return "\n".join(lines + ["</blender_agent_studio_panel>", "", text])
     if facts.get("snapshot"):
         lines.append("- Open scene: a copy of the user's current file was just saved to %s (scene \"%s\", frame %s). "
-                     "Read it for context and never write to it. Selected objects: %s. Active object: %s."
-                     % (facts["snapshot"], facts.get("scene", ""), facts.get("frame", ""),
-                        ", ".join(facts.get("selected") or []) or "none", facts.get("active") or "none"))
+                     "Read it for context and never write to it. %s"
+                     % (facts["snapshot"], facts.get("scene", ""), facts.get("frame", ""), selection))
     else:
         lines.append("- Open scene: not shared for this message.")
     lines.append("- Deliver by saving a .blend in %s. The panel appends that file's objects to the user's open "
@@ -685,7 +744,7 @@ def new_workspace():
     return workspace
 
 
-def send_prompt(text, agent, share_scene):
+def send_prompt(text, agent, share_scene, live=False):
     """Start one agent turn from the panel. Raises with a user-facing message."""
     global _session
     label, name = AGENTS[agent]
@@ -697,16 +756,20 @@ def send_prompt(text, agent, share_scene):
         _session = AgentSession(agent, new_workspace())
     session = _session
     window = first_window() or bpy.context
-    facts = {"version": bpy.app.version_string, "workspace": str(session.workspace),
+    if live:
+        start()  # Ticking Allow Live Edits is the consent to connect.
+    facts = {"version": bpy.app.version_string, "workspace": str(session.workspace), "live": live,
              "results": str(session.results_dir), "blender": bpy.app.binary_path, "viewport": _bridge is not None}
-    if share_scene:
+    if live or share_scene:
+        layer = window.view_layer
+        facts.update(scene=window.scene.name_full, frame=window.scene.frame_current,
+                     selected=[obj.name_full for obj in layer.objects if obj.select_get(view_layer=layer)][:50],
+                     active=layer.objects.active.name_full if layer.objects.active else None)
+    if share_scene and not live:
         snapshot = session.workspace / "scene" / "current.blend"
         snapshot.parent.mkdir(exist_ok=True)
         save_scene_copy(snapshot)
-        layer = window.view_layer
-        facts.update(snapshot=str(snapshot), scene=window.scene.name_full, frame=window.scene.frame_current,
-                     selected=[obj.name_full for obj in layer.objects if obj.select_get(view_layer=layer)][:50],
-                     active=layer.objects.active.name_full if layer.objects.active else None)
+        facts["snapshot"] = str(snapshot)
     environment = dict(os.environ, PATH=search_path())
     if bpy.app.binary_path:
         environment["BLENDER_EXECUTABLE"] = bpy.app.binary_path
@@ -796,7 +859,7 @@ class BAS_OT_agent_send(bpy.types.Operator):
             self.report({"WARNING"}, "Type a request first.")
             return {"CANCELLED"}
         try:
-            send_prompt(text, manager.bas_agent, manager.bas_share_scene)
+            send_prompt(text, manager.bas_agent, manager.bas_share_scene, manager.bas_live_edits)
         except Exception as error:
             self.report({"ERROR"}, str(error))
             return {"CANCELLED"}
@@ -889,7 +952,10 @@ class BAS_PT_agent(bpy.types.Panel):
             if session:
                 row.operator("bas.agent_reset", text="", icon="FILE_NEW")
         column = layout.column(align=True)
-        column.prop(manager, "bas_share_scene")
+        column.prop(manager, "bas_live_edits")
+        row = column.row()
+        row.enabled = not manager.bas_live_edits
+        row.prop(manager, "bas_share_scene")
         column.prop(manager, "bas_auto_import")
         if session and not running:
             for path in session.results:
@@ -919,6 +985,11 @@ _properties = {
         items=[(key, label, "Use the %s CLI" % name) for key, (label, name) in AGENTS.items()]),
     "bas_prompt": lambda: bpy.props.StringProperty(
         name="Request", description="What to build or change", options={"SKIP_SAVE"}),
+    "bas_live_edits": lambda: bpy.props.BoolProperty(
+        name="Allow Live Edits", default=False, options={"SKIP_SAVE"},
+        description="Let the agent run its Python scripts in this open scene instead of working on a copy. "
+                    "Each run is one undo step and blocks Blender until it ends. Off again when Blender restarts. "
+                    "Save first: a script can change or delete anything"),
     "bas_share_scene": lambda: bpy.props.BoolProperty(
         name="Share Open Scene", default=True,
         description="Save a copy of the open file to the session folder with each message, so the agent can "

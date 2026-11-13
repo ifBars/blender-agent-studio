@@ -58,7 +58,7 @@ your own requests.
 
 ## What you can do
 
-- Chat with Claude Code or Codex from a sidebar tab inside Blender; the agent reads a copy of your open scene and its results are added to it. See the [agent panel guide](https://ifbars.github.io/blender-agent-studio/blender-panel/).
+- Chat with Claude Code or Codex from a sidebar tab inside Blender; the agent can edit your open scene directly once you allow it, or build separately and add its results. See the [agent panel guide](https://ifbars.github.io/blender-agent-studio/blender-panel/).
 - View an open Blender session inline, orbit and zoom, and attach a clicked object to your next message with the optional [Studio Live addon](docs/live-viewport.md).
 - Build props, environments, characters, and Geometry Nodes setups.
 - Design readable signs, labels and graphic panels as editable 2D artwork, then integrate their materials and supports and review them at the intended distance. See the [signage workflow](plugins/blender-agent-studio/skills/blender-signage-workflow/SKILL.md).

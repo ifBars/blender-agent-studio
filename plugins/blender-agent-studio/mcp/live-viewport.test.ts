@@ -74,6 +74,24 @@ test('transport bounds wait time and rejects malformed replies',async()=>{
   });
 });
 
+test('live run forwards the script path and timeout, and validates the reply',async()=>{
+  const run={sessionId,ok:false,output:'moved 3\n',error:'RuntimeError: boom',mode:'OBJECT'};
+  await mockBridge((request,socket)=>{
+    expect(request).toMatchObject({command:'run_python',params:{scriptPath:'/w/edit.py',sessionId}});
+    socket.end(JSON.stringify({ok:true,result:run})+'\n');
+  },async path=>{
+    const seen:unknown[]=[];
+    const service=new ViewportService((command,params,options)=>{seen.push(options);return requestViewport(command,params,{...options,path});});
+    expect(await service.call('run_python',{scriptPath:'/w/edit.py'},{timeoutMs:5000})).toEqual(run);
+    expect(seen).toEqual([{timeoutMs:5000}]);
+  });
+  await mockBridge((_,socket)=>socket.end(JSON.stringify({ok:false,error:'Live edits are off.'})+'\n'),async path=>{
+    await expect(requestViewport('run_python',{scriptPath:'/w/edit.py'},{path})).rejects.toThrow('Live edits are off');
+  });
+  const malformed=new ViewportService(async()=>({ok:true}));
+  await expect(malformed.call('run_python',{})).rejects.toThrow();
+});
+
 test('service serializes calls and recovers after an unsuccessful operation',async()=>{
   let active=0,peak=0,calls=0;
   const service=new ViewportService(async()=>{
@@ -90,6 +108,11 @@ test('MCP exposes live viewport and app-only helpers with no external web connec
     await client.connect(new StdioClientTransport({command:'bun',args:[join(import.meta.dir,'server.ts')],stderr:'pipe'}));
     const tools=(await client.listTools()).tools;
     expect(tools.find(t=>t.name==='blender_open_viewport')?._meta).toMatchObject({ui:{resourceUri:LIVE_VIEWPORT_URI}});
+    const live=tools.find(t=>t.name==='blender_live_run_python');
+    expect(live?.annotations).toMatchObject({readOnlyHint:false,destructiveHint:true});
+    expect(live?.description).toContain('Allow Live Edits');
+    const refused=await client.callTool({name:'blender_live_run_python',arguments:{scriptPath:'relative.py'}});
+    expect(refused.isError).toBe(true);
     for(const name of ['blender_viewport_snapshot','blender_viewport_pick','blender_viewport_navigate'])
       expect(tools.find(t=>t.name===name)?._meta).toMatchObject({ui:{resourceUri:LIVE_VIEWPORT_URI,visibility:['app']}});
     const resource=(await client.readResource({uri:LIVE_VIEWPORT_URI})).contents[0];
@@ -115,6 +138,6 @@ test.skipIf(!(process.env.BLENDER_EXECUTABLE??Bun.which('blender')))('real Blend
     const run=await runBlender({scriptPath:join(import.meta.dir,'../scripts/_agent_panel_contract.py'),scriptArgs:[root],timeoutMs:30000});
     expect(run.timedOut).toBe(false);
     if(run.exitCode!==0)throw Error(run.stderr+'\n'+run.stdout);
-    expect(await Bun.file(join(root,'agent-contract.json')).json()).toEqual({registration:true,sceneCopy:true,import:true});
+    expect(await Bun.file(join(root,'agent-contract.json')).json()).toEqual({registration:true,sceneCopy:true,import:true,liveEdits:true});
   }finally{await rm(root,{recursive:true,force:true});}
 },35000);

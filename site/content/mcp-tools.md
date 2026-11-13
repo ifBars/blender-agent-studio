@@ -1,6 +1,6 @@
 ---
 title: MCP tools
-description: Bounded tools for live viewport interaction, checking setup, inspecting, rendering, comparing, and sourcing assets. None runs arbitrary Python.
+description: Bounded tools for live viewport interaction, checking setup, inspecting, rendering, comparing, and sourcing assets. One opt-in tool edits an open scene with Python; the rest run bounded jobs.
 ---
 
 The plugin runs the same local MCP server with Bun in Codex and Claude Code. Tools that inspect or render files start Blender in the background for one bounded job and return structured results. Asset searches, downloads, and browser handoffs do not need to launch Blender. The optional Studio Live addon connects an open Blender viewport to the same MCP server.
@@ -33,7 +33,20 @@ Material Preview. Captures are viewport evidence, not final renders. Mesh
 surface picking does not resolve editable face indices or individual procedural
 instances; use the object list for lights and empties. Temporary disconnects
 retry automatically. The bridge is local,
-authenticated and has no arbitrary-code command. Batch workflows need no addon.
+authenticated. Its only code-running command is the opt-in live edit below.
+Batch workflows need no addon.
+
+### Live edits
+
+| Tool | What it does |
+| --- | --- |
+| `blender_live_run_python` | Runs a Python script file in the open Blender session, then returns what it printed, any traceback, and a viewport image. |
+
+The addon refuses this tool unless you tick **Allow Live Edits** in the
+[agent panel](blender-panel.md#edit-the-open-scene). The box is off by default
+and off again after Blender restarts. Each run is one undo step, a failed run
+keeps its partial changes, and Blender is blocked until the script ends. A
+script can change or delete anything in the session, so save first.
 
 ## Check setup
 

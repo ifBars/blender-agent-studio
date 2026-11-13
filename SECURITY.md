@@ -4,8 +4,15 @@
 
 Blender Agent Studio invokes a local Blender executable and runs Python scripts
 inside Blender. Review untrusted scripts before execution. The bundled MCP is
-intentionally limited to version checks, asset inspection, and evidence renders;
-it does not expose a generic arbitrary-Python tool.
+intentionally limited to bounded jobs such as version checks, asset inspection,
+and evidence renders. It exposes one arbitrary-Python tool,
+`blender_live_run_python`, which runs a script file in an open Blender session
+to edit the scene. The Studio Live addon refuses it unless the user ticks
+**Allow Live Edits** in Blender's Agent Studio sidebar. The setting is off by
+default, is not saved, and is checked on every request. While it is on, any
+local process that can read the connection descriptor can run Python in that
+Blender session with the user's permissions; save your work first and turn it
+off when you are done.
 
 Set `BLENDER_EXECUTABLE` only to a trusted Blender installation. Avoid running
 untrusted `.blend` files with automatic script execution enabled.

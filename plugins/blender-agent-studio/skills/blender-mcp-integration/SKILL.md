@@ -28,8 +28,15 @@ plugin root in Blender, enable it, and press **Connect Agent Studio** in the
 3D View sidebar. It requires an interactive Blender session and GPU context;
 the ordinary file tools remain independent. See the
 [live viewport guide](https://github.com/ifBars/blender-agent-studio/blob/main/docs/live-viewport.md).
-The bridge does not execute arbitrary Python or mutate geometry. General live
-authoring can still use a separate integration as described below.
+By default the bridge does not execute Python or mutate geometry. When the user
+has ticked **Allow Live Edits** in the addon's agent panel,
+`blender_live_run_python` runs a script file in the open session: write the
+script to disk, run it, and review the returned viewport image. Each run is one
+undo step and blocks Blender, so keep runs short, and never save, open or
+revert files or quit Blender from a script. If the tool reports that live edits
+are off, build with the batch tools; do not ask the user to enable it for work
+those tools can do. Other live authoring can use a separate integration as
+described below.
 
 1. Use the bundled tools and Blender CLI for ordinary scripted builds, inspection, and rendering. Add Blender's official Lab MCP only when the task needs live interaction with an open Blender session on a supported version.
 2. Use Blender Agent Studio's MCP for deterministic batch inspection, standardized geometry evidence, and bounded authored-scene renders. `blender_render_scene` preserves cameras, lights, volumes and color management and returns the first image inline; `inspectOnly` discovers scene settings before rendering. The bundled Poly Haven search/download tools also acquire verified CC0 textures and HDRIs without another add-on or API key; see the rendering workflow for material setup and standalone CLI use.

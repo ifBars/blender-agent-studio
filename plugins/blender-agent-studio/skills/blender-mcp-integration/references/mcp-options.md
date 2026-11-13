@@ -64,7 +64,8 @@ The optional bundled **Agent Studio Live** addon also provides an inline
 viewport, refreshed captures, bounded axis/orbit/zoom navigation, and
 surface/object-list selection for the user's next prompt. Use
 `blender_open_viewport` after connecting in Blender's Agent Studio sidebar.
-The addon does not author geometry or execute arbitrary code. Batch tools stay
+The addon does not author geometry or execute code unless the user ticks Allow
+Live Edits, which enables `blender_live_run_python`. Batch tools stay
 independent, and a live capture does not replace final validation.
 
 ## Broader agent capability comparison

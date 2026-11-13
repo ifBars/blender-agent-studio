@@ -1,9 +1,9 @@
 ---
 title: Agent panel in Blender
-description: Chat with Claude Code or Codex from a sidebar tab in Blender. The agent reads a copy of your open scene and its results are added to it.
+description: Chat with Claude Code or Codex from a sidebar tab in Blender. The agent can edit your open scene directly, or build separately and add its results.
 ---
 
-The Studio Live addon adds an **Agent** panel to Blender's 3D Viewport sidebar. Type a request, and the Claude Code or Codex CLI you already have runs in the background with this plugin's skills and MCP tools. When it finishes, the objects it built are added to your open scene.
+The Studio Live addon adds an **Agent** panel to Blender's 3D Viewport sidebar. Type a request, and the Claude Code or Codex CLI you already have runs in the background with this plugin's skills and MCP tools. It can edit your open scene directly, or build in the background and add the result when it finishes.
 
 The panel is a chat front end for your own CLI, not a terminal: it shows the agent's replies and the tools it runs, and it uses your existing login and subscription. Nothing else is installed or contacted.
 
@@ -23,17 +23,30 @@ While the agent works, the panel shows its current step and a **Stop** button, a
 
 | Control | What it does |
 | --- | --- |
+| **Allow Live Edits** | Lets the agent edit the open scene directly. Off by default; see [edit the open scene](#edit-the-open-scene). |
 | **Share Open Scene** | Saves a copy of the open file to the session folder with each message, and tells the agent your selection and active object. Your file, its path and its unsaved-changes state are not touched. |
 | **Add Results to Scene** | When the agent finishes, appends its result to the scene in a new `Agent: <name>` collection. Turn it off to add results yourself with the **Add** button. |
 | **Open Session Folder** | Shows the chat's Python sources, renders, result `.blend` files and `transcript.md`. |
 
 Each chat gets its own folder under `~/blender-agent-studio`. Press **Connect Agent Studio** under **Viewport Sharing** if you also want the agent to see your [live viewport](mcp-tools.md#live-viewport).
 
+## Edit the open scene
+
+Tick **Allow Live Edits** and the agent works in your open scene: it writes a Python script to the session folder, runs it in your Blender session with `blender_live_run_python`, looks at the viewport image that comes back, and repeats. No copy of your file is made, and the agent can change objects you already have.
+
+- Each script run is one undo step, so **Ctrl+Z** steps back through the agent's edits. A script that fails partway keeps the changes it made before the error.
+- Blender is blocked while a script runs. Runs are usually short; a script that never ends has to be stopped by closing Blender, so save before a long session.
+- A script can change or delete anything in the session and do anything Python can on your computer. The agent is told not to save, open or revert files, but nothing enforces that.
+- The box is not saved: it is off again when Blender restarts, and unticking it stops live edits at once. Sending a message with it ticked also turns on viewport sharing, which the live edits use.
+- The sources stay in the session folder, so you can read or rerun what the agent did.
+
+With the box unticked, the agent cannot touch the open scene and works as described next.
+
 ## How results reach your scene
 
-The agent never scripts your open Blender session. It builds in separate background Blender processes, as it does from a terminal, and saves a `.blend` in the session's `results` folder. The panel appends that file's objects.
+Without live edits, the agent never scripts your open Blender session. It builds in separate background Blender processes, as it does from a terminal, and saves a `.blend` in the session's `results` folder. The panel appends that file's objects.
 
-- The agent can add objects. It cannot move, edit or delete objects you already have. To change one, it delivers a replacement and names the original for you to hide or delete.
+- The agent can add objects. It cannot move, edit or delete objects you already have. To change one, it delivers a replacement and names the original for you to hide or delete, or you allow live edits.
 - When the agent revises a result, the earlier `Agent:` collection is hidden, not deleted, so edits you made to it are kept. Delete old collections when you no longer need them.
 - Appending brings in objects with their meshes, materials and animation. World lighting and render settings in the result file are not applied.
 - An automatic import is one undo step.

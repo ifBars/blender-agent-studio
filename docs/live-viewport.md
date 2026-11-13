@@ -65,10 +65,12 @@ The first available 3D Viewport is used. Rendered viewport shading is refused;
 use Solid or Material Preview. A GPU context and an interactive Blender session
 are required. A capture is not a beauty render or final quality validation.
 
-The addon accepts only snapshot, identification and bounded view-navigation
-commands. It listens on an ephemeral **127.0.0.1** port, authenticates requests
+By default the addon accepts only snapshot, identification and bounded
+view-navigation commands. Ticking **Allow Live Edits** in the agent panel adds
+one more, which runs a Python script file in the open session; see the
+[agent panel guide](../site/content/blender-panel.md). It listens on an ephemeral **127.0.0.1** port, authenticates requests
 with a random per-session token, and performs all Blender work on the main
-thread through a nonblocking timer. No arbitrary Python execution, asset
+thread through a nonblocking timer. No asset
 downloads, telemetry or remote-host access are added. Disconnect from Blender
 to stop the bridge and remove its connection descriptor.
 

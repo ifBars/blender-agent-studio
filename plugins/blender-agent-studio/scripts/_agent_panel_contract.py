@@ -1,6 +1,7 @@
 """Run in a clean background Blender to check the agent panel against real bpy."""
 import importlib.util
 import json
+import os
 from pathlib import Path
 import sys
 
@@ -60,6 +61,41 @@ try:
 except ValueError as error:
     assert 'no objects' in str(error)
 
+# Live edits: refused until the user allows them, then one script edits the open scene.
+os.environ['BAS_VIEWPORT_CONNECTION'] = str(out / 'connection.json')
+addon.start()
+bridge = addon._bridge
+script = out / 'edit.py'
+script.write_text("import bpy\nbpy.data.objects['UserCube'].location.z = 3\nprint('moved', len(bpy.data.objects))\n")
+request = {'protocol': 1, 'token': bridge.token, 'command': 'run_python', 'params': {'scriptPath': str(script)}}
+assert not manager.bas_live_edits, 'Live edits must be off by default'
+try:
+    bridge.dispatch(request)
+    raise AssertionError('Live edit accepted while disallowed')
+except ValueError as error:
+    assert 'Live edits are off' in str(error)
+assert bpy.data.objects['UserCube'].location.z == 0
+manager.bas_live_edits = True
+revision = bridge.revision
+reply = bridge.dispatch(request)
+assert reply['ok'] and reply['error'] is None and reply['output'].startswith('moved '), reply
+assert bpy.data.objects['UserCube'].location.z == 3 and bridge.revision > revision
+script.write_text("import bpy\nbpy.data.objects['UserCube'].location.x = 5\nraise RuntimeError('boom')\n")
+reply = bridge.dispatch(request)
+assert not reply['ok'] and 'RuntimeError: boom' in reply['error'] and 'edit.py' in reply['error'], reply
+for bad in ('relative.py', str(out / 'edit.txt'), 7):
+    try:
+        bridge.dispatch(dict(request, params={'scriptPath': bad}))
+        raise AssertionError('Bad script path accepted')
+    except ValueError as error:
+        assert 'absolute path to a .py file' in str(error)
+manager.bas_live_edits = False
+try:
+    bridge.dispatch(request)
+    raise AssertionError('Unticking the box must stop live edits at once')
+except ValueError:
+    pass
+
 addon.unregister()
 assert not hasattr(bpy.types.WindowManager, 'bas_prompt')
-(out / 'agent-contract.json').write_text(json.dumps({'registration': True, 'sceneCopy': True, 'import': True}))
+(out / 'agent-contract.json').write_text(json.dumps({'registration': True, 'sceneCopy': True, 'import': True, 'liveEdits': True}))

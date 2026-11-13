@@ -26,7 +26,9 @@ export const navigationSchema = z.object({action:z.enum(viewActions),
   if(p.action==='ZOOM'&&p.amount===undefined)
     ctx.addIssue({code:'custom',message:'Zoom requires an amount.'});
 });
-export type BridgeCommand = 'snapshot'|'pick'|'navigate';
+export const runSchema = z.object({sessionId:z.string(),ok:z.boolean(),output:z.string().max(8000),
+  error:z.string().max(4000).nullable(),mode:z.string()});
+export type BridgeCommand = 'snapshot'|'pick'|'navigate'|'run_python';
 
 export function connectionPath() {
   return process.env.BAS_VIEWPORT_CONNECTION || join(tmpdir(),'blender-agent-studio','viewport.json');
@@ -38,8 +40,8 @@ export async function requestViewport(command:BridgeCommand,params:Record<string
   try { descriptor=connectionSchema.parse(JSON.parse(await readFile(options.path??connectionPath(),'utf8'))); }
   catch { throw Error('Connect Blender first: install addon/blender_agent_studio_live.py from the plugin folder, then open the 3D View sidebar → Agent Studio → Connect Agent Studio.'); }
   if(params.sessionId && params.sessionId!==descriptor.sessionId)throw Error('A different Blender session is connected. Reopen the viewport.');
-  // The descriptor cannot redirect the connection off-machine. No paths, code,
-  // arbitrary methods or addon credentials are returned to the UI or model.
+  // The descriptor cannot redirect the connection off-machine. No arbitrary
+  // methods or addon credentials are returned to the UI or model.
   return new Promise((resolve,reject)=>{
     const socket=connect({host:'127.0.0.1',port:descriptor.port});
     const chunks:Buffer[]=[];let size=0,done=false;
@@ -76,14 +78,15 @@ export class ViewportService {
   private pending:Promise<unknown> = Promise.resolve();
   private queued=0;
   constructor(private request:typeof requestViewport=requestViewport){}
-  async call(command:BridgeCommand,params:Record<string,unknown>) {
+  async call(command:BridgeCommand,params:Record<string,unknown>,options:{timeoutMs?:number}={}) {
     if(this.queued>=4)throw Error('Viewport is busy. Try again after the current capture.');
     this.queued++;
-    const result=this.pending.catch(()=>{}).then(()=>this.request(command,params));
+    const result=this.pending.catch(()=>{}).then(()=>this.request(command,params,options));
     this.pending=result;
     try {
       const value=await result;
       if(command==='pick')return z.object({sessionId:z.string(),seq:z.number(),object:objectSchema.nullable()}).parse(value);
+      if(command==='run_python')return runSchema.parse(value);
       return snapshotSchema.parse(value);
     }finally{this.queued--;}
   }
