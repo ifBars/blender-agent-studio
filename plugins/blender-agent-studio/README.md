@@ -57,8 +57,9 @@ Measure skill changes on one fixed model before comparing different models.
   iterative multiview review.
 - `blender-asset-validation`: evaluated geometry inspection, fresh GLB import,
   and fixed evidence renders.
-- `blender-iterative-refinement`: opt-in first-candidate, separate critic,
-  targeted source repair, and same-evidence rollback gate.
+- `blender-iterative-refinement`: focused prop and assembly critique during
+  creation or requested refinement, reference-based source repair, close/context
+  comparison, and a rollback gate that preserves unresolved defects.
 - `blender-animation-workflow`: critical-frame review, mechanical pivots, and
   dynamic-connector endpoint invariants.
 - `blender-procedural-workflow`: editable Geometry Nodes, modifiers,

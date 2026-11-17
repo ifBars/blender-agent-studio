@@ -1,4 +1,4 @@
 interface:
   display_name: "Blender Iterative Refinement"
   short_description: "Critique, repair, and rollback Blender iterations"
-  default_prompt: "Use $blender-agent-studio:blender-iterative-refinement to critique this complete Blender candidate, make one evidence-backed source repair, and retain it only if identical validation shows no regression."
+  default_prompt: "Use $blender-agent-studio:blender-iterative-refinement to review each weak prop or assembly against accepted references in close and context views, repair source defects, and recheck until the requested finish is evidenced without regressions. Carry unresolved defects forward and respect scope and approval gates."

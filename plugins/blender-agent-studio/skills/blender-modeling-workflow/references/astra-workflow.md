@@ -94,6 +94,15 @@ inconsistent skin patches. Check these against references before detail and
 again in motion; do not wait for serial user corrections. They are review
 priorities, not universal claims about a model or fixed anatomy thresholds.
 
+When authorized creation includes a prop or assembly that falls short of the
+accepted finish, use the iterative-refinement skill when available without
+waiting for another user prompt. Review one semantic unit against its accepted
+references in both close and context views, repair the highest-impact defect,
+then reopen the same evidence. If the skill is unavailable, apply that loop
+directly. Carry unresolved family defects in the work record until fresh
+evidence clears them; a retained improvement is not automatically a finished
+asset. Respect read-only requests, blockout scope and user approval gates.
+
 ## Spend tool time on evidence that changes the next decision
 
 Make the asset handoff visually useful by default: show a polished hero image
@@ -136,8 +145,8 @@ local fixes and requested blockouts should stay proportionate.
 
 Respect explicit user time limits, approval gates, and stop requests. For full
 scenes, use the modeling workflow's `references/whole-scene-workflow.md` when
-available. Its build-review-repair loop is normal creation, not an opt-in second
-pass. Continue while important contracted gates fail and authorized work is
+available. Focused refinement is part of normal creation. Continue while
+important contracted gates fail and authorized work is
 possible. If a time, tooling or session limit prevents completion, preserve a
 resumable checkpoint and report the result as partial with remaining defects.
 
