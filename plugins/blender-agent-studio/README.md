@@ -14,7 +14,7 @@ session's project directory; pass absolute paths when the location matters.
 For the supported benchmark hosts and CLI prerequisites, see the
 [benchmark workflow](skills/blender-agent-benchmark/SKILL.md).
 
-## Astra adaptation
+## Shared workflow
 
 Version 0.5.0 also makes presentation adaptive by default. Evidence renders use
 scale-correct soft lighting, close framing, and a contrasting studio floor.
@@ -24,19 +24,16 @@ when necessary. Provide two looks when they serve distinct needs. Benchmark
 evidence pins `neutral`; settings version 2 must not be mixed with older renders
 in a controlled comparison.
 
-The workflows now support GPT-6 Astra's longer-task execution: routine brief
-decisions use stated defaults, related modeling stages can share a build/review
-pass, and long work keeps a compact checkpoint with source and evidence state.
-Construction uses focused checks; completion still requires clean-source
-reproduction, applicable fresh-import checks, and opened visual evidence.
-The shared [execution guidance](references/astra-workflow.md) explains the
-behavior and its source in OpenAI's Astra migration guide.
+Routine brief decisions use stated defaults, related modeling stages can
+share a build/review pass, and long work keeps a compact checkpoint with
+source and evidence state. Construction uses focused checks; completion
+still requires clean-source reproduction, applicable fresh-import checks,
+and visual review. The shared [execution guidance](references/astra-workflow.md)
+describes how to run the same workflow with the host's available tools.
 
-Select Astra in Codex to use it interactively; the plugin does not change your
-model setting. Sol, Terra, and Luna remain supported. Model-specific Blender
-quality or speed improvements have not yet been measured for this revision.
-
-For explicit, reproducible model selection in the benchmark:
+The plugin does not change the selected model. A portable workflow is not
+evidence of equal results across models or hosts. For an example of explicit,
+reproducible model selection in a historical benchmark condition:
 
 ```powershell
 bun run benchmark --profile astra --reasoning medium --suite smoke `
