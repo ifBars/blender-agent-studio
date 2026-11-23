@@ -94,7 +94,7 @@ For identifiable reference features, supply up to 32 `landmarks` to the same
 tool: a name, exact `objectName`, `referenceUv` normalized from image top-left,
 and optional object-local `localPoint`. Use authored empties for stable feature
 anchors. Yellow/blue markers and signed pixel offsets provide precise feedback
-for Astra's visual diagnosis even without a mask. Check the camera first when
+for visual diagnosis even without a mask. Check the camera first when
 many landmarks shift together. With plausible pose and at least three separated
 correspondences, `blender_fit_reference_camera` can fit framing in a candidate
 scene; review its overlay, retain accepted parameters in source, then freeze

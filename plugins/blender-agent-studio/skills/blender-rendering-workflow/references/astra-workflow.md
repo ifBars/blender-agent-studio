@@ -1,8 +1,8 @@
-# Astra workflow adaptation
+# Shared execution guidance
 
 Apply this guidance with the domain skill's actual geometry, render, animation,
-simulation, and export gates. It also works with Sol, Terra, and Luna. A skill
-does not select the model or change the user's Codex or Claude Code settings.
+simulation, and export gates. Use the user-selected model and authorized tools.
+A skill does not select a model, grant permissions, or change host settings.
 
 ## Complete the requested result
 
@@ -21,6 +21,21 @@ gates the user requested.
 Explicit user instructions take precedence over skill guidelines. If a skill
 would force a pause, quote and link the specific instruction and explain why
 existing authorization does not cover the next step.
+
+## Use the capabilities available in the host
+
+Check which local execution, image inspection, and Blender tools the host
+actually exposes. Use the bundled MCP for bounded inspection or rendering when
+it is available. Otherwise, run the relevant bundled scripts directly with
+local Blender and its absolute executable path. For background jobs that open
+a source asset, use `--disable-autoexec` and keep the source unchanged. Do not
+add an integration, switch providers, or request broader permissions just to
+duplicate capabilities already available.
+
+Open inline images or read the saved renders using an available image tool.
+Use the same views, camera, and presentation for before/after checks. If the
+host cannot inspect images, return the rendered files and numerical findings
+and mark the visual checks as unverified; a render receipt is not a review.
 
 ## Gather references that answer modeling questions
 
@@ -166,36 +181,27 @@ Where the host supports nonblocking tools, overlap independent inspection,
 documentation, or report preparation with renders/bakes from frozen inputs.
 Keep dependent steps sequential, use separate output directories, collect all
 results, and avoid competing heavy GPU jobs. Never mutate a scene or cache
-while a pending job consumes it. The bundled MCP is still a bounded batch
-evaluator; this guidance does not add Responses API async support to it.
+while a pending job consumes it. If the host only supports blocking calls,
+use a sequential build and review loop.
 
 Use subagents only when the user or applicable instructions request delegation
 and the host supports it. Assign independent work and explicit file ownership;
-do not let multiple agents edit one live scene. Use the user-selected model
-and the host's supported defaults unless the task specifies a comparison. Keep art direction
-and final acceptance with the lead agent. Do not spawn a separate agent task
-merely to obtain a second opinion.
+do not let multiple agents edit one live scene. Keep art direction and final
+acceptance with the lead agent. Do not spawn a separate agent task merely to
+obtain a second opinion.
 
 ## Model choice and evidence limits
 
-Use the model selected by the user. For controlled runs, the benchmark's
-`--profile astra` selects `gpt-6-astra` at `medium`; explicit `--reasoning`
-can preserve the effort used by an existing comparison. Increase effort only
-for a concrete unresolved problem or an explicitly configured experiment.
-Do not silently upgrade all work to maximum effort or silently fall back to a
-different model after an error.
+Use the host's supported defaults unless the user specifies otherwise.
+When the host exposes adjustable effort, increase it only for a concrete
+unresolved problem or an explicitly configured experiment. Do not silently
+switch models after an error. Tool access depends on the active host and
+configuration, not the model name.
 
-The adaptation follows OpenAI's [Astra migration and prompting guide](https://developers.openai.com/api/docs/guides/latest-model),
-checked 2026-09-04: stronger long-task coherence and instruction following,
-with particular attention to unnecessary clarification and excess testing.
-These motivate the workflow changes; they are not Blender-specific results.
-The host's model catalog remains authoritative for available models and effort
-levels. Code-mode tools, image detail, async execution, and steering depend on
-the host; do not infer tool availability from the model name.
-
-Measure old versus revised skills on the same model first. Measure Astra versus
-Sol/Terra/Luna separately with fixed skills, task inputs, effort, permissions,
-Blender build, evaluator, and repeated blinded visual judging. Report model
-effects separately from skill effects. Keep prior results as historical
-evidence; do not relabel them as Astra results or promise a quality/speed gain
-without new measurements.
+Measure skill changes with the same model and host on both sides first.
+Repeat that paired comparison on other model/host configurations before
+claiming that the effect generalizes. To compare models, hold the skills
+fixed. Keep task inputs, effort, permissions, Blender build, and evaluator
+fixed within each comparison, repeat runs, and use blinded visual judging.
+Keep model, host, and skill effects separate. Preserve historical model
+labels and do not claim a quality or speed gain without new measurements.

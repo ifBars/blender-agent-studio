@@ -7,7 +7,8 @@ const plugin = resolve(import.meta.dir, "..");
 const read = (path: string) => readFileSync(join(plugin, path), "utf8");
 const modeling = read("skills/blender-modeling-workflow/SKILL.md");
 const sceneRaw = read("skills/blender-modeling-workflow/references/whole-scene-workflow.md");
-const guidanceRaw = read("references/astra-workflow.md");
+const guidancePath = "references/astra-workflow.md";
+const guidanceRaw = read(guidancePath);
 
 const compact = (text: string) => text.replace(/\s+/g, " ");
 const scene = compact(sceneRaw);
@@ -48,10 +49,22 @@ test("finish gates require multiview defect repairs and honest partial delivery"
   expect(scene).toContain("static workflow tests cannot prove generated scene quality");
 });
 
-test("independently installable skills retain identical shared effort guidance", () => {
+test("independently installable skills link the same shared execution guidance", () => {
   const skills = readdirSync(join(plugin, "skills"), { withFileTypes: true }).filter((entry) => entry.isDirectory());
   expect(skills.length).toBeGreaterThan(0);
   for (const skill of skills) {
-    expect(read(`skills/${skill.name}/references/astra-workflow.md`)).toBe(guidanceRaw);
+    const dir = `skills/${skill.name}`;
+    expect(read(`${dir}/SKILL.md`)).toContain(`](${guidancePath})`);
+    expect(read(`${dir}/${guidancePath}`)).toBe(guidanceRaw);
   }
+});
+
+test("shared guidance supports CLI and limited-vision hosts without changing the model", () => {
+  expect(guidance).toContain("Use the user-selected model and authorized tools");
+  expect(guidance).toContain("run the relevant bundled scripts directly with local Blender");
+  expect(guidance).toContain("`--disable-autoexec`");
+  expect(guidance).toContain("mark the visual checks as unverified");
+  expect(guidance).toContain("Do not silently switch models");
+  expect(guidance).toContain("same model and host on both sides first");
+  expect(guidance).not.toMatch(/--profile|gpt-6-astra|claude-opus/i);
 });

@@ -64,18 +64,20 @@ request. Do not turn a small repair into an unattended multi-hour campaign.
 
 ## Run the suites
 
-For Astra, pass `--profile astra` (model `gpt-6-astra`, effort `medium`). The
-`sol`, `terra`, and `luna` profiles select their corresponding GPT-5.6 models
-at the same effort. Explicit `--reasoning` overrides effort, not the model.
-Use an explicit profile or `--model` for reproducible comparisons; runs using
-`configured default` are exploratory because model identity is not pinned.
+For reproducible comparisons, pin `--model` with the selected `--agent`, or
+use a named profile. The `astra`, `sol`, `terra`, and `luna` profiles pin
+their corresponding GPT models at `medium` by default. For example,
+`--profile astra` selects `gpt-6-astra`. Explicit `--reasoning` overrides
+effort, not the model. Runs using `configured default` are exploratory
+because model identity is not pinned.
 
-Separate two experiments: old/revised skills on Astra, then fixed revised
-skills on Astra/Sol/Terra/Luna. Keep fixture, effective effort, Blender build,
-limits, permissions, and evaluator fixed. The existing non-regression gate
-requires matching models; cross-model results are descriptive model comparisons,
-not proof that a skill revision improved. Never replace historical result labels
-with Astra or attribute a simultaneous model-and-skill change to either alone.
+Measure old versus revised skills on one fixed model and host first. Repeat
+the paired comparison on additional models or hosts when checking portability.
+Keep fixture, effective effort, Blender build, limits, permissions, and
+evaluator fixed within each pair. To compare models, hold the skills fixed.
+The existing non-regression gate requires matching models. Keep historical
+model labels and never attribute a simultaneous model-and-skill change to
+either alone.
 
 Use `scripts/run_benchmark.ts`:
 

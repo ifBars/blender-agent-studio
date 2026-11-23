@@ -9,8 +9,8 @@ Select the smallest set of specialist workflows that covers the request, then
 follow each selected `SKILL.md` completely.
 
 Use routine defaults and continue authorized work; do not turn internal stage
-reviews into approval gates. The specialists bundle Astra execution guidance
-for continuity and focused verification. Start with a polished hero presentation,
+reviews into approval gates. The specialists bundle shared execution guidance
+for continuity and focused verification across models and hosts. Start with a polished hero presentation,
 adapt lighting/background after visual inspection, and preserve diagnostic views.
 
 ## Check a new installation

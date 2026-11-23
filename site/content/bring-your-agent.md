@@ -28,8 +28,11 @@ short prompt and the files to expect.
 ## What is portable today
 
 The specialist workflows are `SKILL.md` files with bundled references and
-scripts. The optional local tools use MCP. These are the building blocks for
-using the same workflow across hosts.
+scripts. The optional local tools use MCP. The shared
+[execution guidance](https://github.com/ifBars/blender-agent-studio/blob/main/plugins/blender-agent-studio/references/astra-workflow.md)
+uses the host's available tools rather than assuming a model or MCP server.
+If the host cannot inspect images, it can still return renders and numerical
+checks, but visual review remains unverified.
 
 | Route | Current support |
 | --- | --- |
